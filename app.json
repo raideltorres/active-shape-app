@@ -1,0 +1,47 @@
+{
+  "expo": {
+    "name": "Active Shape",
+    "slug": "active-shape-app",
+    "scheme": "activeshape",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1F4575"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.activeshape.app",
+      "associatedDomains": ["applinks:activeshape.com"],
+      "infoPlist": {
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLSchemes": ["activeshape"]
+          }
+        ],
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "com.activeshape.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#1F4575"
+      },
+      "edgeToEdgeEnabled": true
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": ["expo-web-browser"],
+    "extra": {
+      "eas": {
+        "projectId": "ddce7c5d-0be6-4493-b77e-64b08b47384d"
+      }
+    }
+  }
+}
