@@ -10,6 +10,20 @@ export const userService = {
   },
 
   /**
+   * Update user profile
+   */
+  async updateProfile(data) {
+    return apiClient.patch(API_ENDPOINTS.PROFILE, data);
+  },
+
+  /**
+   * Upsert user data (create or update)
+   */
+  async upsertUser(data) {
+    return apiClient.patch(`${API_ENDPOINTS.USERS}/${data.id}`, data);
+  },
+
+  /**
    * Get user's tracking data
    */
   async getTrackings() {
@@ -28,5 +42,47 @@ export const userService = {
    */
   async createTracking(data) {
     return apiClient.post(API_ENDPOINTS.TRACKING, data);
+  },
+
+  /**
+   * Generate AI daily insights
+   */
+  async generateDailyInsights() {
+    return apiClient.post(API_ENDPOINTS.DAILY_INSIGHTS);
+  },
+
+  /**
+   * Get fasting plan by ID
+   */
+  async getFastingPlan(planId) {
+    return apiClient.get(`${API_ENDPOINTS.FASTING_PLANS}/${planId}`);
+  },
+
+  /**
+   * Get all fasting plans
+   */
+  async getFastingPlans() {
+    return apiClient.get(API_ENDPOINTS.FASTING_PLANS);
+  },
+
+  /**
+   * Start fasting session
+   */
+  async startFastingSession(data) {
+    return apiClient.post(API_ENDPOINTS.FASTING_SESSIONS, data);
+  },
+
+  /**
+   * End fasting session
+   */
+  async endFastingSession(sessionId, data) {
+    return apiClient.patch(`${API_ENDPOINTS.FASTING_SESSIONS}/${sessionId}/end`, data);
+  },
+
+  /**
+   * Get ongoing fasting session
+   */
+  async getOngoingFastingSession() {
+    return apiClient.get(`${API_ENDPOINTS.FASTING_SESSIONS}/ongoing`);
   },
 };

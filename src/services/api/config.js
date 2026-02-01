@@ -23,6 +23,10 @@ export const API_ENDPOINTS = {
   LOGIN: '/auth/sign-in',
   REGISTER: '/auth/sign-up',
 
+  // Users
+  USERS: '/users',
+  DAILY_INSIGHTS: '/users/daily-insights',
+
   // Recipes
   RECIPES: '/recipes',
   RECIPE_DETAILS: (id) => `/recipes/${id}`,
@@ -34,5 +38,8 @@ export const API_ENDPOINTS = {
   // Tracking
   TRACKING: '/trackings',
   DAILY_TRACKING: '/trackings/daily',
-};
 
+  // Fasting
+  FASTING_PLANS: '/fasting-plans',
+  FASTING_SESSIONS: '/fasting-sessions',
+};

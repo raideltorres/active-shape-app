@@ -53,20 +53,13 @@ const TabBarButton = ({ route, index, state, descriptors, navigation }) => {
 
   useEffect(() => {
     Animated.parallel([
-      Animated.spring(scaleAnim, {
-        toValue: isFocused ? 1 : 0.9,
-        damping: 15,
-        stiffness: 150,
-        mass: 0.5,
-        useNativeDriver: true,
-      }),
       Animated.timing(opacityAnim, {
         toValue: isFocused ? 1 : 0.6,
         duration: 200,
         useNativeDriver: true,
       }),
     ]).start();
-  }, [isFocused, scaleAnim, opacityAnim]);
+  }, [isFocused, opacityAnim]);
 
   const onPress = () => {
     const event = navigation.emit({
@@ -101,8 +94,7 @@ const TabBarButton = ({ route, index, state, descriptors, navigation }) => {
           <Animated.View 
             style={[
               styles.homeButton, 
-              isFocused && styles.homeButtonActive,
-              { transform: [{ scale: scaleAnim }] }
+              isFocused && styles.homeButtonActive
             ]}
           >
             <Ionicons
@@ -125,7 +117,7 @@ const TabBarButton = ({ route, index, state, descriptors, navigation }) => {
       onLongPress={onLongPress}
       style={styles.tabButton}
     >
-      <Animated.View style={[styles.iconWrapper, { transform: [{ scale: scaleAnim }] }]}>
+      <Animated.View style={[styles.iconWrapper]}>
         <View style={[styles.iconBackground, isFocused && styles.iconBackgroundActive]}>
           <Ionicons
             name={isFocused ? iconName : `${iconName}-outline`}
@@ -233,8 +225,8 @@ const styles = StyleSheet.create({
     marginTop: -46,
   },
   homeButton: {
-    width: 68,
-    height: 68,
+    width: 64,
+    height: 64,
     borderRadius: 34,
     backgroundColor: colors.white,
     alignItems: 'center',
@@ -249,7 +241,6 @@ const styles = StyleSheet.create({
   },
   homeButtonActive: {
     backgroundColor: colors.mainOrange,
-    borderColor: colors.mainOrange,
   },
 });
 
