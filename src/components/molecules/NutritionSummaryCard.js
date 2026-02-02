@@ -2,13 +2,14 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
+import { Button } from '../atoms';
 import Card from './Card';
 import { colors, spacing, typography } from '../../theme';
 
 /**
  * Card showing today's nutrition summary
  */
-const NutritionSummaryCard = ({ nutrition = {}, goals = {} }) => {
+const NutritionSummaryCard = ({ nutrition = {}, goals = {}, onLogMeals }) => {
   const { calories = 0, proteins = 0, carbs = 0, fats = 0 } = nutrition;
   const calorieGoal = goals?.dailyCalories || 2000;
 
@@ -24,7 +25,7 @@ const NutritionSummaryCard = ({ nutrition = {}, goals = {} }) => {
     <Card>
       <View style={styles.header}>
         <View style={styles.iconContainer}>
-          <Ionicons name="flame" size={20} color={colors.mainOrange} />
+          <Ionicons name="restaurant-outline" size={20} color={colors.mainOrange} />
         </View>
         <Text style={styles.title}>Today's Nutrition</Text>
       </View>
@@ -53,6 +54,17 @@ const NutritionSummaryCard = ({ nutrition = {}, goals = {} }) => {
           </View>
         ))}
       </View>
+
+      {/* CTA Button */}
+      {onLogMeals && (
+        <Button 
+          title="Log Meals" 
+          onPress={onLogMeals} 
+          variant="ghost"
+          icon="add-circle-outline"
+          style={styles.ctaButton}
+        />
+      )}
     </Card>
   );
 };
@@ -129,6 +141,10 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: colors.raven,
     marginTop: 2,
+  },
+  ctaButton: {
+    marginTop: spacing.xxl,
+    marginBottom: spacing.md,
   },
 });
 

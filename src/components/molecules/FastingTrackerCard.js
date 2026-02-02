@@ -1,22 +1,64 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
+import { Button } from '../atoms';
 import { colors, spacing, typography, borderRadius } from '../../theme';
 
-const formatTime = (seconds) => {
-  const hrs = Math.floor(seconds / 3600);
-  const mins = Math.floor((seconds % 3600) / 60);
-  const secs = seconds % 60;
-  return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-};
-
 const FASTING_STAGES = [
-  { name: 'Blood Sugar Drop', hours: 3, icon: 'water-outline', color: colors.havelockBlue },
-  { name: 'Fat Burning', hours: 12, icon: 'flame-outline', color: colors.mainOrange },
-  { name: 'Ketosis', hours: 16, icon: 'flash-outline', color: colors.purple },
-  { name: 'Autophagy', hours: 24, icon: 'sparkles-outline', color: colors.lima },
+  { 
+    name: 'Fed', 
+    hours: 0, 
+    icon: 'close-circle',
+    color: colors.mainOrange,
+    description: 'During the fed stage, your body digests and absorbs nutrients from your last meal. Insulin levels are elevated to help cells take up glucose for energy.',
+  },
+  { 
+    name: 'Early Fasting', 
+    hours: 4, 
+    icon: 'time-outline',
+    color: colors.raven,
+    description: 'Blood sugar levels start to drop and your body begins to transition from using glucose to stored glycogen for energy.',
+  },
+  { 
+    name: 'Fat Burning', 
+    hours: 12, 
+    icon: 'flame-outline',
+    color: colors.mainOrange,
+    description: 'Your body has depleted glycogen stores and starts burning fat for fuel. This metabolic switch is when significant fat loss begins.',
+  },
+  { 
+    name: 'Ketosis', 
+    hours: 18, 
+    icon: 'flash-outline',
+    color: colors.purple,
+    description: 'Your liver produces ketones from fatty acids, providing an alternative fuel source for your brain and body. Mental clarity often improves.',
+  },
+  { 
+    name: 'Autophagy', 
+    hours: 48, 
+    icon: 'sparkles-outline',
+    color: colors.lima,
+    description: 'Cellular cleanup begins. Your body removes damaged cells and regenerates new ones. This is associated with longevity and disease prevention.',
+  },
 ];
+
+const formatTimeDigit = (value) => value.toString().padStart(2, '0');
+
+const TimeDigit = ({ value, label }) => (
+  <View style={styles.digitContainer}>
+    <View style={styles.digitBox}>
+      <Text style={styles.digitText}>{formatTimeDigit(value)}</Text>
+    </View>
+    <Text style={styles.digitLabel}>{label}</Text>
+  </View>
+);
+
+const TimeSeparator = () => (
+  <View style={styles.separatorContainer}>
+    <Text style={styles.separator}>:</Text>
+  </View>
+);
 
 const FastingTrackerCard = ({
   fastingPlan = null,
@@ -26,6 +68,7 @@ const FastingTrackerCard = ({
   onSetupFasting,
 }) => {
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [selectedStage, setSelectedStage] = useState(FASTING_STAGES[0]);
   
   const isFasting = useMemo(() => {
     return !!fastingStarted && new Date(fastingStarted) <= new Date();
@@ -53,12 +96,19 @@ const FastingTrackerCard = ({
     };
   }, [isFasting, fastingStarted]);
 
-  // Current fasting stage
+  // Current fasting stage based on elapsed time
   const currentStage = useMemo(() => {
-    if (!isFasting) return null;
     const hours = elapsedSeconds / 3600;
-    return FASTING_STAGES.filter(s => hours >= s.hours).pop() || null;
-  }, [isFasting, elapsedSeconds]);
+    const reached = FASTING_STAGES.filter(s => hours >= s.hours);
+    return reached.length > 0 ? reached[reached.length - 1] : FASTING_STAGES[0];
+  }, [elapsedSeconds]);
+
+  // Auto-select current stage when fasting
+  useEffect(() => {
+    if (isFasting && currentStage) {
+      setSelectedStage(currentStage);
+    }
+  }, [isFasting, currentStage]);
 
   // No fasting plan setup - show prompt
   if (!fastingPlan) {
@@ -73,10 +123,11 @@ const FastingTrackerCard = ({
             Boost your metabolism and energy levels with intermittent fasting. Choose a plan that fits your lifestyle.
           </Text>
           {onSetupFasting && (
-            <TouchableOpacity style={styles.promptButton} onPress={onSetupFasting}>
-              <Ionicons name="rocket" size={18} color={colors.white} />
-              <Text style={styles.promptButtonText}>Choose a Fasting Plan</Text>
-            </TouchableOpacity>
+            <Button
+              title="Choose a Fasting Plan"
+              onPress={onSetupFasting}
+              icon="rocket"
+            />
           )}
         </View>
       </View>
@@ -84,15 +135,16 @@ const FastingTrackerCard = ({
   }
 
   const fastingHours = fastingPlan.fastingTime || 16;
-  const eatingHours = 24 - fastingHours;
   const goalSeconds = fastingHours * 3600;
   const progress = Math.min((elapsedSeconds / goalSeconds) * 100, 100);
   const isComplete = elapsedSeconds >= goalSeconds;
-  const remainingSeconds = Math.max(0, goalSeconds - elapsedSeconds);
+
+  const hours = Math.floor(elapsedSeconds / 3600);
+  const mins = Math.floor((elapsedSeconds % 3600) / 60);
+  const secs = elapsedSeconds % 60;
 
   const handleStop = () => {
     if (onStop) {
-      // Calculate stages reached
       const stagesReached = FASTING_STAGES
         .filter(s => elapsedSeconds >= s.hours * 3600)
         .map(s => s.name);
@@ -100,96 +152,108 @@ const FastingTrackerCard = ({
     }
   };
 
+  const isStageReached = (stage) => {
+    const hoursElapsed = elapsedSeconds / 3600;
+    return hoursElapsed >= stage.hours;
+  };
+
+  const isStageActive = (stage) => {
+    return currentStage?.name === stage.name && isFasting;
+  };
+
   return (
     <View style={styles.container}>
+      {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
-          <View style={styles.iconContainer}>
-            <Ionicons name="timer" size={20} color={colors.purple} />
-          </View>
-          <View style={styles.headerText}>
-            <Text style={styles.title}>Fasting Tracker</Text>
-            <Text style={styles.subtitle}>
-              {fastingPlan.title || `${fastingHours}:${eatingHours} Protocol`}
-            </Text>
-          </View>
+          <Text style={styles.headerTitle}>{fastingHours} Hours</Text>
+          <Text style={styles.headerSubtitle}>Goal: {fastingHours} hours</Text>
         </View>
-        {isFasting && currentStage && (
-          <View style={[styles.stageBadge, { backgroundColor: `${currentStage.color}15` }]}>
-            <Ionicons name={currentStage.icon} size={12} color={currentStage.color} />
-            <Text style={[styles.stageText, { color: currentStage.color }]}>{currentStage.name}</Text>
-          </View>
-        )}
+        <Button
+          title={isFasting ? 'End Fast' : 'Start Fast'}
+          onPress={isFasting ? handleStop : onStart}
+          icon={isFasting ? 'stop' : 'play'}
+          variant="ghost"
+          color={isFasting ? colors.cinnabar : colors.lima}
+        />
       </View>
 
       {/* Timer Display */}
-      <View style={styles.timerContainer}>
-        <View style={[styles.timerRing, isComplete && styles.timerRingComplete]}>
-          <View style={styles.timerContent}>
-            {isFasting ? (
-              <>
-                <Text style={[styles.timerValue, isComplete && styles.timerValueComplete]}>
-                  {formatTime(elapsedSeconds)}
-                </Text>
-                <Text style={styles.timerLabel}>
-                  {isComplete ? 'Goal Reached! 🎉' : `${Math.round(progress)}% complete`}
-                </Text>
-              </>
-            ) : (
-              <>
-                <Ionicons name="moon-outline" size={28} color={colors.raven} />
-                <Text style={styles.timerIdle}>Not Fasting</Text>
-              </>
-            )}
+      <View style={styles.timerSection}>
+        <View style={styles.timerRow}>
+          <TimeDigit value={hours} label="hours" />
+          <TimeSeparator />
+          <TimeDigit value={mins} label="mins" />
+          <TimeSeparator />
+          <TimeDigit value={secs} label="secs" />
+        </View>
+      </View>
+
+      {/* Progress Bar */}
+      <View style={styles.progressSection}>
+        <View style={styles.progressBar}>
+          <View style={[styles.progressFill, { width: `${progress}%` }]} />
+          <View style={[styles.progressDot, { left: `${Math.min(progress, 98)}%` }]} />
+        </View>
+        <View style={styles.progressLabels}>
+          <Text style={styles.progressLabel}>0h</Text>
+          <Text style={styles.progressLabel}>{fastingHours}h</Text>
+        </View>
+      </View>
+
+      {/* Stages Grid and Description */}
+      <View style={styles.stagesSection}>
+        <View style={styles.stagesGrid}>
+          {FASTING_STAGES.map((stage) => {
+            const reached = isStageReached(stage);
+            const active = isStageActive(stage);
+            const selected = selectedStage?.name === stage.name;
+
+            return (
+              <TouchableOpacity
+                key={stage.name}
+                style={[
+                  styles.stageItem,
+                  selected && styles.stageItemSelected,
+                  active && styles.stageItemActive,
+                ]}
+                onPress={() => setSelectedStage(stage)}
+              >
+                {active && (
+                  <View style={styles.stageActiveIndicator}>
+                    <Ionicons name="checkmark-circle" size={14} color={colors.lima} />
+                  </View>
+                )}
+                <View style={[
+                  styles.stageIconContainer, 
+                  { backgroundColor: reached ? `${stage.color}20` : colors.alabaster }
+                ]}>
+                  <Ionicons 
+                    name={stage.icon} 
+                    size={18} 
+                    color={reached ? stage.color : colors.raven} 
+                  />
+                </View>
+                <Text style={[
+                  styles.stageName,
+                  reached && { color: colors.mineShaft },
+                ]}>{stage.name}</Text>
+                <Text style={styles.stageHours}>{stage.hours}h</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+
+        {/* Stage Description */}
+        {selectedStage && (
+          <View style={styles.stageDescription}>
+            <Text style={[styles.stageDescTitle, { color: selectedStage.color }]}>
+              {selectedStage.name}
+            </Text>
+            <Text style={styles.stageDescText}>{selectedStage.description}</Text>
           </View>
-        </View>
+        )}
       </View>
-
-      {/* Goal Info */}
-      <View style={styles.goalInfo}>
-        <View style={styles.goalItem}>
-          <Text style={styles.goalLabel}>Goal</Text>
-          <Text style={styles.goalValue}>{fastingHours}h</Text>
-        </View>
-        <View style={styles.goalDivider} />
-        <View style={styles.goalItem}>
-          <Text style={styles.goalLabel}>Elapsed</Text>
-          <Text style={[styles.goalValue, { color: colors.purple }]}>
-            {isFasting 
-              ? `${Math.floor(elapsedSeconds / 3600)}h ${Math.floor((elapsedSeconds % 3600) / 60)}m`
-              : '--'
-            }
-          </Text>
-        </View>
-        <View style={styles.goalDivider} />
-        <View style={styles.goalItem}>
-          <Text style={styles.goalLabel}>Remaining</Text>
-          <Text style={styles.goalValue}>
-            {isFasting && !isComplete
-              ? `${Math.floor(remainingSeconds / 3600)}h ${Math.floor((remainingSeconds % 3600) / 60)}m`
-              : '--'
-            }
-          </Text>
-        </View>
-      </View>
-
-      {/* Action Button */}
-      <TouchableOpacity
-        style={[
-          styles.actionButton,
-          isFasting ? styles.actionButtonStop : styles.actionButtonStart,
-        ]}
-        onPress={isFasting ? handleStop : onStart}
-      >
-        <Ionicons 
-          name={isFasting ? 'stop-circle' : 'play-circle'} 
-          size={20} 
-          color={colors.white} 
-        />
-        <Text style={styles.actionButtonText}>
-          {isFasting ? 'End Fast' : 'Start Fasting'}
-        </Text>
-      </TouchableOpacity>
     </View>
   );
 };
@@ -212,125 +276,159 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
     flex: 1,
   },
-  iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: `${colors.purple}15`,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: spacing.md,
-  },
-  headerText: {
-    flex: 1,
-  },
-  title: {
-    ...typography.h4,
+  headerTitle: {
+    ...typography.h2,
     color: colors.mineShaft,
   },
-  subtitle: {
-    ...typography.caption,
-    color: colors.raven,
+  headerSubtitle: {
+    ...typography.bodySmall,
+    color: colors.mainOrange,
     marginTop: 2,
   },
-  stageBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.full,
-  },
-  stageText: {
-    ...typography.caption,
-    fontWeight: '600',
-    marginLeft: 4,
-    fontSize: 10,
-  },
-  timerContainer: {
+  timerSection: {
     alignItems: 'center',
     marginBottom: spacing.lg,
   },
-  timerRing: {
-    width: 140,
-    height: 140,
-    borderRadius: 70,
-    borderWidth: 8,
-    borderColor: `${colors.purple}20`,
-    alignItems: 'center',
-    justifyContent: 'center',
+  timerRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
   },
-  timerRingComplete: {
-    borderColor: `${colors.lima}30`,
-  },
-  timerContent: {
+  digitContainer: {
     alignItems: 'center',
   },
-  timerValue: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: colors.purple,
-    fontVariant: ['tabular-nums'],
+  digitBox: {
+    flexDirection: 'row',
   },
-  timerValueComplete: {
-    color: colors.lima,
+  digitText: {
+    fontSize: 40,
+    fontWeight: '300',
+    color: colors.mainOrange,
+    backgroundColor: colors.alabaster,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.md,
+    marginHorizontal: 2,
+    minWidth: 48,
+    textAlign: 'center',
+    overflow: 'hidden',
   },
-  timerLabel: {
+  digitLabel: {
     ...typography.caption,
-    color: colors.raven,
-    marginTop: 4,
-  },
-  timerIdle: {
-    ...typography.bodySmall,
     color: colors.raven,
     marginTop: spacing.xs,
   },
-  goalInfo: {
-    flexDirection: 'row',
-    backgroundColor: colors.alabaster,
-    borderRadius: borderRadius.lg,
-    paddingVertical: spacing.md,
-    marginBottom: spacing.md,
+  separatorContainer: {
+    paddingTop: spacing.sm,
+    paddingHorizontal: spacing.xs,
   },
-  goalItem: {
-    flex: 1,
-    alignItems: 'center',
+  separator: {
+    fontSize: 32,
+    fontWeight: '300',
+    color: colors.mineShaft,
   },
-  goalDivider: {
-    width: 1,
+  progressSection: {
+    marginBottom: spacing.xl,
+  },
+  progressBar: {
+    height: 6,
     backgroundColor: colors.gallery,
+    borderRadius: 3,
+    position: 'relative',
   },
-  goalLabel: {
+  progressFill: {
+    height: '100%',
+    backgroundColor: colors.lima,
+    borderRadius: 3,
+  },
+  progressDot: {
+    position: 'absolute',
+    top: -3,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: colors.lima,
+    borderWidth: 2,
+    borderColor: colors.white,
+    shadowColor: colors.black,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  progressLabels: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: spacing.xs,
+  },
+  progressLabel: {
     ...typography.caption,
     color: colors.raven,
-    marginBottom: 4,
   },
-  goalValue: {
-    ...typography.body,
-    color: colors.mineShaft,
-    fontWeight: '600',
+  stagesSection: {
+    marginTop: spacing.sm,
   },
-  actionButton: {
+  stagesGrid: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginHorizontal: -spacing.xs,
+  },
+  stageItem: {
+    width: '33.33%',
+    paddingHorizontal: spacing.xs,
+    paddingVertical: spacing.sm,
+    alignItems: 'center',
+    borderRadius: borderRadius.md,
+    marginBottom: spacing.xs,
+    position: 'relative',
+  },
+  stageItemSelected: {
+    backgroundColor: colors.alabaster,
+  },
+  stageItemActive: {
+    borderWidth: 1,
+    borderColor: colors.lima,
+  },
+  stageActiveIndicator: {
+    position: 'absolute',
+    top: 4,
+    right: 8,
+  },
+  stageIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: spacing.md,
+    marginBottom: spacing.xs,
+  },
+  stageName: {
+    ...typography.caption,
+    color: colors.raven,
+    fontWeight: '500',
+    textAlign: 'center',
+  },
+  stageHours: {
+    ...typography.caption,
+    color: colors.alto,
+    fontSize: 10,
+    marginTop: 2,
+  },
+  stageDescription: {
+    backgroundColor: colors.alabaster,
     borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    marginTop: spacing.md,
   },
-  actionButtonStart: {
-    backgroundColor: colors.purple,
+  stageDescTitle: {
+    ...typography.h4,
+    marginBottom: spacing.xs,
   },
-  actionButtonStop: {
-    backgroundColor: colors.cinnabar,
-  },
-  actionButtonText: {
-    ...typography.body,
-    color: colors.white,
-    fontWeight: '600',
-    marginLeft: spacing.sm,
+  stageDescText: {
+    ...typography.bodySmall,
+    color: colors.raven,
+    lineHeight: 20,
   },
   // Prompt styles
   promptContent: {
@@ -359,20 +457,6 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
     paddingHorizontal: spacing.md,
     lineHeight: 20,
-  },
-  promptButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.purple,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.xl,
-    borderRadius: borderRadius.lg,
-  },
-  promptButtonText: {
-    ...typography.body,
-    color: colors.white,
-    fontWeight: '600',
-    marginLeft: spacing.sm,
   },
 });
 

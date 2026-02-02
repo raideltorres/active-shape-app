@@ -1,13 +1,10 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import { View, StyleSheet } from 'react-native';
 
 import { useAuth } from '../../hooks/useAuth';
 import { userService } from '../../services/api';
 import { 
   NutritionSummaryCard, 
-  WaterTrackerCard,
   WeeklySummaryCard,
   DailyInsightsCard,
   WeightProgressCard,
@@ -15,7 +12,8 @@ import {
   PlanProgressCard,
   FastingTrackerCard,
 } from '../../components/molecules';
-import { colors, spacing, typography, borderRadius } from '../../theme';
+import { TabScreenLayout } from '../../components/templates';
+import { spacing } from '../../theme';
 
 const getTodayDate = () => {
   return new Date().toISOString().split('T')[0];
@@ -35,6 +33,7 @@ const DashboardScreen = ({ navigation }) => {
   const [profile, setProfile] = useState(null);
   const [todayTracking, setTodayTracking] = useState(null);
   const [trackingData, setTrackingData] = useState([]);
+  const [fastingPlan, setFastingPlan] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isGeneratingInsights, setIsGeneratingInsights] = useState(false);
 
@@ -52,6 +51,18 @@ const DashboardScreen = ({ navigation }) => {
       const today = getTodayDate();
       const todayData = trackingsData?.find?.((t) => t.date === today) || {};
       setTodayTracking(todayData);
+
+      // Fetch fasting plan if user has one selected
+      if (profileData?.fastingSettings?.fastingPlanId) {
+        try {
+          const planData = await userService.getFastingPlan(profileData.fastingSettings.fastingPlanId);
+          setFastingPlan(planData);
+        } catch (err) {
+          console.error('Error fetching fasting plan:', err);
+        }
+      } else {
+        setFastingPlan(null);
+      }
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
     } finally {
@@ -68,21 +79,6 @@ const DashboardScreen = ({ navigation }) => {
     await fetchData();
     setRefreshing(false);
   }, [fetchData]);
-
-  const handleAddWater = async (amount) => {
-    try {
-      const currentWater = todayTracking?.water || 0;
-      await userService.createTracking({
-        userId: profile?._id,
-        date: getTodayDate(),
-        field: 'water',
-        value: currentWater + amount,
-      });
-      fetchData();
-    } catch (error) {
-      console.error('Error adding water:', error);
-    }
-  };
 
   const handleGenerateInsights = async () => {
     if (!trackingData || trackingData.length === 0) return;
@@ -106,6 +102,16 @@ const DashboardScreen = ({ navigation }) => {
   const handleSetupFasting = () => {
     // Navigate to fasting settings
     navigation?.navigate?.('ProfileTab', { screen: 'Settings' });
+  };
+
+  const handleLogProgress = () => {
+    // Navigate to tracking screen
+    navigation?.navigate?.('TrackingTab');
+  };
+
+  const handleLogMeals = () => {
+    // Navigate to tracking screen (meals section)
+    navigation?.navigate?.('TrackingTab');
   };
 
   const handleStartFasting = async () => {
@@ -171,169 +177,87 @@ const DashboardScreen = ({ navigation }) => {
     : initialWeight;
   const goalWeight = profile?.goalWeight || profile?.personalizedPlan?.weightPlan?.goalWeight;
 
-  // Fasting plan data
-  const fastingPlanData = profile?.fastingSettings?.fastingPlanId 
-    ? { fastingTime: 16, title: '16:8 Protocol' } // TODO: Fetch actual plan data
-    : null;
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.mainOrange} />
-        }
-      >
-        {/* Header */}
-        <View style={styles.header}>
-          <View style={styles.headerLeft}>
-            <Text style={styles.greeting}>{getGreeting()},</Text>
-            <Text style={styles.userName}>{userName}</Text>
-          </View>
-          <TouchableOpacity style={styles.notificationButton}>
-            <Ionicons name="notifications-outline" size={24} color={colors.mineShaft} />
-            <View style={styles.notificationBadge} />
-          </TouchableOpacity>
-        </View>
+    <TabScreenLayout 
+      greeting={`${getGreeting()},`}
+      title={userName}
+      subtitle="Track your progress and stay on top of your health goals"
+      refreshing={refreshing} 
+      onRefresh={onRefresh}
+    >
+      {/* Weekly Summary */}
+      <View style={styles.section}>
+        <WeeklySummaryCard trackingData={trackingData} />
+      </View>
 
-        {/* Subtitle */}
-        <Text style={styles.headerSubtitle}>
-          Track your progress and stay on top of your health goals
-        </Text>
+      {/* Daily Insights (AI) */}
+      <View style={styles.section}>
+        <DailyInsightsCard
+          insights={profile?.dailyInsights}
+          hasTrackingData={trackingData?.length > 0}
+          isLoading={isGeneratingInsights}
+          onGenerateInsights={handleGenerateInsights}
+        />
+      </View>
 
-        {/* Weekly Summary */}
-        <View style={styles.section}>
-          <WeeklySummaryCard trackingData={trackingData} />
-        </View>
+      {/* Weight Progress */}
+      <View style={styles.section}>
+        <WeightProgressCard
+          weightData={weightRecords}
+          initialWeight={initialWeight}
+          currentWeight={currentWeight}
+          goalWeight={goalWeight}
+          profileCreatedAt={profile?.createdAt}
+        />
+      </View>
 
-        {/* Daily Insights (AI) */}
-        <View style={styles.section}>
-          <DailyInsightsCard
-            insights={profile?.dailyInsights}
-            hasTrackingData={trackingData?.length > 0}
-            isLoading={isGeneratingInsights}
-            onGenerateInsights={handleGenerateInsights}
-          />
-        </View>
+      {/* BMI */}
+      <View style={styles.section}>
+        <BmiCard
+          bmiData={profile?.bmi}
+          bodyComposition={{
+            type: profile?.bodyComposition,
+            bodyFat: profile?.bodyFat,
+            muscleMass: profile?.muscleMass,
+          }}
+        />
+      </View>
 
-        {/* Weight Progress */}
-        <View style={styles.section}>
-          <WeightProgressCard
-            weightData={weightRecords}
-            initialWeight={initialWeight}
-            currentWeight={currentWeight}
-            goalWeight={goalWeight}
-            profileCreatedAt={profile?.createdAt}
-          />
-        </View>
+      {/* Plan Progress */}
+      <View style={styles.section}>
+        <PlanProgressCard
+          plan={personalizedPlan}
+          consumed={consumedData}
+          onCreatePlan={handleCreatePlan}
+          onLogProgress={handleLogProgress}
+        />
+      </View>
 
-        {/* BMI */}
-        <View style={styles.section}>
-          <BmiCard
-            weight={currentWeight || profile?.weight}
-            height={profile?.height}
-            bodyComposition={profile?.bodyComposition}
-          />
-        </View>
+      {/* Nutrition Summary */}
+      <View style={styles.section}>
+        <NutritionSummaryCard 
+          nutrition={nutritionData} 
+          goals={nutritionGoals} 
+          onLogMeals={handleLogMeals}
+        />
+      </View>
 
-        {/* Plan Progress */}
-        <View style={styles.section}>
-          <PlanProgressCard
-            plan={personalizedPlan}
-            consumed={consumedData}
-            onCreatePlan={handleCreatePlan}
-          />
-        </View>
-
-        {/* Nutrition Summary */}
-        <View style={styles.section}>
-          <NutritionSummaryCard nutrition={nutritionData} goals={nutritionGoals} />
-        </View>
-
-        {/* Water Tracker */}
-        <View style={styles.section}>
-          <WaterTrackerCard
-            consumed={todayTracking?.water || todayTracking?.waterConsumed || 0}
-            goal={(profile?.personalizedPlan?.hydrationPlan?.dailyWaterGoal || 2.5) * 1000}
-            onAddWater={handleAddWater}
-          />
-        </View>
-
-        {/* Fasting Tracker */}
-        <View style={styles.section}>
-          <FastingTrackerCard
-            fastingPlan={fastingPlanData}
-            fastingStarted={profile?.fastingSettings?.lastFastingStarted}
-            onStart={handleStartFasting}
-            onStop={handleStopFasting}
-            onSetupFasting={handleSetupFasting}
-          />
-        </View>
-
-        {/* Bottom Padding for Tab Bar */}
-        <View style={{ height: spacing.tabBarPadding }} />
-      </ScrollView>
-    </SafeAreaView>
+      {/* Fasting Tracker */}
+      <View style={styles.section}>
+        <FastingTrackerCard
+          fastingPlan={fastingPlan}
+          fastingStarted={profile?.fastingSettings?.lastFastingStarted}
+          onStart={handleStartFasting}
+          onStop={handleStopFasting}
+          onSetupFasting={handleSetupFasting}
+        />
+      </View>
+    </TabScreenLayout>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.alabaster,
-  },
-  scrollContent: {
-    padding: spacing.lg,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.xs,
-  },
-  headerLeft: {
-    flex: 1,
-  },
-  greeting: {
-    ...typography.body,
-    color: colors.raven,
-  },
-  userName: {
-    ...typography.h1,
-    color: colors.mineShaft,
-    letterSpacing: -0.5,
-  },
-  headerSubtitle: {
-    ...typography.bodySmall,
-    color: colors.raven,
-    marginBottom: spacing.xl,
-    lineHeight: 20,
-  },
-  notificationButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    backgroundColor: colors.white,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  notificationBadge: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: colors.mainOrange,
-    borderWidth: 1.5,
-    borderColor: colors.white,
-  },
   section: {
     marginBottom: spacing.lg,
   },

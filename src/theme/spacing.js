@@ -6,7 +6,7 @@ export const spacing = {
   xl: 20,
   xxl: 24,
   xxxl: 32,
-  tabBarPadding: 100, // accounts for tab bar height (50) + cutout (32) + buffer
+  tabBarPadding: 140, // accounts for tab bar height (50) + cutout (32) + buffer
 };
 
 export const borderRadius = {

@@ -52,6 +52,20 @@ export const userService = {
   },
 
   /**
+   * Generate personalized health plan
+   */
+  async generatePersonalizedPlan() {
+    return apiClient.post(`${API_ENDPOINTS.USERS}/plan/generate`);
+  },
+
+  /**
+   * Regenerate personalized health plan
+   */
+  async regeneratePersonalizedPlan() {
+    return apiClient.post(`${API_ENDPOINTS.USERS}/plan/regenerate`);
+  },
+
+  /**
    * Get fasting plan by ID
    */
   async getFastingPlan(planId) {

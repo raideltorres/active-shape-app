@@ -1,75 +1,151 @@
 import React, { useMemo } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import Svg, { Path, Circle, G, Text as SvgText } from 'react-native-svg';
 
 import { colors, spacing, typography, borderRadius } from '../../theme';
 
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const GAUGE_SIZE = Math.min(SCREEN_WIDTH - spacing.lg * 4, 280);
+const CENTER_X = GAUGE_SIZE / 2;
+const CENTER_Y = GAUGE_SIZE / 2;
+const OUTER_RADIUS = GAUGE_SIZE / 2 - 10;
+const INNER_RADIUS = OUTER_RADIUS - 24;
+const NEEDLE_LENGTH = INNER_RADIUS - 10;
+
+// Match web proportions exactly - values represent BMI range widths from 0
 const BMI_CATEGORIES = [
-  { label: 'Underweight', maxBmi: 18.5, color: colors.havelockBlue },
-  { label: 'Normal', maxBmi: 25, color: colors.lima },
-  { label: 'Overweight', maxBmi: 30, color: colors.mainOrange },
-  { label: 'Obese', maxBmi: Infinity, color: colors.cinnabar },
+  { label: 'Underweight', maxBmi: 18.5, value: 18.5, color: colors.havelockBlue },
+  { label: 'Normal', maxBmi: 25, value: 6.5, color: colors.lima },
+  { label: 'Overweight', maxBmi: 30, value: 5, color: '#FFD700' },
+  { label: 'Obesity Type 1', maxBmi: 35, value: 5, color: colors.mainOrange },
+  { label: 'Obesity Type 2', maxBmi: 40, value: 5, color: '#E53935' },
+  { label: 'Obesity Type 3', maxBmi: 45, value: 5, color: '#B71C1C' },
 ];
 
-const calculateBmi = (weight, heightCm) => {
-  if (!weight || !heightCm) return null;
-  const heightM = heightCm / 100;
-  return weight / (heightM * heightM);
+const TOTAL_VALUE = BMI_CATEGORIES.reduce((sum, cat) => sum + cat.value, 0);
+const MIN_BMI = 0;
+const MAX_BMI = 45;
+
+// Get category color from label
+const getCategoryColor = (categoryLabel) => {
+  const cat = BMI_CATEGORIES.find((c) => c.label === categoryLabel);
+  return cat?.color || colors.raven;
 };
 
-const getBmiCategory = (bmi) => {
-  if (!bmi) return null;
-  return BMI_CATEGORIES.find(cat => bmi < cat.maxBmi) || BMI_CATEGORIES[BMI_CATEGORIES.length - 1];
+// Convert polar coordinates to cartesian
+const polarToCartesian = (centerX, centerY, radius, angleInDegrees) => {
+  const angleInRadians = ((angleInDegrees - 180) * Math.PI) / 180.0;
+  return {
+    x: centerX + radius * Math.cos(angleInRadians),
+    y: centerY + radius * Math.sin(angleInRadians),
+  };
 };
 
-const getBmiDescription = (category, descriptionVariant = 'motivational') => {
-  if (!category) return 'Complete your profile to see personalized recommendations.';
-  
-  if (descriptionVariant === 'motivational') {
-    switch (category.label) {
-      case 'Underweight':
-        return 'Consider increasing your caloric intake with nutritious foods. You\'ve got this!';
-      case 'Normal':
-        return 'Great job! You\'re in a healthy range. Keep maintaining your lifestyle!';
-      case 'Overweight':
-        return 'Small changes can make a big difference. Every step counts on your journey!';
-      case 'Obese':
-        return 'Focus on gradual, sustainable changes. Your health journey starts with one step!';
-      default:
-        return 'Keep tracking your progress!';
-    }
-  }
+// Create arc path for a segment
+const createArc = (startAngle, endAngle, innerRadius, outerRadius) => {
+  const start1 = polarToCartesian(CENTER_X, CENTER_Y, outerRadius, startAngle);
+  const end1 = polarToCartesian(CENTER_X, CENTER_Y, outerRadius, endAngle);
+  const start2 = polarToCartesian(CENTER_X, CENTER_Y, innerRadius, endAngle);
+  const end2 = polarToCartesian(CENTER_X, CENTER_Y, innerRadius, startAngle);
 
-  // Clinical descriptions
-  switch (category.label) {
-    case 'Underweight':
-      return 'BMI below 18.5 is classified as underweight.';
-    case 'Normal':
-      return 'BMI between 18.5 and 24.9 is classified as normal weight.';
-    case 'Overweight':
-      return 'BMI between 25 and 29.9 is classified as overweight.';
-    case 'Obese':
-      return 'BMI of 30 or above is classified as obese.';
-    default:
-      return '';
-  }
+  const largeArcFlag = endAngle - startAngle <= 180 ? 0 : 1;
+
+  return `
+    M ${start1.x} ${start1.y}
+    A ${outerRadius} ${outerRadius} 0 ${largeArcFlag} 1 ${end1.x} ${end1.y}
+    L ${start2.x} ${start2.y}
+    A ${innerRadius} ${innerRadius} 0 ${largeArcFlag} 0 ${end2.x} ${end2.y}
+    Z
+  `;
 };
 
-const BmiCard = ({ weight, height, bodyComposition }) => {
-  const bmi = useMemo(() => calculateBmi(weight, height), [weight, height]);
-  const category = useMemo(() => getBmiCategory(bmi), [bmi]);
-  const description = useMemo(() => getBmiDescription(category), [category]);
-
-  // Calculate gauge position (BMI 15-40 range mapped to 0-100%)
-  const gaugePosition = useMemo(() => {
-    if (!bmi) return 50;
-    const minBmi = 15;
-    const maxBmi = 40;
-    return Math.min(Math.max(((bmi - minBmi) / (maxBmi - minBmi)) * 100, 0), 100);
+// BMI Gauge component
+const BmiGauge = ({ bmi }) => {
+  // Calculate needle angle (0-180 degrees, where 0 is left, 180 is right)
+  const needleAngle = useMemo(() => {
+    if (!bmi) return 90;
+    const clampedBmi = Math.min(Math.max(bmi, MIN_BMI), MAX_BMI);
+    const normalizedValue = (clampedBmi - MIN_BMI) / (MAX_BMI - MIN_BMI);
+    return normalizedValue * 180;
   }, [bmi]);
 
+  // Calculate arc segments
+  const segments = useMemo(() => {
+    const result = [];
+    let currentAngle = 0;
+
+    BMI_CATEGORIES.forEach((cat) => {
+      const segmentAngle = (cat.value / TOTAL_VALUE) * 180;
+      result.push({
+        ...cat,
+        startAngle: currentAngle,
+        endAngle: currentAngle + segmentAngle,
+      });
+      currentAngle += segmentAngle;
+    });
+
+    return result;
+  }, []);
+
+  // Calculate needle position
+  const needleEnd = polarToCartesian(CENTER_X, CENTER_Y, NEEDLE_LENGTH, needleAngle);
+
+  return (
+    <Svg width={GAUGE_SIZE} height={GAUGE_SIZE / 2 + 15}>
+      <G>
+        {/* Arc segments */}
+        {segments.map((segment, index) => (
+          <Path
+            key={index}
+            d={createArc(segment.startAngle, segment.endAngle, INNER_RADIUS, OUTER_RADIUS)}
+            fill={segment.color}
+          />
+        ))}
+
+        {/* Needle */}
+        <G>
+          <Path
+            d={`M ${CENTER_X} ${CENTER_Y} L ${needleEnd.x} ${needleEnd.y}`}
+            stroke={colors.mainOrange}
+            strokeWidth={3}
+            strokeLinecap="round"
+          />
+          <Circle cx={CENTER_X} cy={CENTER_Y} r={8} fill={colors.mainOrange} />
+          <Circle cx={CENTER_X} cy={CENTER_Y} r={4} fill={colors.white} />
+        </G>
+
+        {/* Min/Max labels */}
+        <SvgText x={20} y={CENTER_Y + 15} textAnchor="start" fontSize={10} fill={colors.raven}>
+          0
+        </SvgText>
+        <SvgText x={GAUGE_SIZE - 20} y={CENTER_Y + 15} textAnchor="end" fontSize={10} fill={colors.raven}>
+          45
+        </SvgText>
+      </G>
+    </Svg>
+  );
+};
+
+/**
+ * BmiCard component
+ * 
+ * Props:
+ * - bmiData: Object from backend containing { raw, adjusted, category, calculatedAt }
+ * - bodyComposition: Object with { type, bodyFat, muscleMass }
+ */
+const BmiCard = ({ bmiData, bodyComposition }) => {
+  const displayBmi = bmiData?.adjusted;
+  const category = bmiData?.category;
+  const categoryColor = category ? getCategoryColor(category) : colors.raven;
+  const message = bmiData?.message;
+
+  // Show raw vs adjusted if there's a meaningful difference
+  const showAdjustmentNote = bmiData?.raw && bmiData?.adjusted && 
+    Math.abs(bmiData.raw - bmiData.adjusted) > 0.1;
+
   // Empty state
-  if (!weight || !height) {
+  if (!displayBmi) {
     return (
       <View style={styles.container}>
         <View style={styles.emptyState}>
@@ -86,72 +162,51 @@ const BmiCard = ({ weight, height, bodyComposition }) => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <View style={[styles.iconContainer, { backgroundColor: `${category?.color || colors.raven}15` }]}>
-          <Ionicons name="body-outline" size={20} color={category?.color || colors.raven} />
+        <View style={styles.headerLeft}>
+          <View style={[styles.iconContainer, { backgroundColor: `${categoryColor}15` }]}>
+            <Ionicons name="body-outline" size={20} color={categoryColor} />
+          </View>
+          <Text style={styles.title}>BMI</Text>
         </View>
-        <Text style={styles.title}>BMI</Text>
+        <View style={[styles.bmiValueBadge, { backgroundColor: `${categoryColor}15` }]}>
+          <Text style={[styles.bmiValueText, { color: categoryColor }]}>
+            {displayBmi?.toFixed(1) || '--'}
+          </Text>
+        </View>
       </View>
 
-      {/* BMI Value */}
-      <View style={styles.bmiValueContainer}>
-        <Text style={[styles.bmiValue, { color: category?.color || colors.mineShaft }]}>
-          {bmi?.toFixed(1) || '--'}
-        </Text>
-        {category && (
-          <View style={[styles.categoryBadge, { backgroundColor: `${category.color}15` }]}>
-            <Text style={[styles.categoryText, { color: category.color }]}>{category.label}</Text>
-          </View>
-        )}
-      </View>
+      {/* Show adjustment note if BMI was adjusted for body composition */}
+      {showAdjustmentNote && (
+        <View style={styles.adjustmentNote}>
+          <Ionicons name="fitness-outline" size={12} color={colors.raven} />
+          <Text style={styles.adjustmentNoteText}>
+            Adjusted for body composition (raw: {bmiData.raw?.toFixed(1)})
+          </Text>
+        </View>
+      )}
 
       {/* Gauge */}
       <View style={styles.gaugeContainer}>
-        <View style={styles.gaugeTrack}>
-          {BMI_CATEGORIES.map((cat, index) => {
-            const categoryRanges = [
-              { start: 0, end: 14 },
-              { start: 14, end: 40 },
-              { start: 40, end: 60 },
-              { start: 60, end: 100 },
-            ];
-            const range = categoryRanges[index];
-            
-            return (
-              <View
-                key={index}
-                style={[
-                  styles.gaugeSegment,
-                  {
-                    backgroundColor: cat.color,
-                    flex: range.end - range.start,
-                  },
-                  index === 0 && styles.gaugeSegmentFirst,
-                  index === BMI_CATEGORIES.length - 1 && styles.gaugeSegmentLast,
-                ]}
-              />
-            );
-          })}
-        </View>
-        <View style={[styles.gaugeIndicator, { left: `${gaugePosition}%` }]}>
-          <View style={[styles.gaugeIndicatorDot, { backgroundColor: category?.color || colors.raven }]} />
-        </View>
+        <BmiGauge bmi={displayBmi} />
       </View>
 
-      {/* Labels */}
-      <View style={styles.labelsContainer}>
-        <Text style={styles.labelText}>15</Text>
-        <Text style={styles.labelText}>25</Text>
-        <Text style={styles.labelText}>35</Text>
-      </View>
+      {/* Category Label */}
+      {category && (
+        <View style={[styles.categoryBadge, { backgroundColor: `${categoryColor}15` }]}>
+          <Text style={[styles.categoryText, { color: categoryColor }]}>{category}</Text>
+        </View>
+      )}
 
-      {/* Description */}
-      <View style={styles.descriptionContainer}>
-        <Ionicons name="information-circle-outline" size={16} color={colors.raven} />
-        <Text style={styles.descriptionText}>{description}</Text>
-      </View>
+      {/* Message */}
+      {message && (
+        <View style={styles.descriptionContainer}>
+          <Ionicons name="information-circle-outline" size={16} color={colors.raven} />
+          <Text style={styles.descriptionText}>{message}</Text>
+        </View>
+      )}
 
       {/* Body composition if available */}
-      {bodyComposition && (
+      {bodyComposition && (bodyComposition.bodyFat || bodyComposition.muscleMass) && (
         <View style={styles.bodyCompRow}>
           {bodyComposition.bodyFat && (
             <View style={styles.bodyCompItem}>
@@ -185,7 +240,12 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: spacing.md,
+    justifyContent: 'space-between',
+    marginBottom: spacing.sm,
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   iconContainer: {
     width: 36,
@@ -199,79 +259,40 @@ const styles = StyleSheet.create({
     ...typography.h4,
     color: colors.mineShaft,
   },
-  bmiValueContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing.lg,
-  },
-  bmiValue: {
-    fontSize: 48,
-    fontWeight: '700',
-    marginRight: spacing.md,
-  },
-  categoryBadge: {
+  bmiValueBadge: {
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
-    borderRadius: borderRadius.full,
+    borderRadius: borderRadius.lg,
   },
-  categoryText: {
-    ...typography.bodySmall,
-    fontWeight: '600',
+  bmiValueText: {
+    fontSize: 18,
+    fontWeight: '700',
   },
-  gaugeContainer: {
-    position: 'relative',
-    height: 24,
+  adjustmentNote: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: spacing.xs,
   },
-  gaugeTrack: {
-    flexDirection: 'row',
-    height: 8,
-    borderRadius: 4,
-    overflow: 'hidden',
-    marginTop: 8,
-  },
-  gaugeSegment: {
-    height: '100%',
-  },
-  gaugeSegmentFirst: {
-    borderTopLeftRadius: 4,
-    borderBottomLeftRadius: 4,
-  },
-  gaugeSegmentLast: {
-    borderTopRightRadius: 4,
-    borderBottomRightRadius: 4,
-  },
-  gaugeIndicator: {
-    position: 'absolute',
-    top: 0,
-    width: 20,
-    height: 24,
-    marginLeft: -10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  gaugeIndicatorDot: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    borderWidth: 3,
-    borderColor: colors.white,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  labelsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.xs,
-    marginBottom: spacing.md,
-  },
-  labelText: {
+  adjustmentNoteText: {
     ...typography.caption,
     color: colors.raven,
-    fontSize: 10,
+    marginLeft: spacing.xs,
+    fontStyle: 'italic',
+  },
+  gaugeContainer: {
+    alignItems: 'center',
+    marginBottom: spacing.sm,
+  },
+  categoryBadge: {
+    alignSelf: 'center',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.full,
+    marginBottom: spacing.md,
+  },
+  categoryText: {
+    ...typography.body,
+    fontWeight: '600',
   },
   descriptionContainer: {
     flexDirection: 'row',

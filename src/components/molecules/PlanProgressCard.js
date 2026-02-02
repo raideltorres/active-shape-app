@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
+import { Button } from '../atoms';
 import { colors, spacing, typography, borderRadius } from '../../theme';
 
 const ProgressRing = ({ progress, size = 56, strokeWidth = 5, color }) => {
@@ -42,6 +43,7 @@ const PlanProgressCard = ({
   plan = null, 
   consumed = { calories: 0, water: 0, steps: 0 },
   onCreatePlan,
+  onLogProgress,
 }) => {
   // Calculate progress from plan data
   const progressData = useMemo(() => {
@@ -105,7 +107,7 @@ const PlanProgressCard = ({
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <View style={styles.iconContainer}>
-            <Ionicons name="fitness" size={20} color={colors.mainOrange} />
+            <Ionicons name="trending-up" size={20} color={colors.mainOrange} />
           </View>
           <View style={styles.headerText}>
             <Text style={styles.title}>Today's Progress</Text>
@@ -158,6 +160,17 @@ const PlanProgressCard = ({
           </Text>
         </View>
       </View>
+
+      {/* CTA Button */}
+      {onLogProgress && (
+        <Button 
+          title="Log Progress" 
+          onPress={onLogProgress} 
+          variant="ghost"
+          icon="add-circle-outline"
+          style={styles.ctaButton}
+        />
+      )}
     </View>
   );
 };
@@ -241,6 +254,10 @@ const styles = StyleSheet.create({
     color: colors.mineShaft,
     fontWeight: '600',
     marginTop: 2,
+  },
+  ctaButton: {
+    marginTop: spacing.xxl,
+    marginBottom: spacing.md,
   },
   // Prompt styles
   promptContent: {

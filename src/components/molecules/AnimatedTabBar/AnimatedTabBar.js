@@ -11,8 +11,9 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const TAB_ICONS = {
   HomeTab: 'home',
   RecipesTab: 'restaurant',
-  WorkoutTab: 'barbell',
   TrackingTab: 'stats-chart',
+  PlanTab: 'map',
+  WorkoutTab: 'barbell',
   ProfileTab: 'person',
 };
 
@@ -146,6 +147,12 @@ const AnimatedTabBar = ({ state, descriptors, navigation }) => {
   const totalHeight = TAB_BAR_HEIGHT + bottomInset;
   const svgPath = generateTabBarPath(SCREEN_WIDTH, totalHeight);
 
+  // Filter out routes that have tabBarButton set to null (hidden tabs)
+  const visibleRoutes = state.routes.filter((route) => {
+    const { options } = descriptors[route.key];
+    return options.tabBarButton !== null && typeof options.tabBarButton !== 'function';
+  });
+
   return (
     <View style={[styles.container, { height: totalHeight }]}>
       <Svg width={SCREEN_WIDTH} height={totalHeight} style={styles.svg}>
@@ -153,16 +160,20 @@ const AnimatedTabBar = ({ state, descriptors, navigation }) => {
       </Svg>
 
       <View style={styles.tabsContainer}>
-        {state.routes.map((route, index) => (
-          <TabBarButton
-            key={route.key}
-            route={route}
-            index={index}
-            state={state}
-            descriptors={descriptors}
-            navigation={navigation}
-          />
-        ))}
+        {visibleRoutes.map((route) => {
+          // Find the original index in state.routes for focus detection
+          const originalIndex = state.routes.findIndex((r) => r.key === route.key);
+          return (
+            <TabBarButton
+              key={route.key}
+              route={route}
+              index={originalIndex}
+              state={state}
+              descriptors={descriptors}
+              navigation={navigation}
+            />
+          );
+        })}
       </View>
     </View>
   );
@@ -183,7 +194,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingBottom: 8,
-    paddingHorizontal: 10,
+    paddingHorizontal: 20,
   },
   svg: {
     position: 'absolute',
