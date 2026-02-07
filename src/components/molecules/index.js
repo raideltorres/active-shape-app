@@ -9,3 +9,6 @@ export { default as BmiCard } from './BmiCard';
 export { default as PlanProgressCard } from './PlanProgressCard';
 export { default as FastingTrackerCard } from './FastingTrackerCard';
 export { AnimatedTabBar } from './AnimatedTabBar';
+
+// Plan sections
+export * from './plan';

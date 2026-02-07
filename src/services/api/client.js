@@ -1,5 +1,6 @@
 import { API_BASE_URL } from './config';
 import { storage } from '../../utils/storage';
+import { emitUnauthorized } from '../../utils/authEvents';
 
 class ApiClient {
   constructor(baseURL) {
@@ -37,6 +38,24 @@ class ApiClient {
       // Debug logging
       if (__DEV__) {
         console.log(`[API] Response status: ${response.status}`);
+      }
+
+      // Handle 401 Unauthorized - only auto-logout if we had a token (session expired)
+      // Don't logout for login failures or other 401s without a token
+      if (response.status === 401) {
+        const token = await storage.getItem('token');
+        
+        if (token) {
+          if (__DEV__) {
+            console.log('[API] 401 Unauthorized with existing token - session expired, triggering auto-logout');
+          }
+
+          emitUnauthorized();
+        } else if (__DEV__) {
+          console.log('[API] 401 Unauthorized without token - likely login failure, not triggering logout');
+        }
+        
+        throw new Error('Unauthorized');
       }
 
       const data = await response.json();

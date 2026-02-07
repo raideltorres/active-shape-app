@@ -1,0 +1,11 @@
+export { default as SectionCard } from './SectionCard';
+export { default as WeightManagementSection } from './WeightManagementSection';
+export { default as SleepPlanSection } from './SleepPlanSection';
+export { default as MealTimingSection } from './MealTimingSection';
+export { default as HydrationSection } from './HydrationSection';
+export { default as NutritionPlanSection } from './NutritionPlanSection';
+export { default as ActivityPlanSection } from './ActivityPlanSection';
+export { default as RecommendationsSection } from './RecommendationsSection';
+export { default as ProgressTrackingSection } from './ProgressTrackingSection';
+export { default as EducationSection } from './EducationSection';
+export { default as AdaptivePlanSection } from './AdaptivePlanSection';
