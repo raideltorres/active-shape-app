@@ -5,80 +5,204 @@ import { Ionicons } from '@expo/vector-icons';
 import SectionCard from './SectionCard';
 import { colors, spacing, typography, borderRadius } from '../../../theme';
 
-const ProgressItem = ({ item }) => (
-  <View style={styles.item}>
-    <View style={styles.icon}>
-      <Ionicons name={item.icon || 'checkmark-circle-outline'} size={20} color={colors.lima} />
+// Tracking category configuration matching web
+const TRACKING_CONFIG = {
+  weighIn: {
+    title: 'WEIGH IN',
+    icon: 'scale-outline',
+    color: '#3b82f6', // blue
+  },
+  checkIn: {
+    title: 'CHECK-IN',
+    icon: 'calendar-outline',
+    color: '#10b981', // green
+  },
+  photos: {
+    title: 'PROGRESS PHOTOS',
+    icon: 'camera-outline',
+    color: '#8b5cf6', // purple
+  },
+  measurements: {
+    title: 'MEASUREMENTS',
+    icon: 'resize-outline',
+    color: '#f59e0b', // amber
+  },
+};
+
+// Single tracking card
+const TrackingCard = ({ type, data }) => {
+  if (!data) return null;
+
+  const config = TRACKING_CONFIG[type];
+  if (!config) return null;
+
+  const frequency = data.frequency || null;
+  const items = data.items || null;
+  const tip = data.tip || null;
+
+  // For measurements, show count as heading
+  const displayValue = frequency || (items ? `${items.length} Areas` : null);
+
+  if (!displayValue && !items) return null;
+
+  return (
+    <View style={styles.trackingCard}>
+      {/* Header */}
+      <View style={styles.cardHeader}>
+        <View style={[styles.iconContainer, { backgroundColor: config.color }]}>
+          <Ionicons name={config.icon} size={16} color={colors.white} />
+        </View>
+        <Text style={styles.cardTitle}>{config.title}</Text>
+      </View>
+
+      {/* Value */}
+      {displayValue && (
+        <Text style={styles.cardValue}>{displayValue}</Text>
+      )}
+
+      {/* Tags for measurements */}
+      {items && items.length > 0 && (
+        <View style={styles.tagsContainer}>
+          {items.map((item, index) => (
+            <View key={index} style={styles.tag}>
+              <Text style={styles.tagText}>{item}</Text>
+            </View>
+          ))}
+        </View>
+      )}
+
+      {/* Tip */}
+      {tip && (
+        <Text style={styles.tipText}>{tip}</Text>
+      )}
     </View>
-    <View style={styles.content}>
-      <Text style={styles.title}>{item.metric || item.title}</Text>
-      <Text style={styles.frequency}>{item.frequency}</Text>
-    </View>
-  </View>
-);
+  );
+};
+
+// Helper to normalize old format to new format
+const normalizeData = (progressTracking) => {
+  // Check if it's the new format (has weighIn object)
+  if (progressTracking.weighIn) {
+    return progressTracking;
+  }
+
+  // Convert old format to new format for backward compatibility
+  return {
+    weighIn: {
+      frequency: progressTracking.weighInFrequency,
+      tip: null,
+    },
+    checkIn: {
+      frequency: progressTracking.checkInFrequency,
+      tip: null,
+    },
+    photos: {
+      frequency: progressTracking.photoFrequency,
+      tip: null,
+    },
+    measurements: {
+      items: progressTracking.measurementsToTrack,
+      tip: null,
+    },
+    rationale: progressTracking.rationale || null,
+  };
+};
 
 /**
  * Progress Tracking Guide section for Plan screen
  */
 const ProgressTrackingSection = ({ progressTracking }) => {
-  if (!progressTracking?.metrics || progressTracking.metrics.length === 0) return null;
+  if (!progressTracking) return null;
+
+  const data = normalizeData(progressTracking);
 
   return (
     <SectionCard title="Progress Tracking Guide" icon="analytics-outline" color={colors.havelockBlue}>
-      {progressTracking.metrics.map((item, index) => (
-        <ProgressItem key={index} item={item} />
-      ))}
-
-      {progressTracking.checkInFrequency && (
-        <View style={styles.checkIn}>
-          <Ionicons name="calendar-outline" size={16} color={colors.raven} />
-          <Text style={styles.checkInText}>
-            Check-in: {progressTracking.checkInFrequency}
-          </Text>
+      {/* Rationale */}
+      {data.rationale && (
+        <View style={styles.rationaleContainer}>
+          <Text style={styles.rationaleText}>{data.rationale}</Text>
         </View>
       )}
+
+      {/* Tracking Cards */}
+      <TrackingCard type="weighIn" data={data.weighIn} />
+      <TrackingCard type="checkIn" data={data.checkIn} />
+      <TrackingCard type="photos" data={data.photos} />
+      <TrackingCard type="measurements" data={data.measurements} />
     </SectionCard>
   );
 };
 
 const styles = StyleSheet.create({
-  item: {
+  rationaleContainer: {
+    backgroundColor: colors.alabaster,
+    borderRadius: borderRadius.md,
+    borderLeftWidth: 4,
+    borderLeftColor: colors.havelockBlue,
+    padding: spacing.md,
+    marginBottom: spacing.lg,
+  },
+  rationaleText: {
+    ...typography.bodySmall,
+    color: colors.raven,
+    fontStyle: 'italic',
+    lineHeight: 22,
+  },
+  trackingCard: {
+    backgroundColor: colors.alabaster,
+    borderRadius: borderRadius.md,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+  },
+  cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: spacing.md,
-    paddingBottom: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.gallery,
+    marginBottom: spacing.sm,
   },
-  icon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: `${colors.lima}15`,
+  iconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.sm,
   },
-  content: {
-    flex: 1,
+  cardTitle: {
+    ...typography.labelUppercase,
+    color: colors.raven,
+    letterSpacing: 0.5,
   },
-  title: {
-    ...typography.body,
+  cardValue: {
+    ...typography.h3,
+    color: colors.mineShaft,
+    marginBottom: spacing.xs,
+  },
+  tagsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: spacing.xs,
+    marginBottom: spacing.xs,
+  },
+  tag: {
+    backgroundColor: colors.white,
+    borderRadius: borderRadius.sm,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    marginRight: spacing.xs,
+    marginBottom: spacing.xs,
+    borderWidth: 1,
+    borderColor: colors.gallery,
+  },
+  tagText: {
+    ...typography.caption,
     color: colors.mineShaft,
   },
-  frequency: {
-    ...typography.caption,
-    color: colors.raven,
-  },
-  checkIn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: spacing.sm,
-  },
-  checkInText: {
+  tipText: {
     ...typography.bodySmall,
     color: colors.raven,
-    marginLeft: spacing.xs,
+    marginTop: spacing.xs,
+    lineHeight: 20,
   },
 });
 

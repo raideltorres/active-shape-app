@@ -24,10 +24,12 @@ export const userService = {
   },
 
   /**
-   * Get user's tracking data
+   * Get user's tracking data. Requires userId (from profile._id).
+   * @param {string} userId - User ID from profile
    */
-  async getTrackings() {
-    return apiClient.get(API_ENDPOINTS.TRACKING);
+  async getTrackings(userId) {
+    const query = userId ? `?userId=${encodeURIComponent(userId)}` : '';
+    return apiClient.get(`${API_ENDPOINTS.TRACKING}${query}`);
   },
 
   /**
@@ -98,5 +100,19 @@ export const userService = {
    */
   async getOngoingFastingSession() {
     return apiClient.get(`${API_ENDPOINTS.FASTING_SESSIONS}/ongoing`);
+  },
+
+  /**
+   * Add recipe to favorites
+   */
+  async addRecipeFavorite(recipeId) {
+    return apiClient.post(`${API_ENDPOINTS.USERS}/recipe-favorite-add/${recipeId}`);
+  },
+
+  /**
+   * Remove recipe from favorites
+   */
+  async removeRecipeFavorite(recipeId) {
+    return apiClient.post(`${API_ENDPOINTS.USERS}/recipe-favorite-remove/${recipeId}`);
   },
 };

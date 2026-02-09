@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -9,7 +9,7 @@ import { colors, spacing, typography, borderRadius } from '../../../theme';
 // Weight stat card with gradient background
 const WeightStatCard = ({ icon, label, value, unit, iconColor }) => (
   <LinearGradient
-    colors={[colors.purple, '#8B5CF6']}
+    colors={['#667eea', '#764ba2']}
     start={{ x: 0, y: 0 }}
     end={{ x: 1, y: 1 }}
     style={styles.weightStatCard}
@@ -32,70 +32,75 @@ const getMilestoneIcon = (index, total) => {
   return 'star';
 };
 
+// Milestone colors based on position
 const getMilestoneIconColor = (index, total) => {
+  if (index === 0) return colors.havelockBlue;
   if (index === total - 1) return colors.mainOrange;
   return colors.purple;
 };
 
-// Horizontal milestone card
-const MilestoneCard = ({ milestone, index, total, currentWeight }) => {
-  const isReached = currentWeight && milestone.weight >= currentWeight;
-  const weekLabel = milestone.week || `WEEK ${(index + 1) * 4}`;
+// Vertical milestone item with icon above card
+const MilestoneItem = ({ milestone, index, total }) => {
+  const weekLabel = milestone.week || milestone.weekNumber 
+    ? `WEEK ${milestone.weekNumber || (index + 1) * 4}` 
+    : `WEEK ${(index + 1) * 4}`;
+  const iconColor = getMilestoneIconColor(index, total);
+  
+  // Progress is position-based: first milestone = 25%, second = 50%, etc.
+  const progressPercent = ((index + 1) / total) * 100;
+  
+  // Description text - try multiple possible field names
+  const descriptionText = milestone.celebration || milestone.description || milestone.message || '';
   
   return (
-    <View style={styles.milestoneCard}>
-      <View style={styles.milestoneCardHeader}>
-        <View style={[styles.milestoneWeekBadge, isReached && styles.milestoneWeekBadgeReached]}>
-          <Text style={styles.milestoneWeekBadgeText}>{weekLabel}</Text>
+    <View style={[styles.milestoneItem, index > 0 && styles.milestoneItemSpacing]}>
+      {/* Icon with outer glow */}
+      <View style={[styles.milestoneIconOuter, { backgroundColor: `${iconColor}25` }]}>
+        <View style={[styles.milestoneIconContainer, { backgroundColor: iconColor }]}>
+          <Ionicons 
+            name={getMilestoneIcon(index, total)} 
+            size={20} 
+            color={colors.white} 
+          />
         </View>
-        <Text style={styles.milestoneCardWeight}>{milestone.weight}kg</Text>
       </View>
-      {milestone.description && (
-        <Text style={styles.milestoneCardDescription} numberOfLines={3}>
-          {milestone.description}
-        </Text>
-      )}
-    </View>
-  );
-};
-
-// Timeline with icons
-const MilestoneTimeline = ({ milestones }) => {
-  const total = Math.min(milestones.length, 4);
-  
-  return (
-    <View style={styles.timelineContainer}>
-      <View style={styles.timelineLine} />
-      <View style={styles.timelineIcons}>
-        {milestones.slice(0, 4).map((_, index) => (
-          <View 
-            key={index} 
-            style={[
-              styles.timelineIconContainer,
-              { backgroundColor: getMilestoneIconColor(index, total) }
-            ]}
-          >
-            <Ionicons 
-              name={getMilestoneIcon(index, total)} 
-              size={16} 
-              color={colors.white} 
-            />
+      
+      {/* Card */}
+      <View style={styles.milestoneCard}>
+        <View style={styles.milestoneCardHeader}>
+          <View style={[styles.milestoneWeekBadge, { backgroundColor: iconColor }]}>
+            <Text style={styles.milestoneWeekBadgeText}>{weekLabel}</Text>
           </View>
-        ))}
+          <Text style={styles.milestoneCardWeight}>{milestone.weight}kg</Text>
+        </View>
+        {/* Progress Bar */}
+        <View style={styles.milestoneProgressBar}>
+          <View 
+            style={[
+              styles.milestoneProgressFill, 
+              { backgroundColor: iconColor, width: `${progressPercent}%` }
+            ]} 
+          />
+        </View>
+        {descriptionText ? (
+          <Text style={styles.milestoneCardDescription}>
+            {descriptionText}
+          </Text>
+        ) : null}
       </View>
     </View>
   );
 };
 
 /**
- * Weight Management section for Plan screen
+ * Weight Management Section for Plan Screen
  */
 const WeightManagementSection = ({ weightPlan }) => {
-  if (!weightPlan?.currentWeight) return null;
+  if (!weightPlan) return null;
 
   return (
-    <SectionCard title="Weight Management" icon="scale-outline" color={colors.mainOrange}>
-      {/* Stat Cards Row */}
+    <SectionCard title="Weight Management" icon="scale-outline" color={colors.purple}>
+      {/* Weight Stats Row */}
       <View style={styles.weightStatsRow}>
         <WeightStatCard
           icon="arrow-up"
@@ -120,7 +125,6 @@ const WeightManagementSection = ({ weightPlan }) => {
       {/* Rationale */}
       {weightPlan.rationale && (
         <View style={styles.rationaleContainer}>
-          <View style={styles.rationaleAccent} />
           <Text style={styles.rationaleText}>{weightPlan.rationale}</Text>
         </View>
       )}
@@ -130,24 +134,14 @@ const WeightManagementSection = ({ weightPlan }) => {
         <View style={styles.milestonesContainer}>
           <Text style={styles.milestonesTitle}>Your Journey Milestones</Text>
           
-          <MilestoneTimeline milestones={weightPlan.milestones} />
-          
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false}
-            style={styles.milestonesScroll}
-            contentContainerStyle={styles.milestonesScrollContent}
-          >
-            {weightPlan.milestones.slice(0, 4).map((milestone, index) => (
-              <MilestoneCard
-                key={index}
-                milestone={milestone}
-                index={index}
-                total={Math.min(weightPlan.milestones.length, 4)}
-                currentWeight={weightPlan.currentWeight}
-              />
-            ))}
-          </ScrollView>
+          {weightPlan.milestones.slice(0, 4).map((milestone, index) => (
+            <MilestoneItem
+              key={index}
+              milestone={milestone}
+              index={index}
+              total={Math.min(weightPlan.milestones.length, 4)}
+            />
+          ))}
         </View>
       )}
     </SectionCard>
@@ -155,12 +149,9 @@ const WeightManagementSection = ({ weightPlan }) => {
 };
 
 const styles = StyleSheet.create({
-  // Weight Stats Row
   weightStatsRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    marginBottom: spacing.lg,
+    marginBottom: spacing.md,
   },
   weightStatCard: {
     flex: 1,
@@ -181,7 +172,7 @@ const styles = StyleSheet.create({
     alignItems: 'baseline',
   },
   weightStatIcon: {
-    marginRight: 4,
+    marginRight: spacing.xs,
   },
   weightStatNumber: {
     ...typography.h3,
@@ -192,93 +183,74 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: colors.white,
     opacity: 0.8,
-    marginLeft: 4,
+    marginLeft: spacing.xs,
   },
-  // Rationale
   rationaleContainer: {
-    flexDirection: 'row',
     backgroundColor: colors.alabaster,
     borderRadius: borderRadius.md,
-    padding: spacing.md,
-    marginBottom: spacing.lg,
-  },
-  rationaleAccent: {
-    width: 4,
-    backgroundColor: colors.purple,
-    borderRadius: 2,
-    marginRight: spacing.md,
+    borderLeftWidth: 4,
+    borderLeftColor: colors.purple,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    marginTop: spacing.sm,
+    marginBottom: spacing.md,
   },
   rationaleText: {
     ...typography.bodySmall,
     color: colors.raven,
-    lineHeight: 20,
-    flex: 1,
+    lineHeight: 22,
   },
-  // Milestones
   milestonesContainer: {
     marginTop: spacing.sm,
   },
   milestonesTitle: {
-    ...typography.h4,
+    ...typography.h3,
     color: colors.mineShaft,
+    marginTop: spacing.lg,
     marginBottom: spacing.lg,
+    textAlign: 'center',
+    fontWeight: '600',
   },
-  // Timeline
-  timelineContainer: {
+  milestoneItem: {
+    alignItems: 'center',
     marginBottom: spacing.md,
-    paddingHorizontal: spacing.sm,
   },
-  timelineLine: {
-    position: 'absolute',
-    left: spacing.sm,
-    right: spacing.sm,
-    top: 16,
-    height: 3,
-    backgroundColor: colors.purple,
-    borderRadius: 2,
+  milestoneItemSpacing: {
+    marginTop: spacing.lg,
   },
-  timelineIcons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  timelineIconContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+  milestoneIconOuter: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 1,
+    marginBottom: spacing.sm,
   },
-  // Milestone Cards
-  milestonesScroll: {
-    marginHorizontal: -spacing.lg,
-  },
-  milestonesScrollContent: {
-    paddingHorizontal: spacing.lg,
+  milestoneIconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   milestoneCard: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.alabaster,
     borderRadius: borderRadius.lg,
     padding: spacing.md,
-    marginRight: spacing.sm,
-    width: 160,
-    borderWidth: 1,
-    borderColor: colors.gallery,
+    width: '100%',
+    alignItems: 'center',
   },
   milestoneCardHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
     marginBottom: spacing.sm,
   },
   milestoneWeekBadge: {
-    backgroundColor: colors.purple,
     paddingHorizontal: spacing.sm,
-    paddingVertical: 4,
+    paddingVertical: spacing.xs,
     borderRadius: borderRadius.sm,
-  },
-  milestoneWeekBadgeReached: {
-    backgroundColor: colors.lima,
   },
   milestoneWeekBadgeText: {
     ...typography.caption,
@@ -289,11 +261,27 @@ const styles = StyleSheet.create({
   milestoneCardWeight: {
     ...typography.h4,
     color: colors.mineShaft,
+    fontWeight: '700',
+  },
+  milestoneProgressBar: {
+    height: 4,
+    backgroundColor: colors.gallery,
+    borderRadius: 2,
+    marginBottom: spacing.sm,
+    overflow: 'hidden',
+    width: '100%',
+  },
+  milestoneProgressFill: {
+    height: '100%',
+    borderRadius: 2,
   },
   milestoneCardDescription: {
-    ...typography.caption,
+    ...typography.bodySmall,
     color: colors.raven,
-    lineHeight: 16,
+    textAlign: 'center',
+    lineHeight: 18,
+    marginTop: spacing.sm,
+    marginBottom: spacing.xs,
   },
 });
 

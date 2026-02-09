@@ -3,3 +3,7 @@ export { default as BackButton } from './BackButton';
 export { default as Divider } from './Divider';
 export { default as FormInput } from './FormInput';
 export { default as SocialButton } from './SocialButton';
+export { default as LottiePlayer } from './LottiePlayer';
+export { default as RangeSlider } from './RangeSlider';
+export { default as Ribbon } from './Ribbon';
+export { default as FilterCardSelect } from './FilterCardSelect';

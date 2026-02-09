@@ -1,18 +1,18 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import SectionCard from './SectionCard';
 import { colors, spacing, typography, borderRadius } from '../../../theme';
 
-// Helper to format time from "HH:MM" to "H AM/PM"
-const formatTime = (time) => {
-  if (!time) return '';
-  const [hours] = time.split(':').map(Number);
-  const period = hours >= 12 ? 'PM' : 'AM';
-  const hour12 = hours % 12 || 12;
-  return `${hour12} ${period}`;
-};
+// Default sleep hygiene tips if none provided
+const DEFAULT_SLEEP_TIPS = [
+  'Keep a consistent sleep schedule, even on weekends',
+  'Avoid screens 1 hour before bed',
+  'Keep your bedroom cool, dark, and quiet',
+  'Limit caffeine after 2 PM',
+];
 
 /**
  * Sleep Plan section for Plan screen
@@ -20,40 +20,38 @@ const formatTime = (time) => {
 const SleepPlanSection = ({ sleepPlan }) => {
   if (!sleepPlan?.targetHours) return null;
 
+  // Use provided tips or defaults
+  const tips = sleepPlan.tips && sleepPlan.tips.length > 0 
+    ? sleepPlan.tips 
+    : DEFAULT_SLEEP_TIPS;
+
   return (
-    <SectionCard title="Sleep Plan" icon="moon-outline" color={colors.purple}>
+    <SectionCard title="Sleep Plan" icon="moon-outline" color={colors.mainOrange}>
       <View style={styles.content}>
-        <View style={styles.mainStat}>
-          <Ionicons name="bed-outline" size={32} color={colors.purple} />
-          <Text style={styles.hours}>{sleepPlan.targetHours}</Text>
-          <Text style={styles.unit}>hours/night</Text>
+        {/* Circular Sleep Display */}
+        <View style={styles.circleContainer}>
+          <LinearGradient
+            colors={['#1e3a5f', '#2d5a87']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.circle}
+          >
+            <Ionicons name="moon" size={28} color="#fbbf24" style={styles.moonIcon} />
+            <Text style={styles.hoursNumber}>{sleepPlan.targetHours}</Text>
+            <Text style={styles.hoursLabel}>hours</Text>
+          </LinearGradient>
         </View>
 
-        {sleepPlan.bedtime && sleepPlan.wakeTime && (
-          <View style={styles.schedule}>
-            <View style={styles.timeItem}>
-              <Ionicons name="moon" size={16} color={colors.raven} />
-              <Text style={styles.timeLabel}>Bedtime</Text>
-              <Text style={styles.timeValue}>{formatTime(sleepPlan.bedtime)}</Text>
+        {/* Sleep Hygiene Tips */}
+        <View style={styles.tipsSection}>
+          <Text style={styles.tipsTitle}>Sleep Hygiene Tips</Text>
+          {tips.slice(0, 4).map((tip, index) => (
+            <View key={index} style={styles.tipItem}>
+              <Ionicons name="checkmark-circle" size={18} color={colors.lima} />
+              <Text style={styles.tipText}>{tip}</Text>
             </View>
-            <View style={styles.timeItem}>
-              <Ionicons name="sunny" size={16} color={colors.mainOrange} />
-              <Text style={styles.timeLabel}>Wake up</Text>
-              <Text style={styles.timeValue}>{formatTime(sleepPlan.wakeTime)}</Text>
-            </View>
-          </View>
-        )}
-
-        {sleepPlan.tips && sleepPlan.tips.length > 0 && (
-          <View style={styles.tips}>
-            {sleepPlan.tips.slice(0, 3).map((tip, index) => (
-              <View key={index} style={styles.tipItem}>
-                <Ionicons name="checkmark-circle" size={16} color={colors.lima} />
-                <Text style={styles.tipText}>{tip}</Text>
-              </View>
-            ))}
-          </View>
-        )}
+          ))}
+        </View>
       </View>
     </SectionCard>
   );
@@ -63,43 +61,44 @@ const styles = StyleSheet.create({
   content: {
     alignItems: 'center',
   },
-  mainStat: {
+  circleContainer: {
     alignItems: 'center',
-    marginBottom: spacing.lg,
+    marginBottom: spacing.xl,
   },
-  hours: {
-    ...typography.h1,
-    color: colors.purple,
-    marginTop: spacing.xs,
+  circle: {
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: colors.black,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    elevation: 6,
   },
-  unit: {
+  moonIcon: {
+    marginBottom: spacing.xs,
+  },
+  hoursNumber: {
+    fontSize: 42,
+    fontWeight: '700',
+    color: colors.white,
+    lineHeight: 46,
+  },
+  hoursLabel: {
     ...typography.caption,
-    color: colors.raven,
+    color: colors.white,
+    opacity: 0.9,
   },
-  schedule: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
+  tipsSection: {
     width: '100%',
-    marginBottom: spacing.lg,
   },
-  timeItem: {
-    alignItems: 'center',
-  },
-  timeLabel: {
-    ...typography.caption,
-    color: colors.raven,
-    marginTop: spacing.xs,
-  },
-  timeValue: {
-    ...typography.bodyLarge,
+  tipsTitle: {
+    ...typography.h4,
     color: colors.mineShaft,
+    marginBottom: spacing.md,
     fontWeight: '600',
-  },
-  tips: {
-    width: '100%',
-    borderTopWidth: 1,
-    borderTopColor: colors.gallery,
-    paddingTop: spacing.md,
   },
   tipItem: {
     flexDirection: 'row',
@@ -107,10 +106,11 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   tipText: {
-    ...typography.bodySmall,
+    ...typography.body,
     color: colors.raven,
     marginLeft: spacing.sm,
     flex: 1,
+    lineHeight: 22,
   },
 });
 

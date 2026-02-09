@@ -39,12 +39,12 @@ const DashboardScreen = ({ navigation }) => {
 
   const fetchData = useCallback(async () => {
     try {
-      const [profileData, trackingsData] = await Promise.all([
-        userService.getProfile(),
-        userService.getTrackings(),
-      ]);
-
+      const profileData = await userService.getProfile();
       setProfile(profileData);
+
+      const trackingsData = profileData?._id
+        ? await userService.getTrackings(profileData._id)
+        : [];
       setTrackingData(trackingsData || []);
 
       // Find today's tracking data

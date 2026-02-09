@@ -29,7 +29,9 @@ export const API_ENDPOINTS = {
 
   // Recipes
   RECIPES: '/recipes',
+  RECIPES_GET: '/recipes/get-recipes',
   RECIPE_DETAILS: (id) => `/recipes/${id}`,
+  RECIPES_USER_FILTERS: '/recipes/user/filters',
 
   // Meal Logs
   MEAL_LOGS: '/meal-logs',

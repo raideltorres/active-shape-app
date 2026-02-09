@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 import { userService } from '../../services/api';
-import { Button } from '../../components/atoms';
+import { Button, LottiePlayer } from '../../components/atoms';
 import { TabScreenLayout } from '../../components/templates';
 import {
   WeightManagementSection,
@@ -17,20 +17,20 @@ import {
   EducationSection,
   AdaptivePlanSection,
 } from '../../components/molecules';
+import { fire, water, scale, footSteps } from '../../assets/animations';
 import { colors, spacing, typography, borderRadius } from '../../theme';
+import { isAdmin } from '../../utils/constants';
 
-// Compact stat item for 2x2 grid
-const QuickStat = ({ icon, label, value, unit, color = colors.mainOrange }) => (
-  <View style={styles.quickStat}>
-    <View style={[styles.quickStatIcon, { backgroundColor: `${color}15` }]}>
-      <Ionicons name={icon} size={20} color={color} />
+// Stat card with colored top border and Lottie animation
+const StatCard = ({ animation, label, value, unit, color = colors.mainOrange }) => (
+  <View style={[styles.statCard, { borderTopColor: color }]}>
+    <View style={styles.statCardAnimation}>
+      <LottiePlayer source={animation} size={48} />
     </View>
-    <View style={styles.quickStatContent}>
-      <Text style={styles.quickStatLabel}>{label}</Text>
-      <View style={styles.quickStatValueRow}>
-        <Text style={[styles.quickStatValue, { color }]}>{value}</Text>
-        {unit && <Text style={styles.quickStatUnit}>{unit}</Text>}
-      </View>
+    <Text style={styles.statCardLabel}>{label}</Text>
+    <View style={styles.statCardValueRow}>
+      <Text style={[styles.statCardValue, { color }]}>{value}</Text>
+      {unit && <Text style={[styles.statCardUnit, { color }]}>{unit}</Text>}
     </View>
   </View>
 );
@@ -124,66 +124,64 @@ const PlanScreen = ({ navigation }) => {
       refreshing={refreshing} 
       onRefresh={onRefresh}
     >
-      {/* Quick Stats Grid */}
-      <View style={styles.statsGrid}>
-        <View style={styles.statsRow}>
-          <QuickStat
-            icon="flame-outline"
-            label="Daily Calories"
-            value={nutritionPlan.daily?.calories?.toLocaleString() || '--'}
-            unit="kcal"
-            color={colors.mainOrange}
-          />
-          <QuickStat
-            icon="water-outline"
-            label="Hydration"
-            value={hydrationPlan.dailyWaterGoal || '--'}
-            unit="L/day"
-            color={colors.havelockBlue}
-          />
-        </View>
-        <View style={styles.statsRow}>
-          <QuickStat
-            icon="footsteps-outline"
-            label="Daily Steps"
-            value={activityPlan.dailyStepsGoal?.toLocaleString() || '--'}
-            color={colors.lima}
-          />
-          <QuickStat
-            icon="scale-outline"
-            label="Goal Weight"
-            value={weightPlan.goalWeight || '--'}
-            unit="kg"
-            color={colors.purple}
-          />
-        </View>
+      {/* Quick Stats Cards */}
+      <View style={styles.statsContainer}>
+        <StatCard
+          animation={fire}
+          label="Daily Calories"
+          value={nutritionPlan.daily?.calories?.toLocaleString() || '--'}
+          unit="kcal"
+          color={colors.mainOrange}
+        />
+        <StatCard
+          animation={scale}
+          label="Goal Weight"
+          value={weightPlan.goalWeight || '--'}
+          unit="kg"
+          color={colors.lima}
+        />
+        <StatCard
+          animation={water}
+          label="Daily Water"
+          value={hydrationPlan.dailyWaterGoal || '--'}
+          unit="L"
+          color={colors.havelockBlue}
+        />
+        <StatCard
+          animation={footSteps}
+          label="Daily Steps"
+          value={activityPlan.dailyStepsGoal?.toLocaleString() || '--'}
+          color={colors.purple}
+        />
       </View>
 
       {/* Plan Sections */}
       <WeightManagementSection weightPlan={weightPlan} />
-      <SleepPlanSection sleepPlan={sleepPlan} />
-      <MealTimingSection mealTimingPlan={mealTimingPlan} />
-      <HydrationSection hydrationPlan={hydrationPlan} />
       <NutritionPlanSection 
         nutritionPlan={nutritionPlan} 
         mealTiming={nutritionPlan.mealTiming} 
       />
+      <SleepPlanSection sleepPlan={sleepPlan} />
+      <MealTimingSection mealTimingPlan={mealTimingPlan} />
+      <HydrationSection hydrationPlan={hydrationPlan} />
       <ActivityPlanSection activityPlan={activityPlan} />
       <RecommendationsSection recommendations={plan.recommendations} />
       <ProgressTrackingSection progressTracking={plan.progressTracking} />
       <EducationSection education={plan.education} />
       <AdaptivePlanSection adaptive={plan.adaptive} />
 
-      {/* Regenerate Button */}
-      <View style={styles.regenerateSection}>
-        <Button
-          title={generating ? 'Regenerating...' : 'Regenerate Plan'}
-          onPress={handleGeneratePlan}
-          variant="ghost"
-          icon="refresh"
-          disabled={generating}
-        />
-      </View>
+      {/* Regenerate Button (Admin only) */}
+      {isAdmin(profile?.role) && (
+        <View style={styles.regenerateSection}>
+          <Button
+            title={generating ? 'Regenerating...' : 'Regenerate Plan'}
+            onPress={handleGeneratePlan}
+            variant="ghost"
+            icon="refresh"
+            disabled={generating}
+          />
+        </View>
+      )}
     </TabScreenLayout>
   );
 };
@@ -194,55 +192,45 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  // Stats Grid (2x2)
-  statsGrid: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.xl,
-    padding: spacing.md,
+  // Stats Cards Container
+  statsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
     marginBottom: spacing.lg,
+  },
+  statCard: {
+    backgroundColor: colors.white,
+    borderRadius: borderRadius.lg,
+    borderTopWidth: 4,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
+    width: '48%',
+    alignItems: 'center',
     shadowColor: colors.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
     shadowRadius: 8,
     elevation: 2,
   },
-  statsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  statCardAnimation: {
+    marginBottom: spacing.sm,
   },
-  quickStat: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: spacing.sm,
-  },
-  quickStatIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: spacing.sm,
-  },
-  quickStatContent: {
-    flex: 1,
-  },
-  quickStatLabel: {
-    ...typography.caption,
+  statCardLabel: {
+    ...typography.bodySmall,
     color: colors.raven,
-    marginBottom: 2,
+    marginBottom: spacing.xs,
   },
-  quickStatValueRow: {
+  statCardValueRow: {
     flexDirection: 'row',
     alignItems: 'baseline',
   },
-  quickStatValue: {
-    ...typography.h4,
+  statCardValue: {
+    ...typography.h2,
     fontWeight: '700',
   },
-  quickStatUnit: {
-    ...typography.caption,
-    color: colors.raven,
+  statCardUnit: {
+    ...typography.body,
     marginLeft: 4,
   },
   // Regenerate

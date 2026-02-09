@@ -1,427 +1,238 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
 
-import { colors, spacing, typography, borderRadius } from '../../theme';
+import { userService } from '../../services/api';
+import { DateSelector, TrackerNavigation, Card } from '../../components/molecules';
+import { colors, spacing, typography } from '../../theme';
+import { getCurrentDate } from '../../utils/date';
+import {
+  WaterTrackerSection,
+  WeightTrackerSection,
+  NutritionTrackerSection,
+} from './tracking';
+
+const TRACKER_IDS = { WATER: 'water', WEIGHT: 'weight', NUTRITION: 'nutrition' };
 
 const TrackingScreen = () => {
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(getCurrentDate());
+  const [weightInputStr, setWeightInputStr] = useState('');
+  const [activeTracker, setActiveTracker] = useState(TRACKER_IDS.WATER);
+  const prevDateRef = React.useRef(selectedDate);
 
-  const getWeekDays = () => {
-    const days = [];
-    const today = new Date();
-    for (let i = -3; i <= 3; i++) {
-      const date = new Date(today);
-      date.setDate(today.getDate() + i);
-      days.push(date);
+  const [profile, setProfile] = useState(null);
+  const [trackingData, setTrackingData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  const [caloriesConsumed, setCaloriesConsumed] = useState('');
+  const [caloriesBurned, setCaloriesBurned] = useState('');
+  const [proteins, setProteins] = useState('');
+  const [carbs, setCarbs] = useState('');
+  const [fats, setFats] = useState('');
+
+  const fetchData = useCallback(async () => {
+    try {
+      const profileData = await userService.getProfile();
+      setProfile(profileData);
+      const data = profileData?._id ? await userService.getTrackings(profileData._id) : [];
+      setTrackingData(Array.isArray(data) ? data : []);
+    } catch (e) {
+      if (__DEV__) console.error('Tracking fetch error:', e);
+    } finally {
+      setLoading(false);
     }
-    return days;
-  };
+  }, []);
 
-  const weekDays = getWeekDays();
-  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  useEffect(() => { fetchData(); }, [fetchData]);
 
-  const isToday = (date) => {
-    const today = new Date();
-    return date.toDateString() === today.toDateString();
-  };
+  const todayData = useMemo(
+    () => trackingData?.find((r) => r.date === selectedDate) || {},
+    [trackingData, selectedDate],
+  );
 
-  const isSelected = (date) => {
-    return date.toDateString() === selectedDate.toDateString();
-  };
+  useEffect(() => {
+    setCaloriesConsumed(String(todayData.caloriesConsumed ?? ''));
+    setCaloriesBurned(String(todayData.caloriesBurned ?? ''));
+    setProteins(String(todayData.proteins ?? ''));
+    setCarbs(String(todayData.carbs ?? ''));
+    setFats(String(todayData.fats ?? ''));
+  }, [selectedDate, todayData.caloriesConsumed, todayData.caloriesBurned, todayData.proteins, todayData.carbs, todayData.fats]);
+
+  const trackersList = useMemo(() => [
+    { id: TRACKER_IDS.WATER, label: 'Water', statusText: (todayData.water || 0) > 0 ? `${((todayData.water || 0) / 1000).toFixed(1)}L` : '—', isTracked: (todayData.water || 0) > 0 },
+    { id: TRACKER_IDS.WEIGHT, label: 'Weight', statusText: todayData.weight != null ? `${todayData.weight} kg` : '—', isTracked: todayData.weight != null },
+    { id: TRACKER_IDS.NUTRITION, label: 'Nutrition', statusText: (todayData.caloriesConsumed || 0) > 0 ? `${todayData.caloriesConsumed} kcal` : '—', isTracked: (todayData.caloriesConsumed || 0) > 0 },
+  ], [todayData]);
+
+  const saveTrackingField = useCallback(async (field, value) => {
+    if (!profile?._id) return;
+    setSaving(true);
+    try {
+      await userService.createTracking({ userId: profile._id, date: selectedDate, field, value });
+      await fetchData();
+    } catch (e) {
+      if (__DEV__) console.error('Save tracking error:', e);
+      Alert.alert('Error', 'Failed to save. Please try again.');
+    } finally {
+      setSaving(false);
+    }
+  }, [profile?._id, selectedDate, fetchData]);
+
+  const initialWeight = profile?.weight ?? profile?.personalizedPlan?.weightPlan?.currentWeight ?? null;
+  const goalWeight = profile?.goalWeight ?? profile?.personalizedPlan?.weightPlan?.goalWeight ?? null;
+  const waterGoalMl = useMemo(() => Math.round((profile?.personalizedPlan?.hydrationPlan?.dailyWaterGoal ?? 2.5) * 1000), [profile]);
+  const weightChartData = useMemo(() => (trackingData || []).filter((r) => r.weight != null), [trackingData]);
+  const displayWeight = useMemo(() => {
+    const n = parseFloat(weightInputStr.replace(',', '.'), 10);
+    return !Number.isNaN(n) ? n : (todayData.weight ?? initialWeight ?? 70);
+  }, [weightInputStr, todayData.weight, initialWeight]);
+  const weightInputValue = weightInputStr || String(todayData.weight ?? initialWeight ?? 70);
+
+  const handleDateChange = useCallback((date) => {
+    setSelectedDate(date);
+    setWeightInputStr('');
+  }, []);
+
+  useEffect(() => {
+    if (prevDateRef.current !== selectedDate) {
+      prevDateRef.current = selectedDate;
+      setWeightInputStr('');
+    }
+  }, [selectedDate]);
+
+  const onWeightInputChange = useCallback((t) => {
+    setWeightInputStr(t);
+  }, []);
+
+  const onWeightSave = useCallback(async () => {
+    const num = parseFloat(String(displayWeight).replace(',', '.'), 10);
+    if (Number.isNaN(num)) return;
+    await saveTrackingField('weight', num);
+    setWeightInputStr('');
+  }, [saveTrackingField, displayWeight]);
+
+  const onNutritionSave = useCallback(async () => {
+    if (!profile?._id) return;
+    const consumed = parseInt(caloriesConsumed, 10) || 0;
+    const burned = parseInt(caloriesBurned, 10) || 0;
+    const dC = consumed - (todayData.caloriesConsumed || 0);
+    const dB = burned - (todayData.caloriesBurned || 0);
+    setSaving(true);
+    try {
+      if (dC !== 0) await userService.createTracking({ userId: profile._id, date: selectedDate, field: 'caloriesConsumed', value: dC });
+      if (dB !== 0) await userService.createTracking({ userId: profile._id, date: selectedDate, field: 'caloriesBurned', value: dB });
+      await fetchData();
+    } catch (e) {
+      if (__DEV__) console.error('Save nutrition error:', e);
+      Alert.alert('Error', 'Failed to save calories.');
+    } finally {
+      setSaving(false);
+    }
+  }, [profile?._id, selectedDate, caloriesConsumed, caloriesBurned, todayData.caloriesConsumed, todayData.caloriesBurned, fetchData]);
+
+  const onMacrosSave = useCallback(async () => {
+    if (!profile?._id) return;
+    const p = parseInt(proteins, 10) || 0;
+    const c = parseInt(carbs, 10) || 0;
+    const f = parseInt(fats, 10) || 0;
+    const dP = p - (todayData.proteins || 0);
+    const dC = c - (todayData.carbs || 0);
+    const dF = f - (todayData.fats || 0);
+    setSaving(true);
+    try {
+      if (dP !== 0) await userService.createTracking({ userId: profile._id, date: selectedDate, field: 'proteins', value: dP });
+      if (dC !== 0) await userService.createTracking({ userId: profile._id, date: selectedDate, field: 'carbs', value: dC });
+      if (dF !== 0) await userService.createTracking({ userId: profile._id, date: selectedDate, field: 'fats', value: dF });
+      await fetchData();
+    } catch (e) {
+      if (__DEV__) console.error('Save macros error:', e);
+      Alert.alert('Error', 'Failed to save macronutrients.');
+    } finally {
+      setSaving(false);
+    }
+  }, [profile?._id, selectedDate, proteins, carbs, fats, todayData.proteins, todayData.carbs, todayData.fats, fetchData]);
+
+  const trackerTitle = activeTracker === TRACKER_IDS.WEIGHT ? 'Weight Tracking' : 'Nutrition Tracking';
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color={colors.mainOrange} />
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.title}>Daily Tracking</Text>
-          <Text style={styles.subtitle}>Monitor your nutrition & habits</Text>
-        </View>
-
-        {/* Date Selector */}
-        <View style={styles.dateSelector}>
-          {weekDays.map((date, index) => (
-            <TouchableOpacity
-              key={index}
-              style={[
-                styles.dateItem,
-                isSelected(date) && styles.dateItemSelected,
-              ]}
-              onPress={() => setSelectedDate(date)}
-            >
-              <Text
-                style={[
-                  styles.dateDayName,
-                  isSelected(date) && styles.dateDayNameSelected,
-                ]}
-              >
-                {dayNames[date.getDay()]}
-              </Text>
-              <Text
-                style={[
-                  styles.dateNumber,
-                  isSelected(date) && styles.dateNumberSelected,
-                  isToday(date) && !isSelected(date) && styles.dateNumberToday,
-                ]}
-              >
-                {date.getDate()}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        {/* Calories Card */}
-        <View style={styles.caloriesCard}>
-          <View style={styles.caloriesHeader}>
-            <Text style={styles.caloriesTitle}>Calories</Text>
-            <Text style={styles.caloriesRemaining}>850 remaining</Text>
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={100}>
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+          <View style={styles.header}>
+            <Text style={styles.title}>Track Your Daily Metrics</Text>
+            <Text style={styles.subtitle}>Select a tracker below to log your daily progress</Text>
           </View>
-          <View style={styles.caloriesProgress}>
-            <View style={styles.caloriesBar}>
-              <View style={[styles.caloriesBarFill, { width: '60%' }]} />
-            </View>
-            <View style={styles.caloriesStats}>
-              <Text style={styles.caloriesConsumed}>1,150 eaten</Text>
-              <Text style={styles.caloriesGoal}>of 2,000</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Macros */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Macronutrients</Text>
-          <View style={styles.macrosGrid}>
-            <View style={styles.macroCard}>
-              <View style={[styles.macroIcon, { backgroundColor: `${colors.havelockBlue}15` }]}>
-                <Text style={styles.macroEmoji}>🥩</Text>
-              </View>
-              <Text style={styles.macroValue}>85g</Text>
-              <Text style={styles.macroLabel}>Protein</Text>
-              <View style={styles.macroProgress}>
-                <View style={[styles.macroBar, { backgroundColor: colors.havelockBlue, width: '70%' }]} />
-              </View>
-            </View>
-            <View style={styles.macroCard}>
-              <View style={[styles.macroIcon, { backgroundColor: `${colors.mainOrange}15` }]}>
-                <Text style={styles.macroEmoji}>🍞</Text>
-              </View>
-              <Text style={styles.macroValue}>150g</Text>
-              <Text style={styles.macroLabel}>Carbs</Text>
-              <View style={styles.macroProgress}>
-                <View style={[styles.macroBar, { backgroundColor: colors.mainOrange, width: '55%' }]} />
-              </View>
-            </View>
-            <View style={styles.macroCard}>
-              <View style={[styles.macroIcon, { backgroundColor: `${colors.lima}15` }]}>
-                <Text style={styles.macroEmoji}>🥑</Text>
-              </View>
-              <Text style={styles.macroValue}>45g</Text>
-              <Text style={styles.macroLabel}>Fats</Text>
-              <View style={styles.macroProgress}>
-                <View style={[styles.macroBar, { backgroundColor: colors.lima, width: '65%' }]} />
-              </View>
-            </View>
-          </View>
-        </View>
-
-        {/* Water Intake */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Hydration</Text>
-          <View style={styles.waterCard}>
-            <View style={styles.waterHeader}>
-              <View style={styles.waterIconContainer}>
-                <Ionicons name="water" size={24} color={colors.havelockBlue} />
-              </View>
-              <View style={styles.waterInfo}>
-                <Text style={styles.waterValue}>1.5L / 2.5L</Text>
-                <Text style={styles.waterLabel}>Water intake today</Text>
-              </View>
-            </View>
-            <View style={styles.waterGlasses}>
-              {[1, 2, 3, 4, 5, 6, 7, 8].map((glass) => (
-                <View
-                  key={glass}
-                  style={[
-                    styles.waterGlass,
-                    glass <= 6 && styles.waterGlassFilled,
-                  ]}
-                >
-                  <Ionicons
-                    name="water"
-                    size={16}
-                    color={glass <= 6 ? colors.havelockBlue : colors.gallery}
-                  />
-                </View>
-              ))}
-            </View>
-          </View>
-        </View>
-
-        {/* Quick Log Buttons */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Quick Log</Text>
-          <View style={styles.quickLogGrid}>
-            <TouchableOpacity style={styles.quickLogButton}>
-              <Ionicons name="cafe-outline" size={24} color={colors.mainOrange} />
-              <Text style={styles.quickLogLabel}>Breakfast</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.quickLogButton}>
-              <Ionicons name="restaurant-outline" size={24} color={colors.lima} />
-              <Text style={styles.quickLogLabel}>Lunch</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.quickLogButton}>
-              <Ionicons name="moon-outline" size={24} color={colors.havelockBlue} />
-              <Text style={styles.quickLogLabel}>Dinner</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.quickLogButton}>
-              <Ionicons name="nutrition-outline" size={24} color={colors.purple} />
-              <Text style={styles.quickLogLabel}>Snack</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        <View style={{ height: spacing.xxl }} />
-      </ScrollView>
+          <DateSelector selectedDate={selectedDate} onDateChange={handleDateChange} maxDaysBack={5} />
+          <TrackerNavigation trackers={trackersList} activeTracker={activeTracker} onTrackerSelect={setActiveTracker} />
+          {activeTracker !== TRACKER_IDS.WATER && <Text style={styles.trackerTitle}>{trackerTitle}</Text>}
+          {activeTracker === TRACKER_IDS.WATER && (
+            <WaterTrackerSection todayData={todayData} waterGoalLiters={waterGoalMl} onDrink={(amount) => saveTrackingField('water', amount)} saving={saving} />
+          )}
+          {activeTracker === TRACKER_IDS.WEIGHT && (
+            <WeightTrackerSection
+              weightInputValue={weightInputValue}
+              onWeightInputChange={onWeightInputChange}
+              onWeightSave={onWeightSave}
+              saving={saving}
+              weightChartData={weightChartData}
+              initialWeight={initialWeight}
+              goalWeight={goalWeight}
+              profileCreatedAt={profile?.createdAt ?? null}
+            />
+          )}
+          {activeTracker === TRACKER_IDS.NUTRITION && (
+            <NutritionTrackerSection
+              caloriesConsumed={caloriesConsumed}
+              caloriesBurned={caloriesBurned}
+              proteins={proteins}
+              carbs={carbs}
+              fats={fats}
+              onCaloriesConsumedChange={setCaloriesConsumed}
+              onCaloriesBurnedChange={setCaloriesBurned}
+              onProteinsChange={setProteins}
+              onCarbsChange={setCarbs}
+              onFatsChange={setFats}
+              onNutritionSave={onNutritionSave}
+              onMacrosSave={onMacrosSave}
+              saving={saving}
+            />
+          )}
+          <View style={{ height: spacing.xxl }} />
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.alabaster,
-  },
-  scrollContent: {
-    padding: spacing.lg,
-  },
-  header: {
-    marginBottom: spacing.lg,
-  },
-  title: {
-    ...typography.h1,
-    color: colors.mineShaft,
-  },
-  subtitle: {
-    ...typography.body,
-    color: colors.raven,
-    marginTop: 4,
-  },
-  dateSelector: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: spacing.xl,
-  },
-  dateItem: {
-    alignItems: 'center',
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.sm,
-    borderRadius: borderRadius.lg,
-  },
-  dateItemSelected: {
-    backgroundColor: colors.mainOrange,
-  },
-  dateDayName: {
-    ...typography.caption,
-    color: colors.raven,
-    marginBottom: 4,
-  },
-  dateDayNameSelected: {
-    color: colors.white,
-  },
-  dateNumber: {
-    ...typography.h4,
-    color: colors.mineShaft,
-  },
-  dateNumberSelected: {
-    color: colors.white,
-  },
-  dateNumberToday: {
-    color: colors.mainOrange,
-  },
-  caloriesCard: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.xl,
-    padding: spacing.lg,
-    marginBottom: spacing.xl,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  caloriesHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.md,
-  },
-  caloriesTitle: {
-    ...typography.h3,
-    color: colors.mineShaft,
-  },
-  caloriesRemaining: {
-    ...typography.body,
-    color: colors.lima,
-    fontWeight: '600',
-  },
-  caloriesProgress: {},
-  caloriesBar: {
-    height: 12,
-    backgroundColor: colors.gallery,
-    borderRadius: 6,
-    overflow: 'hidden',
-    marginBottom: spacing.sm,
-  },
-  caloriesBarFill: {
-    height: '100%',
-    backgroundColor: colors.mainOrange,
-    borderRadius: 6,
-  },
-  caloriesStats: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  caloriesConsumed: {
-    ...typography.bodySmall,
-    color: colors.mineShaft,
-    fontWeight: '500',
-  },
-  caloriesGoal: {
-    ...typography.bodySmall,
-    color: colors.raven,
-  },
-  section: {
-    marginBottom: spacing.lg,
-  },
-  sectionTitle: {
-    ...typography.h4,
-    color: colors.mineShaft,
-    marginBottom: spacing.md,
-  },
-  macrosGrid: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-  },
-  macroCard: {
-    flex: 1,
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.xl,
-    padding: spacing.md,
-    alignItems: 'center',
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  macroIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.xs,
-  },
-  macroEmoji: {
-    fontSize: 20,
-  },
-  macroValue: {
-    ...typography.h4,
-    color: colors.mineShaft,
-  },
-  macroLabel: {
-    ...typography.caption,
-    color: colors.raven,
-    marginBottom: spacing.xs,
-  },
-  macroProgress: {
-    width: '100%',
-    height: 4,
-    backgroundColor: colors.gallery,
-    borderRadius: 2,
-    overflow: 'hidden',
-  },
-  macroBar: {
-    height: '100%',
-    borderRadius: 2,
-  },
-  waterCard: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.xl,
-    padding: spacing.lg,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  waterHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing.md,
-  },
-  waterIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 14,
-    backgroundColor: `${colors.havelockBlue}15`,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: spacing.md,
-  },
-  waterInfo: {
-    flex: 1,
-  },
-  waterValue: {
-    ...typography.h3,
-    color: colors.mineShaft,
-  },
-  waterLabel: {
-    ...typography.caption,
-    color: colors.raven,
-  },
-  waterGlasses: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  waterGlass: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    backgroundColor: colors.gallery,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  waterGlassFilled: {
-    backgroundColor: `${colors.havelockBlue}20`,
-  },
-  quickLogGrid: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-  },
-  quickLogButton: {
-    flex: 1,
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.xl,
-    padding: spacing.md,
-    alignItems: 'center',
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  quickLogLabel: {
-    ...typography.caption,
-    color: colors.mineShaft,
-    marginTop: spacing.xs,
-    fontWeight: '500',
-  },
+  container: { flex: 1, backgroundColor: colors.alabaster },
+  flex: { flex: 1 },
+  scrollContent: { padding: spacing.lg },
+  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  header: { marginBottom: spacing.lg },
+  title: { ...typography.h1, color: '#26466B', textAlign: 'center' },
+  subtitle: { ...typography.body, color: colors.raven, marginTop: 4, textAlign: 'center' },
+  trackerTitle: { ...typography.h4, color: colors.mineShaft, marginBottom: spacing.md },
 });
 
 export default TrackingScreen;

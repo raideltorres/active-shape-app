@@ -14,6 +14,7 @@ export const colors = {
   // Brand - Oranges
   mainOrange: '#D95725',
   salmon: '#FF8C69',
+  redBerry: '#8B0000', // dark red (web ribbon border/fold)
 
   // Grays - Dark to Light
   codGray: '#1C1C1C',
