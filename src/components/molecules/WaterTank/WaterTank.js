@@ -1,8 +1,8 @@
-import React, { useRef, useEffect, useCallback } from "react";
+import React, { useRef, useEffect, useCallback, useState } from "react";
 import { View, Text, StyleSheet, Animated, Easing } from "react-native";
-import Svg, { Path } from "react-native-svg";
+import Svg, { Path, G } from "react-native-svg";
 
-import { colors, spacing, typography, borderRadius } from "../../../theme";
+import { colors } from "../../../theme";
 
 // Web WaveSvg exact paths (viewBox 0 0 560 20)
 const WAVE_VIEWBOX = { width: 560, height: 20 };
@@ -13,10 +13,11 @@ const WAVE_PATHS = [
   "M140,20c-21.5-0.4-38.8-2.5-51.1-4.5c-13.4-2.2-26.5-5.2-27.3-5.4C46,6.5,42,4.7,31.5,2.7C24.3,1.4,13.6-0.1,0,0c0,0,0,0,0,0l0,20H140z",
 ];
 
-const WAVE_WIDTH = 560;
-const WAVE_DOUBLE_WIDTH = WAVE_WIDTH * 2;
-const WAVE_HEIGHT = 24;
+// Paths 2,3 = left half (0-280) = 2 crests
+const HALF_PERIOD_VIEWBOX = 280;
+const WAVE_HEIGHT = 12;
 const BUBBLE_DURATION = 750;
+const DEFAULT_VISIBLE_WIDTH = 200;
 
 const WaterTank = ({
   displayValue,
@@ -24,6 +25,7 @@ const WaterTank = ({
   fillPercent = 40,
   animated: bubbleAnimated = false,
 }) => {
+  const [visibleWidth, setVisibleWidth] = useState(DEFAULT_VISIBLE_WIDTH);
   const waveBackX = useRef(new Animated.Value(0)).current;
   const waveFrontX = useRef(new Animated.Value(0)).current;
   const bubble1 = useRef(new Animated.Value(0)).current;
@@ -31,12 +33,16 @@ const WaterTank = ({
   const bubble3 = useRef(new Animated.Value(0)).current;
 
   const percent = Math.min(65, Math.max(25, fillPercent));
+  const stripWidthPx = visibleWidth * 2;
+  const scrollDistance = visibleWidth;
 
   useEffect(() => {
+    waveBackX.setValue(0);
+    waveFrontX.setValue(0);
     const backLoop = Animated.loop(
       Animated.sequence([
         Animated.timing(waveBackX, {
-          toValue: WAVE_WIDTH,
+          toValue: scrollDistance,
           duration: 2300,
           easing: Easing.linear,
           useNativeDriver: true,
@@ -52,7 +58,7 @@ const WaterTank = ({
     const frontLoop = Animated.loop(
       Animated.sequence([
         Animated.timing(waveFrontX, {
-          toValue: -WAVE_WIDTH,
+          toValue: -scrollDistance,
           duration: 1450,
           easing: Easing.linear,
           useNativeDriver: true,
@@ -73,7 +79,7 @@ const WaterTank = ({
       backLoop.stop();
       frontLoop.stop();
     };
-  }, [waveBackX, waveFrontX]);
+  }, [visibleWidth, waveBackX, waveFrontX, scrollDistance]);
 
   const runBubbles = useCallback(() => {
     bubble1.setValue(0);
@@ -111,17 +117,23 @@ const WaterTank = ({
     if (bubbleAnimated) runBubbles();
   }, [bubbleAnimated, runBubbles]);
 
+  const twoCrestPaths = [WAVE_PATHS[2], WAVE_PATHS[3]];
   const renderWaveSvg = (fillColor) => (
     <Svg
-      width={WAVE_DOUBLE_WIDTH}
+      width={stripWidthPx}
       height={WAVE_HEIGHT}
-      viewBox={`0 0 ${WAVE_VIEWBOX.width} ${WAVE_VIEWBOX.height}`}
+      viewBox={`0 0 ${HALF_PERIOD_VIEWBOX * 2} ${WAVE_VIEWBOX.height}`}
       preserveAspectRatio="none"
       style={StyleSheet.absoluteFill}
     >
-      {WAVE_PATHS.map((d, i) => (
-        <Path key={i} d={d} fill={fillColor} />
+      {twoCrestPaths.map((d, i) => (
+        <Path key={i} d={d} fill={fillColor} stroke="none" />
       ))}
+      <G transform={`translate(${HALF_PERIOD_VIEWBOX}, 0)`}>
+        {twoCrestPaths.map((d, i) => (
+          <Path key={`c2-${i}`} d={d} fill={fillColor} stroke="none" />
+        ))}
+      </G>
     </Svg>
   );
 
@@ -133,12 +145,19 @@ const WaterTank = ({
       </View>
 
       <View style={[styles.water, { height: `${percent}%` }]}>
+        <View style={styles.waterFill} />
         <View style={styles.waterInner}>
-          <View style={styles.waveRow}>
+          <View
+            style={styles.waveRow}
+            onLayout={(e) => {
+              const w = e.nativeEvent.layout.width;
+              if (w > 0) setVisibleWidth(w);
+            }}
+          >
             <Animated.View
               style={[
                 styles.waveWrapBack,
-                { transform: [{ translateX: waveBackX }] },
+                { width: stripWidthPx, transform: [{ translateX: waveBackX }] },
               ]}
             >
               {renderWaveSvg(colors.mariner)}
@@ -148,12 +167,17 @@ const WaterTank = ({
             <Animated.View
               style={[
                 styles.waveWrapFront,
-                { transform: [{ translateX: waveFrontX }] },
+                {
+                  width: stripWidthPx,
+                  transform: [{ translateX: waveFrontX }],
+                },
               ]}
             >
               {renderWaveSvg(colors.lightBlue)}
             </Animated.View>
           </View>
+
+          <View style={styles.waveSeamCover} pointerEvents="none" />
 
           <View style={[styles.bubbles, { pointerEvents: "none" }]}>
             <Animated.View
@@ -293,7 +317,15 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    overflow: "hidden",
+    overflow: "visible",
+  },
+  waterFill: {
+    position: "absolute",
+    top: -2,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: colors.lightBlue,
   },
   waterInner: {
     ...StyleSheet.absoluteFillObject,
@@ -303,24 +335,31 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: WAVE_HEIGHT,
-    top: 0,
+    top: -12,
     overflow: "hidden",
   },
   waveFrontRow: {
     marginTop: -1,
   },
+  waveSeamCover: {
+    position: "absolute",
+    top: -2,
+    left: 0,
+    right: 0,
+    height: 2,
+    backgroundColor: colors.lightBlue,
+    zIndex: 1,
+  },
   waveWrapBack: {
     position: "absolute",
     top: 0,
     right: 0,
-    width: WAVE_DOUBLE_WIDTH,
     height: WAVE_HEIGHT,
   },
   waveWrapFront: {
     position: "absolute",
     top: 0,
     left: 0,
-    width: WAVE_DOUBLE_WIDTH,
     height: WAVE_HEIGHT,
   },
   bubbles: {
