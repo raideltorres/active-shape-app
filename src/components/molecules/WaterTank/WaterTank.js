@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useCallback } from "react";
-import { View, Text, StyleSheet, Animated } from "react-native";
+import { View, Text, StyleSheet, Animated, Easing } from "react-native";
 import Svg, { Path } from "react-native-svg";
 
 import { colors, spacing, typography, borderRadius } from "../../../theme";
@@ -33,25 +33,45 @@ const WaterTank = ({
   const percent = Math.min(65, Math.max(25, fillPercent));
 
   useEffect(() => {
-    const back = Animated.loop(
-      Animated.timing(waveBackX, {
-        toValue: WAVE_WIDTH,
-        duration: 1800,
-        useNativeDriver: true,
-      }),
+    const backLoop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(waveBackX, {
+          toValue: WAVE_WIDTH,
+          duration: 2300,
+          easing: Easing.linear,
+          useNativeDriver: true,
+        }),
+        Animated.timing(waveBackX, {
+          toValue: 0,
+          duration: 0,
+          useNativeDriver: true,
+        }),
+      ]),
+      { resetBeforeIteration: false },
     );
-    const front = Animated.loop(
-      Animated.timing(waveFrontX, {
-        toValue: -WAVE_WIDTH,
-        duration: 1100,
-        useNativeDriver: true,
-      }),
+    const frontLoop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(waveFrontX, {
+          toValue: -WAVE_WIDTH,
+          duration: 1450,
+          easing: Easing.linear,
+          useNativeDriver: true,
+        }),
+        Animated.timing(waveFrontX, {
+          toValue: 0,
+          duration: 0,
+          useNativeDriver: true,
+        }),
+      ]),
+      { resetBeforeIteration: false },
     );
-    back.start();
-    front.start();
+
+    backLoop.start();
+    frontLoop.start();
+
     return () => {
-      back.stop();
-      front.stop();
+      backLoop.stop();
+      frontLoop.stop();
     };
   }, [waveBackX, waveFrontX]);
 
