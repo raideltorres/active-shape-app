@@ -1,5 +1,6 @@
 export { default as Card } from "./Card";
 export { default as DateSelector } from "./DateSelector";
+export { default as ValuePicker } from "./ValuePicker";
 export { default as NutritionSummaryCard } from "./NutritionSummaryCard";
 export { default as TrackerNavigation } from "./TrackerNavigation";
 export { default as QuickActionCard } from "./QuickActionCard";

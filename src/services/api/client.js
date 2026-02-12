@@ -103,6 +103,38 @@ class ApiClient {
   delete(endpoint) {
     return this.request(endpoint, { method: 'DELETE' });
   }
+
+  /**
+   * POST with FormData (e.g. file upload). Do not set Content-Type so multipart boundary is set automatically.
+   */
+  async postFormData(endpoint, formData) {
+    const url = `${this.baseURL}${endpoint}`;
+    const token = await storage.getItem('token');
+    const headers = {
+      ...(token && { Authorization: `Bearer ${token}` }),
+    };
+
+    if (__DEV__) {
+      console.log(`[API] POST (FormData) ${url}`);
+    }
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
+
+    if (response.status === 401 && token) {
+      emitUnauthorized();
+      throw new Error('Unauthorized');
+    }
+
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.message || 'Request failed');
+    }
+    return data;
+  }
 }
 
 export const apiClient = new ApiClient(API_BASE_URL);

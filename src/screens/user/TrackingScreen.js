@@ -15,6 +15,7 @@ import { userService } from '../../services/api';
 import { DateSelector, TrackerNavigation, Card } from '../../components/molecules';
 import { colors, spacing, typography } from '../../theme';
 import { getCurrentDate } from '../../utils/date';
+import { formatWeightKg } from '../../utils/measure';
 import {
   WaterTrackerSection,
   WeightTrackerSection,
@@ -96,7 +97,13 @@ const TrackingScreen = () => {
     const n = parseFloat(weightInputStr.replace(',', '.'), 10);
     return !Number.isNaN(n) ? n : (todayData.weight ?? initialWeight ?? 70);
   }, [weightInputStr, todayData.weight, initialWeight]);
-  const weightInputValue = weightInputStr || String(todayData.weight ?? initialWeight ?? 70);
+  const weightInputValue =
+    weightInputStr ||
+    (todayData.weight != null
+      ? formatWeightKg(todayData.weight)
+      : initialWeight != null
+        ? formatWeightKg(initialWeight)
+        : '70.0');
 
   const handleDateChange = useCallback((date) => {
     setSelectedDate(date);
@@ -117,7 +124,7 @@ const TrackingScreen = () => {
   const onWeightSave = useCallback(async () => {
     const num = parseFloat(String(displayWeight).replace(',', '.'), 10);
     if (Number.isNaN(num)) return;
-    await saveTrackingField('weight', num);
+    await saveTrackingField('weight', parseFloat(formatWeightKg(num)));
     setWeightInputStr('');
   }, [saveTrackingField, displayWeight]);
 
@@ -139,6 +146,50 @@ const TrackingScreen = () => {
       setSaving(false);
     }
   }, [profile?._id, selectedDate, caloriesConsumed, caloriesBurned, todayData.caloriesConsumed, todayData.caloriesBurned, fetchData]);
+
+  const onFoodAnalyzed = useCallback(
+    async (analysis) => {
+      if (!analysis?.totalNutrition || !profile?._id) return;
+      const { totalNutrition } = analysis;
+      setSaving(true);
+      try {
+        await Promise.all([
+          userService.createTracking({
+            userId: profile._id,
+            date: selectedDate,
+            field: 'caloriesConsumed',
+            value: totalNutrition.calories ?? 0,
+          }),
+          userService.createTracking({
+            userId: profile._id,
+            date: selectedDate,
+            field: 'proteins',
+            value: totalNutrition.proteins ?? 0,
+          }),
+          userService.createTracking({
+            userId: profile._id,
+            date: selectedDate,
+            field: 'carbs',
+            value: totalNutrition.carbs ?? 0,
+          }),
+          userService.createTracking({
+            userId: profile._id,
+            date: selectedDate,
+            field: 'fats',
+            value: totalNutrition.fats ?? 0,
+          }),
+        ]);
+        await fetchData();
+        Alert.alert('Success', `Added ${totalNutrition.calories ?? 0} kcal and macros to your daily tracking.`);
+      } catch (e) {
+        if (__DEV__) console.error('Log food analysis error:', e);
+        Alert.alert('Error', e?.message || 'Failed to log food. Please try again.');
+      } finally {
+        setSaving(false);
+      }
+    },
+    [profile?._id, selectedDate, fetchData],
+  );
 
   const onMacrosSave = useCallback(async () => {
     if (!profile?._id) return;
@@ -198,10 +249,13 @@ const TrackingScreen = () => {
               initialWeight={initialWeight}
               goalWeight={goalWeight}
               profileCreatedAt={profile?.createdAt ?? null}
+              displayWeightNum={displayWeight}
             />
           )}
           {activeTracker === TRACKER_IDS.NUTRITION && (
             <NutritionTrackerSection
+              userId={profile?._id}
+              onFoodAnalyzed={onFoodAnalyzed}
               caloriesConsumed={caloriesConsumed}
               caloriesBurned={caloriesBurned}
               proteins={proteins}
@@ -227,7 +281,7 @@ const TrackingScreen = () => {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.alabaster },
   flex: { flex: 1 },
-  scrollContent: { padding: spacing.lg },
+  scrollContent: { padding: spacing.lg, paddingBottom: spacing.tabBarPadding },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   header: { marginBottom: spacing.lg },
   title: { ...typography.h1, color: '#26466B', textAlign: 'center' },

@@ -2,10 +2,13 @@ import React from 'react';
 import { View, Text, TextInput, StyleSheet } from 'react-native';
 
 import { Card } from '../../../components/molecules';
+import { AiFoodScanner } from '../../../components/organisms/AiFoodScanner';
 import { Button } from '../../../components/atoms';
 import { colors, spacing, typography, borderRadius } from '../../../theme';
 
 const NutritionTrackerSection = ({
+  userId,
+  onFoodAnalyzed,
   caloriesConsumed,
   caloriesBurned,
   proteins,
@@ -21,6 +24,12 @@ const NutritionTrackerSection = ({
   saving,
 }) => (
   <View style={styles.content}>
+    {userId && onFoodAnalyzed ? (
+      <>
+        <AiFoodScanner userId={userId} onFoodAnalyzed={onFoodAnalyzed} />
+        <Text style={styles.divider}>Or enter manually</Text>
+      </>
+    ) : null}
     <Card>
       <Text style={styles.sectionTitle}>Calories</Text>
       <View style={styles.row}>
@@ -66,6 +75,12 @@ const NutritionTrackerSection = ({
 
 const styles = StyleSheet.create({
   content: { marginBottom: spacing.lg },
+  divider: {
+    ...typography.bodySmall,
+    color: colors.raven,
+    textAlign: 'center',
+    marginVertical: spacing.md,
+  },
   sectionTitle: { ...typography.h4, color: colors.mineShaft, marginBottom: spacing.md },
   row: { marginBottom: spacing.md },
   label: { ...typography.bodySmall, color: colors.raven, marginBottom: 4 },

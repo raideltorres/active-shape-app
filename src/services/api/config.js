@@ -41,6 +41,9 @@ export const API_ENDPOINTS = {
   TRACKING: '/trackings',
   DAILY_TRACKING: '/trackings/daily',
 
+  // AI Nutrition
+  AI_NUTRITION_ANALYZE: '/ai-nutrition/analyze-food-image',
+
   // Fasting
   FASTING_PLANS: '/fasting-plans',
   FASTING_SESSIONS: '/fasting-sessions',

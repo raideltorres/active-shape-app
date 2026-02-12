@@ -85,23 +85,25 @@ const WaterTank = ({
     bubble1.setValue(0);
     bubble2.setValue(0);
     bubble3.setValue(0);
+    // useNativeDriver: false to avoid "output range should have the same number of components"
+    // when multiple interpolates are used in one transform array
     Animated.parallel([
       Animated.timing(bubble1, {
         toValue: 1,
         duration: BUBBLE_DURATION,
-        useNativeDriver: true,
+        useNativeDriver: false,
         delay: 0,
       }),
       Animated.timing(bubble2, {
         toValue: 1,
         duration: BUBBLE_DURATION,
-        useNativeDriver: true,
+        useNativeDriver: false,
         delay: 100,
       }),
       Animated.timing(bubble3, {
         toValue: 1,
         duration: BUBBLE_DURATION,
-        useNativeDriver: true,
+        useNativeDriver: false,
         delay: 150,
       }),
     ]).start(({ finished }) => {
@@ -185,8 +187,8 @@ const WaterTank = ({
                 styles.bubble,
                 {
                   opacity: bubble1.interpolate({
-                    inputRange: [0, 0.2, 1],
-                    outputRange: [0, 1, 0],
+                    inputRange: [0, 1],
+                    outputRange: [1, 0],
                   }),
                   transform: [
                     {
@@ -203,8 +205,8 @@ const WaterTank = ({
                     },
                     {
                       translateX: bubble1.interpolate({
-                        inputRange: [0, 0.5, 1],
-                        outputRange: [0, 15, 5],
+                        inputRange: [0, 1],
+                        outputRange: [0, 10],
                       }),
                     },
                   ],
@@ -217,8 +219,8 @@ const WaterTank = ({
                 styles.bubble2,
                 {
                   opacity: bubble2.interpolate({
-                    inputRange: [0, 0.2, 1],
-                    outputRange: [0, 1, 0],
+                    inputRange: [0, 1],
+                    outputRange: [1, 0],
                   }),
                   transform: [
                     {
@@ -235,8 +237,8 @@ const WaterTank = ({
                     },
                     {
                       translateX: bubble2.interpolate({
-                        inputRange: [0, 0.5, 1],
-                        outputRange: [0, -10, 0],
+                        inputRange: [0, 1],
+                        outputRange: [0, -8],
                       }),
                     },
                   ],
@@ -249,8 +251,8 @@ const WaterTank = ({
                 styles.bubble3,
                 {
                   opacity: bubble3.interpolate({
-                    inputRange: [0, 0.2, 1],
-                    outputRange: [0, 1, 0],
+                    inputRange: [0, 1],
+                    outputRange: [1, 0],
                   }),
                   transform: [
                     {
@@ -267,8 +269,8 @@ const WaterTank = ({
                     },
                     {
                       translateX: bubble3.interpolate({
-                        inputRange: [0, 0.5, 1],
-                        outputRange: [0, -5, 5],
+                        inputRange: [0, 1],
+                        outputRange: [0, 5],
                       }),
                     },
                   ],
@@ -284,8 +286,8 @@ const WaterTank = ({
 
 const styles = StyleSheet.create({
   tank: {
-    minHeight: 160,
-    maxWidth: 200,
+    width: 140,
+    minHeight: 200,
     backgroundColor: colors.mainBlue,
     borderRadius: 18,
     overflow: "hidden",

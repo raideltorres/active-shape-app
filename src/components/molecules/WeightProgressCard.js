@@ -257,7 +257,7 @@ const WeightProgressCard = ({
             height={120}
             animated
             animationDuration={1500}
-            animateOnDataChange
+            animateOnDataChange={false}
             color={colors.purple}
             thickness={2.5}
             areaChart
@@ -292,7 +292,7 @@ const WeightProgressCard = ({
 
       <View style={styles.statsRow}>
         <View style={styles.statItem}>
-          <Text style={styles.statLabel}>Starting</Text>
+          <Text style={styles.statLabel}>Initial</Text>
           <Text style={styles.statValue}>
             {stats.initial ? `${stats.initial} kg` : '--'}
           </Text>

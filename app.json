@@ -37,7 +37,16 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "plugins": ["expo-web-browser"],
+    "plugins": [
+      "expo-web-browser",
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Allow Active Shape to access your camera to take photos of your meals.",
+          "photosPermission": "Allow Active Shape to access your photos to choose food images."
+        }
+      ]
+    ],
     "extra": {
       "eas": {
         "projectId": "ddce7c5d-0be6-4493-b77e-64b08b47384d"

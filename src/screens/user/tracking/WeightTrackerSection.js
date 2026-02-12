@@ -1,9 +1,13 @@
 import React from 'react';
-import { View, Text, TextInput, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 
-import { Card, WeightProgressCard } from '../../../components/molecules';
-import { Button } from '../../../components/atoms';
-import { colors, spacing, typography, borderRadius } from '../../../theme';
+import { Card, ValuePicker, WeightProgressCard } from '../../../components/molecules';
+import { colors, spacing } from '../../../theme';
+import { fromKgToLbs, fromLbsToKg, formatWeightKg, formatWeightLbs } from '../../../utils/measure';
+
+const WEIGHT_MIN = 20;
+const WEIGHT_MAX = 200;
+const WEIGHT_STEP = 0.1;
 
 const WeightTrackerSection = ({
   weightInputValue,
@@ -14,49 +18,53 @@ const WeightTrackerSection = ({
   initialWeight,
   goalWeight,
   profileCreatedAt,
-}) => (
-  <View style={styles.content}>
-    <Card>
-      <Text style={styles.sectionTitle}>Log weight (kg)</Text>
-      <View style={styles.weightRow}>
-        <TextInput
-          style={styles.weightInput}
+  displayWeightNum = 70,
+}) => {
+  return (
+    <View style={styles.content}>
+      <Card>
+        <ValuePicker
+          title="Weight"
+          description="Monitor your weight journey by logging your current weight daily. The chart below shows your
+          progress over time, helping you visualize trends and stay motivated. Consistent tracking is
+          key to achieving your fitness goals. For best results, weigh yourself at the same time each
+          day, preferably in the morning before eating."
           value={weightInputValue}
-          onChangeText={onWeightInputChange}
-          keyboardType="decimal-pad"
-          placeholder="e.g. 72.5"
+          onChange={onWeightInputChange}
+          min={WEIGHT_MIN}
+          max={WEIGHT_MAX}
+          step={WEIGHT_STEP}
+          unit="kg"
+          alternativeUnit="lbs"
+          convertToAlternative={(kg) => fromKgToLbs(kg).lbs}
+          convertFromAlternative={fromLbsToKg}
+          formatMainValue={formatWeightKg}
+          formatAlternativeValue={formatWeightLbs}
+          showSaveButton
+          onSave={onWeightSave}
+          loading={saving}
+          saveButtonLabel="Record New Weight"
         />
-        <Button title="Save" onPress={onWeightSave} disabled={saving} />
-      </View>
-    </Card>
-    {weightChartData.length > 0 && (
+      </Card>
+
       <View style={styles.chartSection}>
         <WeightProgressCard
-          weightData={weightChartData.map((r) => ({ date: r.date, weight: r.weight }))}
+          weightData={(weightChartData || []).map((r) => ({ date: r.date, weight: r.weight }))}
           initialWeight={initialWeight}
-          currentWeight={weightChartData[weightChartData.length - 1].weight}
+          currentWeight={weightChartData?.length ? weightChartData[weightChartData.length - 1].weight : null}
           goalWeight={goalWeight}
           profileCreatedAt={profileCreatedAt}
         />
       </View>
-    )}
-  </View>
-);
+    </View>
+  );
+};
 
 const styles = StyleSheet.create({
   content: { marginBottom: spacing.lg },
-  sectionTitle: { ...typography.h4, color: colors.mineShaft, marginBottom: spacing.md },
-  weightRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-  weightInput: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: colors.gallery,
-    borderRadius: borderRadius.lg,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    ...typography.body,
+  chartSection: {
+    marginTop: spacing.lg,
   },
-  chartSection: { marginTop: spacing.lg },
 });
 
 export default WeightTrackerSection;
