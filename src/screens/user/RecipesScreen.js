@@ -9,8 +9,8 @@ import {
   ActivityIndicator,
   RefreshControl,
   ScrollView,
-  Alert,
 } from "react-native";
+import Toast from 'react-native-toast-message';
 import { Ionicons } from "@expo/vector-icons";
 
 import { TabScreenLayout } from "../../components/templates";
@@ -244,7 +244,7 @@ const RecipesScreen = ({ navigation }) => {
         prev.map((r) => (r.id === id ? { ...r, isFavorite: !isFavorite } : r)),
       );
     } catch (err) {
-      Alert.alert("Error", "Could not update favorite.");
+      Toast.show({ type: 'error', text1: 'Error', text2: 'Could not update favorite.' });
     }
   }, [addFavorite, removeFavorite]);
 

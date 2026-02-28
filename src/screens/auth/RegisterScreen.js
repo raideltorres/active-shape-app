@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
+import Toast from 'react-native-toast-message';
 
 import { ScrollableFormLayout } from '../../components/templates';
 import {
@@ -28,17 +29,17 @@ const RegisterScreen = ({ navigation }) => {
 
   const handleRegister = async () => {
     if (!name || !email || !password || !confirmPassword) {
-      Alert.alert('Error', 'Please fill in all fields');
+      Toast.show({ type: 'error', text1: 'Error', text2: 'Please fill in all fields.' });
       return;
     }
 
     if (password !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match');
+      Toast.show({ type: 'error', text1: 'Error', text2: 'Passwords do not match.' });
       return;
     }
 
     if (password.length < 6) {
-      Alert.alert('Error', 'Password must be at least 6 characters');
+      Toast.show({ type: 'error', text1: 'Error', text2: 'Password must be at least 6 characters.' });
       return;
     }
 
@@ -46,7 +47,7 @@ const RegisterScreen = ({ navigation }) => {
       const response = await signUp({ name, email, password }).unwrap();
       await login(response.data, response.access_token, response.refresh_token);
     } catch (error) {
-      Alert.alert('Error', error.data?.message || error.message || 'Registration failed');
+      Toast.show({ type: 'error', text1: 'Registration Failed', text2: error.data?.message || error.message || 'Please try again.' });
     }
   };
 

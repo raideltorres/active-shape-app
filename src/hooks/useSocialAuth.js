@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Alert } from 'react-native';
+import Toast from 'react-native-toast-message';
 import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
 import { makeRedirectUri } from 'expo-auth-session';
@@ -40,7 +41,7 @@ export const useSocialAuth = (mode = 'signIn') => {
       await login(response.data, response.access_token, response.refresh_token);
     } catch (error) {
       const action = mode === 'signUp' ? 'sign up' : 'sign in';
-      Alert.alert('Error', error.data?.message || error.message || `Google ${action} failed`);
+      Toast.show({ type: 'error', text1: 'Error', text2: error.data?.message || error.message || `Google ${action} failed.` });
     } finally {
       setSocialLoading(null);
     }
@@ -54,7 +55,7 @@ export const useSocialAuth = (mode = 'signIn') => {
     } else if (googleResponse?.type === 'error') {
       setSocialLoading(null);
       const action = mode === 'signUp' ? 'sign up' : 'sign in';
-      Alert.alert('Error', googleResponse.error?.message || `Google ${action} failed. Please try again.`);
+      Toast.show({ type: 'error', text1: 'Error', text2: googleResponse.error?.message || `Google ${action} failed. Please try again.` });
     } else if (googleResponse?.type === 'dismiss') {
       setSocialLoading(null);
     }
@@ -73,10 +74,10 @@ export const useSocialAuth = (mode = 'signIn') => {
           await login(null, token, refreshToken);
         } else {
           const error = url.searchParams.get('error');
-          Alert.alert('Error', error || `${providerName} authentication failed`);
+          Toast.show({ type: 'error', text1: 'Error', text2: error || `${providerName} authentication failed.` });
         }
       } catch (error) {
-        Alert.alert('Error', `${providerName} authentication failed`);
+        Toast.show({ type: 'error', text1: 'Error', text2: `${providerName} authentication failed.` });
       }
     }
     setSocialLoading(null);
@@ -92,10 +93,7 @@ export const useSocialAuth = (mode = 'signIn') => {
           if (googleRequest) {
             await googlePromptAsync();
           } else {
-            Alert.alert(
-              'Configuration Required',
-              'Google authentication is not configured yet.'
-            );
+            Toast.show({ type: 'info', text1: 'Configuration Required', text2: 'Google authentication is not configured yet.' });
             setSocialLoading(null);
           }
           break;
@@ -125,7 +123,7 @@ export const useSocialAuth = (mode = 'signIn') => {
       }
     } catch (error) {
       console.error('Social auth error:', error);
-      Alert.alert('Error', 'Social authentication failed. Please try again.');
+      Toast.show({ type: 'error', text1: 'Error', text2: 'Social authentication failed. Please try again.' });
       setSocialLoading(null);
     }
   }, [googleRequest, googlePromptAsync, handleBrowserAuthResult]);

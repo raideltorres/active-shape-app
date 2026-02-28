@@ -7,8 +7,8 @@ import {
   TouchableOpacity,
   Image,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -119,7 +119,7 @@ const RecipeDetailsScreen = ({ navigation, route }) => {
         setIsFavorite(true);
       }
     } catch (err) {
-      Alert.alert('Error', 'Could not update favorite.');
+      Toast.show({ type: 'error', text1: 'Error', text2: 'Could not update favorite.' });
     }
   }, [id, isFavorite, addFavoriteMutation, removeFavoriteMutation]);
 

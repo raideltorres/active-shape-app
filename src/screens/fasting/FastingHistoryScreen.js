@@ -8,6 +8,7 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -120,7 +121,7 @@ const FastingHistoryScreen = ({ navigation }) => {
       try {
         await deleteSession(sessionId).unwrap();
       } catch {
-        Alert.alert('Error', 'Failed to delete session. Please try again.');
+        Toast.show({ type: 'error', text1: 'Error', text2: 'Failed to delete session. Please try again.' });
       }
     },
     [deleteSession],

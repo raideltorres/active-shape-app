@@ -5,12 +5,12 @@ import {
   StyleSheet,
   ScrollView,
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   TouchableOpacity,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 
@@ -113,7 +113,7 @@ const TrackingScreen = () => {
       await createTracking({ userId: profile._id, date: selectedDate, field, value }).unwrap();
     } catch (e) {
       if (__DEV__) console.error('Save tracking error:', e);
-      Alert.alert('Error', 'Failed to save. Please try again.');
+      Toast.show({ type: 'error', text1: 'Error', text2: 'Failed to save. Please try again.' });
     }
   }, [profile?._id, selectedDate, createTracking]);
 
@@ -168,7 +168,7 @@ const TrackingScreen = () => {
       if (dB !== 0) await createTracking({ userId: profile._id, date: selectedDate, field: 'caloriesBurned', value: dB }).unwrap();
     } catch (e) {
       if (__DEV__) console.error('Save nutrition error:', e);
-      Alert.alert('Error', 'Failed to save calories.');
+      Toast.show({ type: 'error', text1: 'Error', text2: 'Failed to save calories.' });
     }
   }, [profile?._id, selectedDate, caloriesConsumed, caloriesBurned, todayData.caloriesConsumed, todayData.caloriesBurned, createTracking]);
 
@@ -183,10 +183,10 @@ const TrackingScreen = () => {
           createTracking({ userId: profile._id, date: selectedDate, field: 'carbs', value: totalNutrition.carbs ?? 0 }).unwrap(),
           createTracking({ userId: profile._id, date: selectedDate, field: 'fats', value: totalNutrition.fats ?? 0 }).unwrap(),
         ]);
-        Alert.alert('Success', `Added ${totalNutrition.calories ?? 0} kcal and macros to your daily tracking.`);
+        Toast.show({ type: 'success', text1: 'Success', text2: `Added ${totalNutrition.calories ?? 0} kcal and macros to your daily tracking.` });
       } catch (e) {
         if (__DEV__) console.error('Log food analysis error:', e);
-        Alert.alert('Error', e?.message || 'Failed to log food. Please try again.');
+        Toast.show({ type: 'error', text1: 'Error', text2: e?.message || 'Failed to log food. Please try again.' });
       }
     },
     [profile?._id, selectedDate, createTracking],
@@ -206,7 +206,7 @@ const TrackingScreen = () => {
       if (dF !== 0) await createTracking({ userId: profile._id, date: selectedDate, field: 'fats', value: dF }).unwrap();
     } catch (e) {
       if (__DEV__) console.error('Save macros error:', e);
-      Alert.alert('Error', 'Failed to save macronutrients.');
+      Toast.show({ type: 'error', text1: 'Error', text2: 'Failed to save macronutrients.' });
     }
   }, [profile?._id, selectedDate, proteins, carbs, fats, todayData.proteins, todayData.carbs, todayData.fats, createTracking]);
 
@@ -219,10 +219,10 @@ const TrackingScreen = () => {
           totalCaloriesBurned > 0 && createTracking({ userId: profile._id, date: selectedDate, field: 'caloriesBurned', value: totalCaloriesBurned }).unwrap(),
           totalDuration > 0 && createTracking({ userId: profile._id, date: selectedDate, field: 'exerciseDuration', value: totalDuration }).unwrap(),
         ].filter(Boolean));
-        Alert.alert('Success', `Logged ${totalCaloriesBurned} kcal burned and ${totalDuration} min of exercise.`);
+        Toast.show({ type: 'success', text1: 'Exercise Logged', text2: `${totalCaloriesBurned} kcal burned · ${totalDuration} min of exercise` });
       } catch (e) {
         if (__DEV__) console.error('Log exercise error:', e);
-        Alert.alert('Error', e?.message || 'Failed to log exercise.');
+        Toast.show({ type: 'error', text1: 'Error', text2: e?.message || 'Failed to log exercise.' });
       }
     },
     [profile?._id, selectedDate, createTracking],
@@ -240,7 +240,7 @@ const TrackingScreen = () => {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={100}>
+      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
           <View style={styles.header}>
             <Text style={styles.title}>Track Your Daily Metrics</Text>

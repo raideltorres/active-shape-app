@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import Toast from 'react-native-toast-message';
 
 import {
   useGetProfileQuery,
@@ -84,7 +85,7 @@ const TrackingHistoryScreen = () => {
     if (!profile?._id || !editingField) return;
     const num = parseFloat(editValue);
     if (Number.isNaN(num) || num < 0) {
-      Alert.alert('Invalid', 'Please enter a valid number.');
+      Toast.show({ type: 'error', text1: 'Invalid', text2: 'Please enter a valid number.' });
       return;
     }
     try {
@@ -97,7 +98,7 @@ const TrackingHistoryScreen = () => {
       setEditingField(null);
     } catch (e) {
       if (__DEV__) console.error('Update tracking error:', e);
-      Alert.alert('Error', e?.data?.message || 'Failed to update. Please try again.');
+      Toast.show({ type: 'error', text1: 'Error', text2: e?.data?.message || 'Failed to update. Please try again.' });
     }
   }, [profile?._id, selectedDate, editingField, editValue, updateTracking]);
 
@@ -120,7 +121,7 @@ const TrackingHistoryScreen = () => {
               }).unwrap();
             } catch (e) {
               if (__DEV__) console.error('Delete field error:', e);
-              Alert.alert('Error', e?.data?.message || 'Failed to delete.');
+              Toast.show({ type: 'error', text1: 'Error', text2: e?.data?.message || 'Failed to delete.' });
             }
           },
         },
@@ -146,7 +147,7 @@ const TrackingHistoryScreen = () => {
               }).unwrap();
             } catch (e) {
               if (__DEV__) console.error('Delete all error:', e);
-              Alert.alert('Error', e?.data?.message || 'Failed to delete.');
+              Toast.show({ type: 'error', text1: 'Error', text2: e?.data?.message || 'Failed to delete.' });
             }
           },
         },
@@ -209,25 +210,67 @@ const TrackingHistoryScreen = () => {
             ))}
 
             {emptyFields.length > 0 && (
-              <>
-                <Text style={[styles.sectionTitle, { marginTop: spacing.lg }]}>Not Tracked</Text>
-                <View style={styles.emptyFieldsWrap}>
+            <View style={styles.notTrackedSection}>
+              <View style={styles.notTrackedHeader}>
+                <Ionicons name="ellipsis-horizontal-circle-outline" size={18} color={colors.raven} />
+                <Text style={styles.notTrackedTitle}>Not Tracked</Text>
+              </View>
+              <Text style={styles.notTrackedHint}>
+                You can quickly log values here, or head to the main Tracking page for detailed tools like the water tracker, step counter, and AI exercise analyzer — with full day navigation.
+              </Text>
+              <View style={styles.emptyFieldsGrid}>
                   {emptyFields.map((field) => (
-                    <View key={field.key} style={styles.emptyField}>
-                      <Ionicons name={field.icon} size={18} color={colors.raven} />
+                    <TouchableOpacity
+                      key={field.key}
+                      style={styles.emptyFieldCard}
+                      onPress={() => handleEdit(field)}
+                      activeOpacity={0.7}
+                    >
+                      <View style={[styles.emptyFieldIcon, { backgroundColor: `${field.color}12` }]}>
+                        <Ionicons name={field.icon} size={18} color={field.color} />
+                      </View>
                       <Text style={styles.emptyFieldLabel}>{field.label}</Text>
-                    </View>
+                      <View style={styles.emptyFieldAddBadge}>
+                        <Ionicons name="add" size={14} color={colors.mainBlue} />
+                      </View>
+                    </TouchableOpacity>
                   ))}
                 </View>
-              </>
+              </View>
             )}
           </>
         ) : (
-          <View style={styles.noData}>
-            <Ionicons name="analytics-outline" size={48} color={colors.alto} />
-            <Text style={styles.noDataTitle}>No data tracked</Text>
-            <Text style={styles.noDataText}>No tracking data found for this day. Use the Tracking page to log your daily metrics.</Text>
-          </View>
+          <>
+            <View style={styles.noData}>
+              <Ionicons name="analytics-outline" size={48} color={colors.alto} />
+              <Text style={styles.noDataTitle}>No data tracked</Text>
+              <Text style={styles.noDataText}>Nothing logged for this day yet. Tap a metric below to start tracking.</Text>
+            </View>
+
+            <View style={styles.notTrackedSection}>
+              <Text style={styles.notTrackedHint}>
+                You can quickly log values here, or head to the main Tracking page for detailed tools like the water tracker, step counter, and AI exercise analyzer — with full day navigation.
+              </Text>
+              <View style={styles.emptyFieldsGrid}>
+                {FIELD_CONFIG.map((field) => (
+                  <TouchableOpacity
+                    key={field.key}
+                    style={styles.emptyFieldCard}
+                    onPress={() => handleEdit(field)}
+                    activeOpacity={0.7}
+                  >
+                    <View style={[styles.emptyFieldIcon, { backgroundColor: `${field.color}12` }]}>
+                      <Ionicons name={field.icon} size={18} color={field.color} />
+                    </View>
+                    <Text style={styles.emptyFieldLabel}>{field.label}</Text>
+                    <View style={styles.emptyFieldAddBadge}>
+                      <Ionicons name="add" size={14} color={colors.mainBlue} />
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          </>
         )}
 
         <View style={{ height: spacing.xxl }} />
@@ -330,22 +373,70 @@ const styles = StyleSheet.create({
   fieldValue: { ...typography.h4, color: colors.mineShaft },
   fieldActions: { flexDirection: 'row', gap: spacing.sm },
   actionBtn: { padding: spacing.xs },
-  emptyFieldsWrap: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-    marginTop: spacing.sm,
+  notTrackedSection: {
+    marginTop: spacing.xl,
+    backgroundColor: colors.white,
+    borderRadius: borderRadius.xl,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.mercury,
+    borderStyle: 'dashed',
   },
-  emptyField: {
+  notTrackedHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.xs,
-    backgroundColor: colors.athensGray,
-    paddingVertical: spacing.xs,
-    paddingHorizontal: spacing.sm,
-    borderRadius: borderRadius.md,
+    marginBottom: spacing.md,
   },
-  emptyFieldLabel: { ...typography.bodySmall, color: colors.raven },
+  notTrackedTitle: {
+    ...typography.body,
+    fontWeight: '600',
+    color: colors.raven,
+  },
+  notTrackedHint: {
+    ...typography.caption,
+    color: colors.raven,
+    lineHeight: 18,
+    marginBottom: spacing.md,
+  },
+  emptyFieldsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+  },
+  emptyFieldCard: {
+    width: '47%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    backgroundColor: colors.alabaster,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: colors.gallery,
+  },
+  emptyFieldIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyFieldLabel: {
+    ...typography.caption,
+    color: colors.mineShaft,
+    fontWeight: '500',
+    flex: 1,
+  },
+  emptyFieldAddBadge: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: `${colors.mainBlue}12`,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   noData: {
     alignItems: 'center',
     paddingVertical: spacing.xxxl,

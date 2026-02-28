@@ -11,6 +11,7 @@ import {
   Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import Toast from 'react-native-toast-message';
 import * as ImagePicker from 'expo-image-picker';
 
 import { useAnalyzeFoodImageMutation } from '../../../store/api';
@@ -117,7 +118,7 @@ const AiFoodScanner = ({ userId, onFoodAnalyzed }) => {
       setDishContext('');
     } catch (e) {
       if (__DEV__) console.error('Log food error:', e);
-      Alert.alert('Error', e?.message || 'Failed to log food.');
+      Toast.show({ type: 'error', text1: 'Error', text2: e?.message || 'Failed to log food.' });
     } finally {
       setLogging(false);
     }

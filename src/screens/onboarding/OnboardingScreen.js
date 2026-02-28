@@ -4,11 +4,11 @@ import {
   Text,
   StyleSheet,
   ActivityIndicator,
-  Alert,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import PersonalInfoStep from './PersonalInfoStep';
@@ -64,7 +64,7 @@ const OnboardingScreen = ({ navigation }) => {
       } catch (err) {
         const msg =
           err?.data?.message || 'Failed to save. Please try again.';
-        Alert.alert('Error', msg);
+        Toast.show({ type: 'error', text1: 'Error', text2: msg });
       }
     },
     [upsertUser, profileData],
@@ -81,7 +81,7 @@ const OnboardingScreen = ({ navigation }) => {
         },
       }).unwrap();
     } catch (err) {
-      Alert.alert('Error', 'Failed to go back. Please try again.');
+      Toast.show({ type: 'error', text1: 'Error', text2: 'Failed to go back. Please try again.' });
     }
   }, [upsertUser, profileData, currentStep]);
 

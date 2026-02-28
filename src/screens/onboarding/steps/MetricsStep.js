@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, StyleSheet, Alert } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
+import Toast from 'react-native-toast-message';
 
 import { ValuePicker, BodyCompositionPicker, BmiGauge } from '../../../components/molecules';
 import { Button, BackButton } from '../../../components/atoms';
@@ -23,7 +24,7 @@ const MetricsStep = ({ onSubmit, onBack, profileData, loading }) => {
 
   const handleSubmit = () => {
     if (!bodyComposition) {
-      Alert.alert('Required', 'Please select your body composition.');
+      Toast.show({ type: 'error', text1: 'Required', text2: 'Please select your body composition.' });
       return;
     }
 

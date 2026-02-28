@@ -14,8 +14,8 @@ const STEP_PRESETS = [
   { label: '10,000', value: 10000 },
 ];
 
-const RING_SIZE = 140;
-const RING_STROKE = 10;
+const RING_SIZE = 150;
+const RING_STROKE = 8;
 const RING_RADIUS = (RING_SIZE - RING_STROKE) / 2;
 const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
 
@@ -50,8 +50,13 @@ const StepsTrackerSection = ({ totalSteps = 0, dailyGoal = 10000, onSave, saving
       <Card>
         <Text style={styles.cardTitle}>Activity Tracking</Text>
         <Text style={styles.description}>
-          Track your daily steps to monitor your physical activity. Walking improves cardiovascular health, aids weight management, and boosts mental well-being. Aim for 7,000–10,000 daily steps.
+          Track your daily steps to monitor your physical activity. Walking is one of the most effective forms of
+          exercise — it improves cardiovascular health, aids weight management, and boosts mental well-being. The WHO
+          recommends at least 150 minutes of moderate activity per week, and 7,000–10,000 daily steps is a strong
+          indicator of meeting that goal.
         </Text>
+
+        <View style={styles.greenDivider} />
 
         <View style={styles.goalCard}>
           <View style={styles.goalCardLeft}>
@@ -104,14 +109,14 @@ const StepsTrackerSection = ({ totalSteps = 0, dailyGoal = 10000, onSave, saving
             />
           </View>
 
-          <View style={styles.ringCol}>
+          <View style={styles.statsPanel}>
             <View style={styles.ringWrap}>
               <Svg width={RING_SIZE} height={RING_SIZE}>
                 <Circle
                   cx={RING_SIZE / 2}
                   cy={RING_SIZE / 2}
                   r={RING_RADIUS}
-                  stroke={colors.gallery}
+                  stroke="rgba(255,255,255,0.15)"
                   strokeWidth={RING_STROKE}
                   fill="transparent"
                 />
@@ -119,7 +124,7 @@ const StepsTrackerSection = ({ totalSteps = 0, dailyGoal = 10000, onSave, saving
                   cx={RING_SIZE / 2}
                   cy={RING_SIZE / 2}
                   r={RING_RADIUS}
-                  stroke={colors.mainOrange}
+                  stroke={colors.lima}
                   strokeWidth={RING_STROKE}
                   fill="transparent"
                   strokeDasharray={RING_CIRCUMFERENCE}
@@ -130,7 +135,7 @@ const StepsTrackerSection = ({ totalSteps = 0, dailyGoal = 10000, onSave, saving
                 />
               </Svg>
               <View style={styles.ringCenter}>
-                <Ionicons name="walk" size={22} color={colors.mainOrange} />
+                <Ionicons name="walk" size={22} color={colors.white} />
                 <Text style={styles.ringValue}>{totalSteps.toLocaleString()}</Text>
                 <Text style={styles.ringLabel}>steps</Text>
               </View>
@@ -149,9 +154,13 @@ const StepsTrackerSection = ({ totalSteps = 0, dailyGoal = 10000, onSave, saving
           </View>
         </View>
 
-        <Text style={styles.info}>
-          Distance is estimated using a 0.762m stride. Calorie burn is ~0.04 kcal/step.
-        </Text>
+        <View style={styles.infoCard}>
+          <Text style={styles.infoText}>
+            <Text style={styles.infoBold}>How we calculate: </Text>
+            Distance is estimated using an average stride length of 0.762m. Calorie burn is approximated at ~0.04 kcal
+            per step (varies by weight, pace, and terrain).
+          </Text>
+        </View>
       </Card>
     </View>
   );
@@ -168,6 +177,11 @@ const styles = StyleSheet.create({
     color: colors.raven,
     lineHeight: 20,
     marginBottom: spacing.md,
+  },
+  greenDivider: {
+    height: 2,
+    backgroundColor: colors.lima,
+    marginBottom: spacing.lg,
   },
   goalCard: {
     flexDirection: 'row',
@@ -189,11 +203,11 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   goalText: { ...typography.bodySmall, color: colors.riverBed },
-  goalPercent: { fontSize: 22, fontWeight: '700', color: colors.mainBlue },
+  goalPercent: { fontSize: 22, fontWeight: '700', color: colors.lima },
   bodyRow: {
     flexDirection: 'row',
     gap: spacing.md,
-    marginBottom: spacing.md,
+    marginBottom: spacing.lg,
   },
   detailsCol: { flex: 1 },
   sectionTitle: { ...typography.h4, color: colors.mineShaft, marginBottom: 4 },
@@ -205,6 +219,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   presetBtn: {
+    width: '48%',
     paddingVertical: spacing.xs,
     paddingHorizontal: spacing.sm,
     borderRadius: borderRadius.md,
@@ -214,12 +229,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   presetBtnActive: {
-    borderColor: colors.mainOrange,
-    backgroundColor: `${colors.mainOrange}12`,
+    borderColor: colors.lima,
+    backgroundColor: `${colors.lima}0D`,
   },
   presetValue: { ...typography.body, fontWeight: '700', color: colors.mineShaft },
   presetLabel: { ...typography.caption, color: colors.raven, fontSize: 10 },
-  presetTextActive: { color: colors.mainOrange },
+  presetTextActive: { color: colors.lima },
   customInput: {
     borderWidth: 1,
     borderColor: colors.gallery,
@@ -230,24 +245,65 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   addBtn: { marginBottom: spacing.sm },
-  ringCol: { alignItems: 'center', justifyContent: 'center' },
-  ringWrap: { alignItems: 'center', justifyContent: 'center', marginBottom: spacing.md },
+  statsPanel: {
+    width: 170,
+    backgroundColor: colors.mainBlue,
+    borderRadius: 18,
+    paddingVertical: spacing.xl,
+    paddingHorizontal: spacing.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.lg,
+  },
+  ringWrap: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   ringCenter: {
     position: 'absolute',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  ringValue: { ...typography.h4, color: colors.mineShaft, marginTop: 2 },
-  ringLabel: { ...typography.caption, color: colors.raven },
+  ringValue: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: colors.white,
+    marginTop: 2,
+  },
+  ringLabel: {
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.7)',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+  },
   metricsRow: { flexDirection: 'row', gap: spacing.lg },
   metric: { alignItems: 'center' },
-  metricValue: { ...typography.body, fontWeight: '700', color: colors.mineShaft },
-  metricLabel: { ...typography.caption, color: colors.raven },
-  info: {
+  metricValue: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: colors.white,
+  },
+  metricLabel: {
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.6)',
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+    marginTop: 2,
+  },
+  infoCard: {
+    backgroundColor: `${colors.lima}0F`,
+    borderWidth: 1,
+    borderColor: `${colors.lima}26`,
+    borderRadius: 12,
+    padding: spacing.md,
+  },
+  infoText: {
     ...typography.caption,
     color: colors.raven,
-    fontStyle: 'italic',
-    textAlign: 'center',
+    lineHeight: 20,
+  },
+  infoBold: {
+    fontWeight: '700',
   },
 });
 

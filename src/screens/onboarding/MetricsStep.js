@@ -1,5 +1,6 @@
 import React, { useCallback, useState } from 'react';
-import { View, StyleSheet, Alert } from 'react-native';
+import { View, StyleSheet } from 'react-native';
+import Toast from 'react-native-toast-message';
 
 import Button from '../../components/atoms/Button';
 import ValuePicker from '../../components/molecules/ValuePicker/ValuePicker';
@@ -23,11 +24,11 @@ const MetricsStep = ({ onSubmit, onBack, profileData, loading }) => {
 
   const handleSubmit = useCallback(() => {
     if (height < 50 || height > 300) {
-      Alert.alert('Validation', 'Please enter a valid height (50–300 cm).');
+      Toast.show({ type: 'error', text1: 'Validation', text2: 'Please enter a valid height (50–300 cm).' });
       return;
     }
     if (weight < 20 || weight > 300) {
-      Alert.alert('Validation', 'Please enter a valid weight (20–300 kg).');
+      Toast.show({ type: 'error', text1: 'Validation', text2: 'Please enter a valid weight (20–300 kg).' });
       return;
     }
 

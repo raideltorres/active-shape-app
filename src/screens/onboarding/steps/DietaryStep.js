@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, TextInput, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, StyleSheet } from 'react-native';
+import Toast from 'react-native-toast-message';
 
 import { OptionPicker, Button, BackButton } from '../../../components/atoms';
 import { colors, spacing, typography, borderRadius } from '../../../theme';
@@ -25,7 +26,7 @@ const DietaryStep = ({ onSubmit, onBack, profileData, optionsData, loading }) =>
 
   const handleSubmit = () => {
     if (!dietaryPreference) {
-      Alert.alert('Required', 'Please select a dietary preference.');
+      Toast.show({ type: 'error', text1: 'Required', text2: 'Please select a dietary preference.' });
       return;
     }
 

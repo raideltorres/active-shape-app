@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Alert } from 'react-native';
+import Toast from 'react-native-toast-message';
 
 import {
   useGetFastingPlanQuery,
@@ -53,7 +53,7 @@ export const useFasting = () => {
         }).unwrap();
       }
     } catch {
-      Alert.alert('Error', 'Failed to start fasting session. Please try again.');
+      Toast.show({ type: 'error', text1: 'Error', text2: 'Failed to start fasting session. Please try again.' });
     }
   }, [profileData, upsertUser, fastingPlan, startFastingSession]);
 
@@ -82,9 +82,9 @@ export const useFasting = () => {
           }).unwrap();
         }
 
-        Alert.alert('Great job!', `You fasted for ${secondsToTime(elapsedSeconds)}`);
+        Toast.show({ type: 'success', text1: 'Great job!', text2: `You fasted for ${secondsToTime(elapsedSeconds)}` });
       } catch {
-        Alert.alert('Error', 'Failed to end fasting session. Please try again.');
+        Toast.show({ type: 'error', text1: 'Error', text2: 'Failed to end fasting session. Please try again.' });
       }
     },
     [profileData, upsertUser, ongoingSession, fastingPlan, endFastingSession],

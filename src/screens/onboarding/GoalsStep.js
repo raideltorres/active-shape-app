@@ -9,10 +9,10 @@ import {
   View,
   Text,
   StyleSheet,
-  Alert,
   Switch,
   ActivityIndicator,
 } from "react-native";
+import Toast from 'react-native-toast-message';
 
 import Button from "../../components/atoms/Button";
 import OptionPicker from "../../components/atoms/OptionPicker";
@@ -167,7 +167,7 @@ const GoalsStep = ({ onSubmit, onBack, profileData, optionsData, loading }) => {
   const handleSubmit = useCallback(() => {
     const error = validate();
     if (error) {
-      Alert.alert("Validation", error);
+      Toast.show({ type: 'error', text1: 'Validation', text2: error });
       return;
     }
 

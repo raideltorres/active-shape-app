@@ -1,14 +1,16 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { StatusBar } from 'expo-status-bar';
-import { View, ActivityIndicator, StyleSheet } from 'react-native';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { Provider } from 'react-redux';
+import React, { useEffect, useState, useCallback } from "react";
+import { StatusBar } from "expo-status-bar";
+import { View, ActivityIndicator, StyleSheet } from "react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
+import { Provider } from "react-redux";
+import Toast from "react-native-toast-message";
 
-import { RootNavigator } from './src/navigation';
-import { store } from './src/store';
-import { useAuth } from './src/hooks/useAuth';
-import { onUnauthorized } from './src/utils/authEvents';
-import { colors } from './src/theme';
+import { RootNavigator } from "./src/navigation";
+import { store } from "./src/store";
+import { useAuth } from "./src/hooks/useAuth";
+import { onUnauthorized } from "./src/utils/authEvents";
+import { colors } from "./src/theme";
+import { toastConfig } from "./src/config/toastConfig";
 
 const AppContent = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -17,9 +19,9 @@ const AppContent = () => {
   // Handle unauthorized events (401) - auto logout
   const handleUnauthorized = useCallback(async () => {
     if (__DEV__) {
-      console.log('[Auth] Session expired or unauthorized - logging out');
+      console.log("[Auth] Session expired or unauthorized - logging out");
     }
-    
+
     await signOut();
   }, [signOut]);
 
@@ -53,6 +55,7 @@ export default function App() {
       <SafeAreaProvider>
         <StatusBar style="auto" />
         <AppContent />
+        <Toast config={toastConfig} topOffset={70} />
       </SafeAreaProvider>
     </Provider>
   );
@@ -61,8 +64,8 @@ export default function App() {
 const styles = StyleSheet.create({
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     backgroundColor: colors.white,
   },
 });

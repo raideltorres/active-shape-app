@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Alert } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
+import Toast from 'react-native-toast-message';
 
 import { GenderPicker, DateOfBirthPicker } from '../../../components/molecules';
 import { Button } from '../../../components/atoms';
@@ -11,11 +12,11 @@ const PersonalInfoStep = ({ onSubmit, profileData, loading }) => {
 
   const handleSubmit = () => {
     if (!gender) {
-      Alert.alert('Required', 'Please select your gender.');
+      Toast.show({ type: 'error', text1: 'Required', text2: 'Please select your gender.' });
       return;
     }
     if (!birthDate) {
-      Alert.alert('Required', 'Please select your date of birth.');
+      Toast.show({ type: 'error', text1: 'Required', text2: 'Please select your date of birth.' });
       return;
     }
 

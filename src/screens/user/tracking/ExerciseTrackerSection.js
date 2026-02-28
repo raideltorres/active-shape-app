@@ -6,8 +6,8 @@ import {
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { Ionicons } from '@expo/vector-icons';
 
 import { Card } from '../../../components/molecules';
@@ -44,7 +44,7 @@ const ExerciseTrackerSection = ({ userWeight, onExerciseAnalyzed, saving }) => {
       await analyzeExercise({ description: description.trim(), userWeight }).unwrap();
     } catch (err) {
       if (__DEV__) console.error('Exercise analysis error:', err);
-      Alert.alert('Analysis failed', err?.data?.message || 'Please try again with a clearer description.');
+      Toast.show({ type: 'error', text1: 'Analysis Failed', text2: err?.data?.message || 'Please try again with a clearer description.' });
     }
   }, [description, userWeight, analyzeExercise, canAnalyze]);
 
@@ -56,7 +56,7 @@ const ExerciseTrackerSection = ({ userWeight, onExerciseAnalyzed, saving }) => {
       setDescription('');
     } catch (err) {
       if (__DEV__) console.error('Log exercise error:', err);
-      Alert.alert('Error', err?.message || 'Failed to log exercise.');
+      Toast.show({ type: 'error', text1: 'Error', text2: err?.message || 'Failed to log exercise.' });
     } finally {
       setLogging(false);
     }
@@ -72,26 +72,30 @@ const ExerciseTrackerSection = ({ userWeight, onExerciseAnalyzed, saving }) => {
     return (
       <View>
         <Card>
-          <View style={styles.header}>
-            <Ionicons name="fitness" size={22} color={colors.mainOrange} />
-            <Text style={styles.title}>Exercise Analysis</Text>
+          <View style={styles.resultHeader}>
+            <View style={styles.resultHeaderIcon}>
+              <Ionicons name="fitness" size={20} color={colors.white} />
+            </View>
+            <View>
+              <Text style={styles.resultHeaderTitle}>Exercise Analysis</Text>
+              <Text style={styles.resultHeaderSubtitle}>
+                {exercises.length} {exercises.length === 1 ? 'exercise' : 'exercises'} detected
+              </Text>
+            </View>
           </View>
-          <Text style={styles.subtitle}>
-            {exercises.length} {exercises.length === 1 ? 'exercise' : 'exercises'} detected
-          </Text>
 
           <View style={styles.heroRow}>
-            <View style={[styles.heroCard, { backgroundColor: `${colors.mainOrange}14` }]}>
+            <View style={[styles.heroCard, styles.heroCalories]}>
               <Ionicons name="flame" size={20} color={colors.mainOrange} />
               <Text style={styles.heroValue}>{totalCaloriesBurned}</Text>
               <Text style={styles.heroLabel}>kcal burned</Text>
             </View>
-            <View style={[styles.heroCard, { backgroundColor: `${colors.mainBlue}14` }]}>
+            <View style={[styles.heroCard, styles.heroDuration]}>
               <Ionicons name="time" size={20} color={colors.mainBlue} />
               <Text style={styles.heroValue}>{totalDuration}</Text>
               <Text style={styles.heroLabel}>minutes</Text>
             </View>
-            <View style={[styles.heroCard, { backgroundColor: `${colors.lima}14` }]}>
+            <View style={[styles.heroCard, styles.heroIntensity]}>
               <Ionicons name="flash" size={20} color={colors.lima} />
               <Text style={styles.heroValue}>{INTENSITY_LABELS[intensityLevel] || intensityLevel}</Text>
               <Text style={styles.heroLabel}>intensity</Text>
@@ -113,7 +117,10 @@ const ExerciseTrackerSection = ({ userWeight, onExerciseAnalyzed, saving }) => {
 
           {suggestions?.length > 0 && (
             <>
-              <Text style={[styles.sectionTitle, { marginTop: spacing.md }]}>Recovery & Tips</Text>
+              <View style={styles.tipsHeader}>
+                <Ionicons name="sparkles" size={16} color={colors.mainBlue} />
+                <Text style={styles.sectionTitle}>Recovery & Tips</Text>
+              </View>
               {suggestions.map((tip, i) => (
                 <View key={i} style={styles.tipRow}>
                   <Ionicons name="information-circle-outline" size={16} color={colors.raven} />
@@ -132,7 +139,7 @@ const ExerciseTrackerSection = ({ userWeight, onExerciseAnalyzed, saving }) => {
               style={styles.logBtn}
             />
             <Button
-              title="Analyze Another"
+              title="Analyze Another Exercise"
               onPress={handleReset}
               variant="secondary"
               icon="barbell-outline"
@@ -146,53 +153,64 @@ const ExerciseTrackerSection = ({ userWeight, onExerciseAnalyzed, saving }) => {
   return (
     <View>
       <Card>
-        <View style={styles.header}>
-          <Ionicons name="sparkles" size={22} color={colors.mainBlue} />
-          <Text style={styles.title}>AI Exercise Analyzer</Text>
-        </View>
-        <Text style={styles.description}>
-          Describe your exercise session in natural language and our AI will identify activities, look up MET values, and calculate calories burned using: Calories = MET x Weight (kg) x Duration (hours).
-        </Text>
-
-        <Text style={styles.inputLabel}>Describe your exercise</Text>
-        <TextInput
-          style={styles.input}
-          value={description}
-          onChangeText={setDescription}
-          placeholder="e.g. 30 min running at moderate pace"
-          placeholderTextColor={colors.alto}
-          multiline
-          numberOfLines={3}
-          textAlignVertical="top"
-        />
-
-        <Text style={styles.examplesLabel}>Examples:</Text>
-        <View style={styles.examplesWrap}>
-          {EXAMPLE_INPUTS.map((example) => (
-            <TouchableOpacity
-              key={example}
-              style={styles.chip}
-              onPress={() => setDescription(example)}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.chipText}>{example}</Text>
-            </TouchableOpacity>
-          ))}
+        <View style={styles.headerCenter}>
+          <View style={styles.headerRow}>
+            <Ionicons name="sparkles" size={20} color={colors.mainBlue} />
+            <Text style={styles.title}>AI Exercise Analyzer</Text>
+          </View>
+          <Text style={styles.description}>
+            Describe your exercise session in natural language and our AI will identify the activities, look up the
+            correct MET (Metabolic Equivalent) values from the 2024 Compendium of Physical Activities, and calculate
+            your calories burned using the scientifically validated formula:{' '}
+            <Text style={styles.descBold}>Calories = MET × Weight (kg) × Duration (hours)</Text>. The more specific
+            your description (intensity, duration, pace), the more accurate the estimate.
+          </Text>
         </View>
 
-        <Button
-          title="Analyze Exercise"
-          onPress={handleAnalyze}
-          disabled={!canAnalyze || isLoading}
-          icon="sparkles"
-          style={styles.analyzeBtn}
-        />
+        {!isLoading && (
+          <>
+            <Text style={styles.inputLabel}>Describe your exercise</Text>
+            <TextInput
+              style={styles.input}
+              value={description}
+              onChangeText={setDescription}
+              placeholder="e.g. 30 min running at moderate pace"
+              placeholderTextColor={colors.alto}
+              multiline
+              numberOfLines={3}
+              textAlignVertical="top"
+            />
+
+            <Text style={styles.examplesLabel}>Examples:</Text>
+            <View style={styles.examplesWrap}>
+              {EXAMPLE_INPUTS.map((example) => (
+                <TouchableOpacity
+                  key={example}
+                  style={styles.chip}
+                  onPress={() => setDescription(example)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.chipText}>{example}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <Button
+              title="Analyze Exercise"
+              onPress={handleAnalyze}
+              disabled={!canAnalyze || isLoading}
+              icon="sparkles"
+            />
+          </>
+        )}
 
         {isLoading && (
           <View style={styles.loading}>
             <ActivityIndicator size="large" color={colors.mainOrange} />
             <Text style={styles.loadingText}>Analyzing your exercise...</Text>
-            <Text style={styles.loadingSubtext}>Looking up MET values and calculating calories.</Text>
+            <Text style={styles.loadingSubtext}>
+              AI is identifying exercises, looking up MET values, and calculating calories. This may take a few seconds.
+            </Text>
           </View>
         )}
 
@@ -209,14 +227,24 @@ const ExerciseTrackerSection = ({ userWeight, onExerciseAnalyzed, saving }) => {
 };
 
 const styles = StyleSheet.create({
-  header: {
+  headerCenter: {
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: spacing.sm,
     marginBottom: spacing.sm,
   },
-  title: { ...typography.h4, color: colors.mainBlue, marginLeft: spacing.sm },
-  subtitle: { ...typography.bodySmall, color: colors.raven, marginBottom: spacing.md },
-  description: { ...typography.bodySmall, color: colors.raven, lineHeight: 20, marginBottom: spacing.md },
+  title: { ...typography.h4, color: colors.mainBlue },
+  description: {
+    ...typography.bodySmall,
+    color: colors.raven,
+    lineHeight: 20,
+    textAlign: 'justify',
+  },
+  descBold: { fontWeight: '700' },
   inputLabel: { ...typography.bodySmall, color: colors.raven, marginBottom: 4 },
   input: {
     borderWidth: 1,
@@ -228,21 +256,39 @@ const styles = StyleSheet.create({
     minHeight: 80,
     marginBottom: spacing.md,
   },
-  examplesLabel: { ...typography.bodySmall, color: colors.raven, marginBottom: spacing.xs },
-  examplesWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs, marginBottom: spacing.lg },
-  chip: {
-    backgroundColor: colors.athensGray,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 6,
-    borderRadius: borderRadius.md,
-    borderWidth: 1,
-    borderColor: colors.gallery,
+  examplesLabel: {
+    ...typography.bodySmall,
+    color: colors.raven,
+    marginBottom: spacing.xs,
   },
-  chipText: { ...typography.caption, color: colors.mineShaft },
-  analyzeBtn: {},
-  loading: { alignItems: 'center', paddingVertical: spacing.xl },
-  loadingText: { ...typography.body, fontWeight: '600', color: colors.mineShaft, marginTop: spacing.md },
-  loadingSubtext: { ...typography.bodySmall, color: colors.raven, marginTop: 4 },
+  examplesWrap: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.xs,
+    marginBottom: spacing.lg,
+  },
+  chip: {
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: colors.mercury,
+    backgroundColor: colors.white,
+  },
+  chipText: { fontSize: 12, color: colors.raven },
+  loading: { alignItems: 'center', paddingVertical: spacing.xxl },
+  loadingText: {
+    ...typography.body,
+    fontWeight: '600',
+    color: colors.mineShaft,
+    marginTop: spacing.md,
+  },
+  loadingSubtext: {
+    ...typography.bodySmall,
+    color: colors.raven,
+    marginTop: 4,
+    textAlign: 'center',
+  },
   errorWrap: {
     backgroundColor: `${colors.error}12`,
     padding: spacing.md,
@@ -250,6 +296,23 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
   },
   errorText: { ...typography.bodySmall, color: colors.error },
+
+  resultHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  resultHeaderIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.mainBlue,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  resultHeaderTitle: { ...typography.h4, color: colors.mineShaft },
+  resultHeaderSubtitle: { ...typography.caption, color: colors.raven },
   heroRow: {
     flexDirection: 'row',
     gap: spacing.sm,
@@ -261,9 +324,17 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.lg,
     alignItems: 'center',
   },
+  heroCalories: { backgroundColor: `${colors.mainOrange}14` },
+  heroDuration: { backgroundColor: `${colors.mainBlue}14` },
+  heroIntensity: { backgroundColor: `${colors.lima}14` },
   heroValue: { ...typography.h4, color: colors.mineShaft, marginTop: 4, textAlign: 'center' },
   heroLabel: { ...typography.caption, color: colors.raven, textAlign: 'center' },
-  sectionTitle: { ...typography.body, fontWeight: '600', color: colors.mineShaft, marginBottom: spacing.sm },
+  sectionTitle: {
+    ...typography.body,
+    fontWeight: '600',
+    color: colors.mineShaft,
+    marginBottom: spacing.sm,
+  },
   exerciseRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -276,7 +347,19 @@ const styles = StyleSheet.create({
   exerciseName: { ...typography.body, color: colors.mineShaft },
   exerciseMeta: { ...typography.caption, color: colors.raven },
   exerciseCal: { ...typography.body, fontWeight: '700', color: colors.mainOrange },
-  tipRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.xs, marginBottom: spacing.xs },
+  tipsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    marginTop: spacing.md,
+    marginBottom: spacing.sm,
+  },
+  tipRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.xs,
+    marginBottom: spacing.xs,
+  },
   tipText: { ...typography.bodySmall, color: colors.raven, flex: 1 },
   actions: { marginTop: spacing.lg },
   logBtn: { marginBottom: spacing.sm },

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
+import Toast from 'react-native-toast-message';
 
 import { ScrollableFormLayout } from '../../components/templates';
 import {
@@ -26,7 +27,7 @@ const LoginScreen = ({ navigation }) => {
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert('Error', 'Please fill in all fields');
+      Toast.show({ type: 'error', text1: 'Error', text2: 'Please fill in all fields.' });
       return;
     }
 
@@ -34,7 +35,7 @@ const LoginScreen = ({ navigation }) => {
       const response = await signIn({ email, password }).unwrap();
       await login(response.data, response.access_token, response.refresh_token);
     } catch (error) {
-      Alert.alert('Error', error.data?.message || error.message || 'Login failed');
+      Toast.show({ type: 'error', text1: 'Login Failed', text2: error.data?.message || error.message || 'Please try again.' });
     }
   };
 
@@ -51,7 +52,7 @@ const LoginScreen = ({ navigation }) => {
       await login(response.data, response.access_token, response.refresh_token);
     } catch (error) {
       if (__DEV__) console.error('[DEV] Login error:', error);
-      Alert.alert('Dev Login Error', `${error.data?.message || error.message}\n\nAPI: ${API_BASE_URL}`);
+      Toast.show({ type: 'error', text1: 'Dev Login Error', text2: error.data?.message || error.message });
     }
   };
 

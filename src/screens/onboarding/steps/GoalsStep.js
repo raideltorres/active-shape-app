@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { View, Text, StyleSheet, Alert, Switch } from 'react-native';
+import { View, Text, StyleSheet, Switch } from 'react-native';
+import Toast from 'react-native-toast-message';
 
 import { ValuePicker, OnboardingFastingPlanCard } from '../../../components/molecules';
 import { OptionPicker, Button, BackButton } from '../../../components/atoms';
@@ -89,15 +90,15 @@ const GoalsStep = ({ onSubmit, onBack, profileData, optionsData, loading }) => {
 
   const handleSubmit = () => {
     if (!primaryGoal) {
-      Alert.alert('Required', 'Please select a primary goal.');
+      Toast.show({ type: 'error', text1: 'Required', text2: 'Please select a primary goal.' });
       return;
     }
     if (fitnessPreferences.length === 0) {
-      Alert.alert('Required', 'Please select at least one fitness preference.');
+      Toast.show({ type: 'error', text1: 'Required', text2: 'Please select at least one fitness preference.' });
       return;
     }
     if (!preferredEatingSchedule) {
-      Alert.alert('Required', 'Please select your preferred eating schedule.');
+      Toast.show({ type: 'error', text1: 'Required', text2: 'Please select your preferred eating schedule.' });
       return;
     }
 

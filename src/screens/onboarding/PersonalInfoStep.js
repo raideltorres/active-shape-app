@@ -1,5 +1,6 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { View, Text, StyleSheet, Alert } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
+import Toast from 'react-native-toast-message';
 
 import FormInput from '../../components/atoms/FormInput';
 import Button from '../../components/atoms/Button';
@@ -41,7 +42,7 @@ const PersonalInfoStep = ({ onSubmit, profileData, loading }) => {
   const handleSubmit = useCallback(() => {
     const error = validate();
     if (error) {
-      Alert.alert('Validation', error);
+      Toast.show({ type: 'error', text1: 'Validation', text2: error });
       return;
     }
 

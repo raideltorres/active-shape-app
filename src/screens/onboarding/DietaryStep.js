@@ -1,5 +1,6 @@
 import React, { useCallback, useState } from 'react';
-import { View, Text, StyleSheet, Alert } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
+import Toast from 'react-native-toast-message';
 
 import Button from '../../components/atoms/Button';
 import FormInput from '../../components/atoms/FormInput';
@@ -49,7 +50,7 @@ const DietaryStep = ({ onSubmit, onBack, profileData, optionsData, loading }) =>
   const handleSubmit = useCallback(() => {
     const error = validate();
     if (error) {
-      Alert.alert('Validation', error);
+      Toast.show({ type: 'error', text1: 'Validation', text2: error });
       return;
     }
 
