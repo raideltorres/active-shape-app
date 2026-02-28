@@ -1,47 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 import { Button } from '../atoms';
+import { FASTING_STAGES, getCurrentStage, getStagesReachedLabels } from '../../constants/fasting';
 import { colors, spacing, typography, borderRadius } from '../../theme';
-
-const FASTING_STAGES = [
-  { 
-    name: 'Fed', 
-    hours: 0, 
-    icon: 'close-circle',
-    color: colors.mainOrange,
-    description: 'During the fed stage, your body digests and absorbs nutrients from your last meal. Insulin levels are elevated to help cells take up glucose for energy.',
-  },
-  { 
-    name: 'Early Fasting', 
-    hours: 4, 
-    icon: 'time-outline',
-    color: colors.raven,
-    description: 'Blood sugar levels start to drop and your body begins to transition from using glucose to stored glycogen for energy.',
-  },
-  { 
-    name: 'Fat Burning', 
-    hours: 12, 
-    icon: 'flame-outline',
-    color: colors.mainOrange,
-    description: 'Your body has depleted glycogen stores and starts burning fat for fuel. This metabolic switch is when significant fat loss begins.',
-  },
-  { 
-    name: 'Ketosis', 
-    hours: 18, 
-    icon: 'flash-outline',
-    color: colors.purple,
-    description: 'Your liver produces ketones from fatty acids, providing an alternative fuel source for your brain and body. Mental clarity often improves.',
-  },
-  { 
-    name: 'Autophagy', 
-    hours: 48, 
-    icon: 'sparkles-outline',
-    color: colors.lima,
-    description: 'Cellular cleanup begins. Your body removes damaged cells and regenerates new ones. This is associated with longevity and disease prevention.',
-  },
-];
 
 const formatTimeDigit = (value) => value.toString().padStart(2, '0');
 
@@ -66,10 +29,11 @@ const FastingTrackerCard = ({
   onStart,
   onStop,
   onSetupFasting,
+  onViewHistory,
 }) => {
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [selectedStage, setSelectedStage] = useState(FASTING_STAGES[0]);
-  
+
   const isFasting = useMemo(() => {
     return !!fastingStarted && new Date(fastingStarted) <= new Date();
   }, [fastingStarted]);
@@ -78,7 +42,7 @@ const FastingTrackerCard = ({
     let interval;
     if (isFasting && fastingStarted) {
       const startTime = new Date(fastingStarted).getTime();
-      
+
       const updateElapsed = () => {
         const now = Date.now();
         const elapsed = Math.floor((now - startTime) / 1000);
@@ -96,21 +60,14 @@ const FastingTrackerCard = ({
     };
   }, [isFasting, fastingStarted]);
 
-  // Current fasting stage based on elapsed time
-  const currentStage = useMemo(() => {
-    const hours = elapsedSeconds / 3600;
-    const reached = FASTING_STAGES.filter(s => hours >= s.hours);
-    return reached.length > 0 ? reached[reached.length - 1] : FASTING_STAGES[0];
-  }, [elapsedSeconds]);
+  const currentStage = useMemo(() => getCurrentStage(elapsedSeconds), [elapsedSeconds]);
 
-  // Auto-select current stage when fasting
   useEffect(() => {
     if (isFasting && currentStage) {
       setSelectedStage(currentStage);
     }
   }, [isFasting, currentStage]);
 
-  // No fasting plan setup - show prompt
   if (!fastingPlan) {
     return (
       <View style={styles.container}>
@@ -137,7 +94,6 @@ const FastingTrackerCard = ({
   const fastingHours = fastingPlan.fastingTime || 16;
   const goalSeconds = fastingHours * 3600;
   const progress = Math.min((elapsedSeconds / goalSeconds) * 100, 100);
-  const isComplete = elapsedSeconds >= goalSeconds;
 
   const hours = Math.floor(elapsedSeconds / 3600);
   const mins = Math.floor((elapsedSeconds % 3600) / 60);
@@ -145,28 +101,19 @@ const FastingTrackerCard = ({
 
   const handleStop = () => {
     if (onStop) {
-      const stagesReached = FASTING_STAGES
-        .filter(s => elapsedSeconds >= s.hours * 3600)
-        .map(s => s.name);
+      const stagesReached = getStagesReachedLabels(elapsedSeconds);
       onStop(elapsedSeconds, stagesReached);
     }
   };
 
-  const isStageReached = (stage) => {
-    const hoursElapsed = elapsedSeconds / 3600;
-    return hoursElapsed >= stage.hours;
-  };
-
-  const isStageActive = (stage) => {
-    return currentStage?.name === stage.name && isFasting;
-  };
+  const isStageReached = (stage) => elapsedSeconds >= stage.value;
+  const isStageActive = (stage) => currentStage?.label === stage.label && isFasting;
 
   return (
     <View style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
-          <Text style={styles.headerTitle}>{fastingHours} Hours</Text>
+          <Text style={styles.headerTitle}>{fastingPlan.title || `${fastingHours} Hours`}</Text>
           <Text style={styles.headerSubtitle}>Goal: {fastingHours} hours</Text>
         </View>
         <Button
@@ -178,7 +125,6 @@ const FastingTrackerCard = ({
         />
       </View>
 
-      {/* Timer Display */}
       <View style={styles.timerSection}>
         <View style={styles.timerRow}>
           <TimeDigit value={hours} label="hours" />
@@ -189,7 +135,6 @@ const FastingTrackerCard = ({
         </View>
       </View>
 
-      {/* Progress Bar */}
       <View style={styles.progressSection}>
         <View style={styles.progressBar}>
           <View style={[styles.progressFill, { width: `${progress}%` }]} />
@@ -201,17 +146,16 @@ const FastingTrackerCard = ({
         </View>
       </View>
 
-      {/* Stages Grid and Description */}
       <View style={styles.stagesSection}>
         <View style={styles.stagesGrid}>
           {FASTING_STAGES.map((stage) => {
             const reached = isStageReached(stage);
             const active = isStageActive(stage);
-            const selected = selectedStage?.name === stage.name;
+            const selected = selectedStage?.label === stage.label;
 
             return (
               <TouchableOpacity
-                key={stage.name}
+                key={stage.label}
                 style={[
                   styles.stageItem,
                   selected && styles.stageItemSelected,
@@ -225,35 +169,44 @@ const FastingTrackerCard = ({
                   </View>
                 )}
                 <View style={[
-                  styles.stageIconContainer, 
-                  { backgroundColor: reached ? `${stage.color}20` : colors.alabaster }
+                  styles.stageIconContainer,
+                  { backgroundColor: reached ? `${stage.color}20` : colors.alabaster },
                 ]}>
-                  <Ionicons 
-                    name={stage.icon} 
-                    size={18} 
-                    color={reached ? stage.color : colors.raven} 
+                  <Ionicons
+                    name={stage.icon}
+                    size={18}
+                    color={reached ? stage.color : colors.raven}
                   />
                 </View>
                 <Text style={[
                   styles.stageName,
                   reached && { color: colors.mineShaft },
-                ]}>{stage.name}</Text>
-                <Text style={styles.stageHours}>{stage.hours}h</Text>
+                ]}>{stage.label}</Text>
+                <Text style={styles.stageHours}>{Math.round(stage.value / 3600)}h</Text>
               </TouchableOpacity>
             );
           })}
         </View>
 
-        {/* Stage Description */}
         {selectedStage && (
           <View style={styles.stageDescription}>
             <Text style={[styles.stageDescTitle, { color: selectedStage.color }]}>
-              {selectedStage.name}
+              {selectedStage.label}
             </Text>
-            <Text style={styles.stageDescText}>{selectedStage.description}</Text>
+            <Text style={styles.stageDescText}>
+              {selectedStage.longDescription || selectedStage.description}
+            </Text>
           </View>
         )}
       </View>
+
+      {onViewHistory && (
+        <TouchableOpacity style={styles.historyLink} onPress={onViewHistory} activeOpacity={0.7}>
+          <Ionicons name="calendar-outline" size={16} color={colors.mainBlue} />
+          <Text style={styles.historyLinkText}>View Fasting History</Text>
+          <Ionicons name="chevron-forward" size={16} color={colors.mainBlue} />
+        </TouchableOpacity>
+      )}
     </View>
   );
 };
@@ -430,7 +383,21 @@ const styles = StyleSheet.create({
     color: colors.raven,
     lineHeight: 20,
   },
-  // Prompt styles
+  historyLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
+    paddingTop: spacing.lg,
+    marginTop: spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: colors.gallery,
+  },
+  historyLinkText: {
+    ...typography.bodySmall,
+    fontWeight: '600',
+    color: colors.mainBlue,
+  },
   promptContent: {
     alignItems: 'center',
     paddingVertical: spacing.md,

@@ -32,7 +32,7 @@ const LoginScreen = ({ navigation }) => {
 
     try {
       const response = await signIn({ email, password }).unwrap();
-      await login(response.data, response.access_token);
+      await login(response.data, response.access_token, response.refresh_token);
     } catch (error) {
       Alert.alert('Error', error.data?.message || error.message || 'Login failed');
     }
@@ -48,7 +48,7 @@ const LoginScreen = ({ navigation }) => {
         email: 'admin@gotowertech.com',
         password: 'Pac0peric0',
       }).unwrap();
-      await login(response.data, response.access_token);
+      await login(response.data, response.access_token, response.refresh_token);
     } catch (error) {
       if (__DEV__) console.error('[DEV] Login error:', error);
       Alert.alert('Dev Login Error', `${error.data?.message || error.message}\n\nAPI: ${API_BASE_URL}`);
@@ -88,6 +88,7 @@ const LoginScreen = ({ navigation }) => {
           icon="mail-outline"
           keyboardType="email-address"
           autoComplete="email"
+          textContentType="username"
         />
 
         <FormInput
@@ -101,6 +102,7 @@ const LoginScreen = ({ navigation }) => {
           showPassword={showPassword}
           onTogglePassword={() => setShowPassword(!showPassword)}
           autoComplete="password"
+          textContentType="password"
         />
 
         <TouchableOpacity style={styles.forgotPassword}>

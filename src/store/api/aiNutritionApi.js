@@ -10,22 +10,56 @@ import { emitUnauthorized } from '../../utils/authEvents';
  * so we use a manual fetch instead.
  */
 const formDataBaseQuery = async ({ url, body }) => {
-  const token = await storage.getItem('token');
+  let token = await storage.getItem('token');
   const headers = {};
   if (token) {
     headers.Authorization = `Bearer ${token}`;
   }
 
   try {
-    const response = await fetch(`${API_BASE_URL}${url}`, {
+    let response = await fetch(`${API_BASE_URL}${url}`, {
       method: 'POST',
       headers,
       body,
     });
 
     if (response.status === 401 && token) {
-      emitUnauthorized();
-      return { error: { status: 401, data: 'Unauthorized' } };
+      const refreshToken = await storage.getItem('refreshToken');
+
+      if (refreshToken) {
+        try {
+          const refreshResponse = await fetch(
+            `${API_BASE_URL}${API_ENDPOINTS.REFRESH_TOKEN}`,
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ refreshToken }),
+            },
+          );
+
+          if (refreshResponse.ok) {
+            const refreshData = await refreshResponse.json();
+            await storage.setItem('token', refreshData.access_token);
+            await storage.setItem('refreshToken', refreshData.refresh_token);
+
+            headers.Authorization = `Bearer ${refreshData.access_token}`;
+            response = await fetch(`${API_BASE_URL}${url}`, {
+              method: 'POST',
+              headers,
+              body,
+            });
+          } else {
+            emitUnauthorized();
+            return { error: { status: 401, data: 'Unauthorized' } };
+          }
+        } catch {
+          emitUnauthorized();
+          return { error: { status: 401, data: 'Unauthorized' } };
+        }
+      } else {
+        emitUnauthorized();
+        return { error: { status: 401, data: 'Unauthorized' } };
+      }
     }
 
     const data = await response.json();
@@ -62,7 +96,66 @@ export const aiNutritionApi = createApi({
         return { url: API_ENDPOINTS.AI_NUTRITION_ANALYZE, body: formData };
       },
     }),
+
+    analyzeExercise: builder.mutation({
+      queryFn: async ({ description, userWeight }, _api, _extra) => {
+        let token = await storage.getItem('token');
+        const url = `${API_BASE_URL}${API_ENDPOINTS.AI_EXERCISE_ANALYZE}`;
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) headers.Authorization = `Bearer ${token}`;
+
+        try {
+          let response = await fetch(url, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({ description, userWeight }),
+          });
+
+          if (response.status === 401 && token) {
+            const refreshToken = await storage.getItem('refreshToken');
+            if (refreshToken) {
+              try {
+                const refreshResponse = await fetch(
+                  `${API_BASE_URL}${API_ENDPOINTS.REFRESH_TOKEN}`,
+                  {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ refreshToken }),
+                  },
+                );
+                if (refreshResponse.ok) {
+                  const refreshData = await refreshResponse.json();
+                  await storage.setItem('token', refreshData.access_token);
+                  await storage.setItem('refreshToken', refreshData.refresh_token);
+                  headers.Authorization = `Bearer ${refreshData.access_token}`;
+                  response = await fetch(url, {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify({ description, userWeight }),
+                  });
+                } else {
+                  emitUnauthorized();
+                  return { error: { status: 401, data: 'Unauthorized' } };
+                }
+              } catch {
+                emitUnauthorized();
+                return { error: { status: 401, data: 'Unauthorized' } };
+              }
+            } else {
+              emitUnauthorized();
+              return { error: { status: 401, data: 'Unauthorized' } };
+            }
+          }
+
+          const data = await response.json();
+          if (!response.ok) return { error: { status: response.status, data } };
+          return { data };
+        } catch (error) {
+          return { error: { status: 'FETCH_ERROR', error: error.message } };
+        }
+      },
+    }),
   }),
 });
 
-export const { useAnalyzeFoodImageMutation } = aiNutritionApi;
+export const { useAnalyzeFoodImageMutation, useAnalyzeExerciseMutation } = aiNutritionApi;

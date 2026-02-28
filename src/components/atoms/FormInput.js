@@ -26,6 +26,7 @@ const FormInput = ({
   keyboardType = 'default',
   autoCapitalize = 'none',
   autoComplete,
+  textContentType,
   editable,
   containerStyle,
   maxLength,
@@ -52,6 +53,7 @@ const FormInput = ({
           keyboardType={keyboardType}
           autoCapitalize={autoCapitalize}
           autoComplete={autoComplete}
+          textContentType={textContentType}
           editable={editable}
           maxLength={maxLength}
         />

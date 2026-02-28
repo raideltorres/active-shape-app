@@ -37,7 +37,7 @@ export const useSocialAuth = (mode = 'signIn') => {
       }
       const mutation = mode === 'signUp' ? googleSignUp : googleSignIn;
       const response = await mutation(idToken).unwrap();
-      await login(response.data, response.access_token);
+      await login(response.data, response.access_token, response.refresh_token);
     } catch (error) {
       const action = mode === 'signUp' ? 'sign up' : 'sign in';
       Alert.alert('Error', error.data?.message || error.message || `Google ${action} failed`);
@@ -66,10 +66,11 @@ export const useSocialAuth = (mode = 'signIn') => {
       try {
         const url = new URL(result.url);
         const token = url.searchParams.get('token');
+        const refreshToken = url.searchParams.get('refreshToken');
         const success = url.searchParams.get('success');
 
         if (success === 'true' && token) {
-          await login(null, token);
+          await login(null, token, refreshToken);
         } else {
           const error = url.searchParams.get('error');
           Alert.alert('Error', error || `${providerName} authentication failed`);

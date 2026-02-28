@@ -10,6 +10,7 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 
 import {
   useGetProfileQuery,
@@ -24,11 +25,26 @@ import {
   WaterTrackerSection,
   WeightTrackerSection,
   NutritionTrackerSection,
+  StepsTrackerSection,
+  ExerciseTrackerSection,
 } from './tracking';
 
-const TRACKER_IDS = { WATER: 'water', WEIGHT: 'weight', NUTRITION: 'nutrition' };
+const TRACKER_IDS = {
+  WATER: 'water',
+  WEIGHT: 'weight',
+  NUTRITION: 'nutrition',
+  ACTIVITY: 'activity',
+};
+
+const TRACKER_TITLES = {
+  [TRACKER_IDS.WATER]: 'Water Intake',
+  [TRACKER_IDS.WEIGHT]: 'Weight Tracking',
+  [TRACKER_IDS.NUTRITION]: 'Nutrition Tracking',
+  [TRACKER_IDS.ACTIVITY]: 'Activity Tracking',
+};
 
 const TrackingScreen = () => {
+  const navigation = useNavigation();
   const [selectedDate, setSelectedDate] = useState(getCurrentDate());
   const [weightInputStr, setWeightInputStr] = useState('');
   const [activeTracker, setActiveTracker] = useState(TRACKER_IDS.WATER);
@@ -41,7 +57,7 @@ const TrackingScreen = () => {
   const [fats, setFats] = useState('');
 
   const { data: profile, isLoading: profileLoading } = useGetProfileQuery();
-  const { data: trackingData = [], refetch: refetchTrackings } = useGetTrackingsQuery(
+  const { data: trackingData = [] } = useGetTrackingsQuery(
     profile?._id,
     { skip: !profile?._id },
   );
@@ -62,11 +78,39 @@ const TrackingScreen = () => {
     setFats(String(todayData.fats ?? ''));
   }, [selectedDate, todayData.caloriesConsumed, todayData.caloriesBurned, todayData.proteins, todayData.carbs, todayData.fats]);
 
-  const trackersList = useMemo(() => [
-    { id: TRACKER_IDS.WATER, label: 'Water', statusText: (todayData.water || 0) > 0 ? `${((todayData.water || 0) / 1000).toFixed(1)}L` : '—', isTracked: (todayData.water || 0) > 0 },
-    { id: TRACKER_IDS.WEIGHT, label: 'Weight', statusText: todayData.weight != null ? `${todayData.weight} kg` : '—', isTracked: todayData.weight != null },
-    { id: TRACKER_IDS.NUTRITION, label: 'Nutrition', statusText: (todayData.caloriesConsumed || 0) > 0 ? `${todayData.caloriesConsumed} kcal` : '—', isTracked: (todayData.caloriesConsumed || 0) > 0 },
-  ], [todayData]);
+  const trackersList = useMemo(() => {
+    const waterConsumed = todayData.water || 0;
+    const weightValue = todayData.weight;
+    const caloriesVal = todayData.caloriesConsumed || 0;
+    const stepsCount = todayData.steps || 0;
+
+    return [
+      {
+        id: TRACKER_IDS.WATER,
+        label: 'Water',
+        statusText: waterConsumed > 0 ? `${(waterConsumed / 1000).toFixed(1)}L` : '—',
+        isTracked: waterConsumed > 0,
+      },
+      {
+        id: TRACKER_IDS.WEIGHT,
+        label: 'Weight',
+        statusText: weightValue != null ? `${weightValue}kg` : '—',
+        isTracked: weightValue != null,
+      },
+      {
+        id: TRACKER_IDS.NUTRITION,
+        label: 'Nutrition',
+        statusText: caloriesVal > 0 ? `${caloriesVal} kcal` : '—',
+        isTracked: caloriesVal > 0,
+      },
+      {
+        id: TRACKER_IDS.ACTIVITY,
+        label: 'Activity',
+        statusText: stepsCount > 0 ? `${stepsCount.toLocaleString()} steps` : '—',
+        isTracked: stepsCount > 0,
+      },
+    ];
+  }, [todayData]);
 
   const saveTrackingField = useCallback(async (field, value) => {
     if (!profile?._id) return;
@@ -81,6 +125,7 @@ const TrackingScreen = () => {
   const initialWeight = profile?.weight ?? profile?.personalizedPlan?.weightPlan?.currentWeight ?? null;
   const goalWeight = profile?.goalWeight ?? profile?.personalizedPlan?.weightPlan?.goalWeight ?? null;
   const waterGoalMl = useMemo(() => Math.round((profile?.personalizedPlan?.hydrationPlan?.dailyWaterGoal ?? 2.5) * 1000), [profile]);
+  const dailyStepsGoal = profile?.personalizedPlan?.activityPlan?.dailyStepsGoal || 10000;
   const weightChartData = useMemo(() => (trackingData || []).filter((r) => r.weight != null), [trackingData]);
   const displayWeight = useMemo(() => {
     const n = parseFloat(weightInputStr.replace(',', '.'), 10);
@@ -170,7 +215,23 @@ const TrackingScreen = () => {
     }
   }, [profile?._id, selectedDate, proteins, carbs, fats, todayData.proteins, todayData.carbs, todayData.fats, createTracking]);
 
-  const trackerTitle = activeTracker === TRACKER_IDS.WEIGHT ? 'Weight Tracking' : 'Nutrition Tracking';
+  const onExerciseAnalyzed = useCallback(
+    async (analysis) => {
+      if (!analysis || !profile?._id) return;
+      const { totalCaloriesBurned = 0, totalDuration = 0 } = analysis;
+      try {
+        await Promise.all([
+          totalCaloriesBurned > 0 && createTracking({ userId: profile._id, date: selectedDate, field: 'caloriesBurned', value: totalCaloriesBurned }).unwrap(),
+          totalDuration > 0 && createTracking({ userId: profile._id, date: selectedDate, field: 'exerciseDuration', value: totalDuration }).unwrap(),
+        ].filter(Boolean));
+        Alert.alert('Success', `Logged ${totalCaloriesBurned} kcal burned and ${totalDuration} min of exercise.`);
+      } catch (e) {
+        if (__DEV__) console.error('Log exercise error:', e);
+        Alert.alert('Error', e?.message || 'Failed to log exercise.');
+      }
+    },
+    [profile?._id, selectedDate, createTracking],
+  );
 
   if (loading) {
     return (
@@ -191,8 +252,21 @@ const TrackingScreen = () => {
             <Text style={styles.subtitle}>Select a tracker below to log your daily progress</Text>
           </View>
           <DateSelector selectedDate={selectedDate} onDateChange={handleDateChange} maxDaysBack={5} />
-          <TrackerNavigation trackers={trackersList} activeTracker={activeTracker} onTrackerSelect={setActiveTracker} />
-          {activeTracker !== TRACKER_IDS.WATER && <Text style={styles.trackerTitle}>{trackerTitle}</Text>}
+          <TrackerNavigation
+            trackers={trackersList}
+            activeTracker={activeTracker}
+            onTrackerSelect={setActiveTracker}
+            extraCards={[{
+              id: 'history',
+              label: 'Edit',
+              statusText: 'Edit / delete',
+              icon: 'create-outline',
+              onPress: () => navigation.navigate('TrackingHistory'),
+            }]}
+          />
+
+          <Text style={styles.trackerTitle}>{TRACKER_TITLES[activeTracker]}</Text>
+
           {activeTracker === TRACKER_IDS.WATER && (
             <WaterTrackerSection todayData={todayData} waterGoalLiters={waterGoalMl} onDrink={(amount) => saveTrackingField('water', amount)} saving={saving} />
           )}
@@ -228,6 +302,29 @@ const TrackingScreen = () => {
               saving={saving}
             />
           )}
+          {activeTracker === TRACKER_IDS.ACTIVITY && (
+            <View>
+              <StepsTrackerSection
+                totalSteps={todayData.steps || 0}
+                dailyGoal={dailyStepsGoal}
+                onSave={(steps) => saveTrackingField('steps', steps)}
+                saving={saving}
+              />
+
+              <View style={styles.divider}>
+                <View style={styles.dividerLine} />
+                <Text style={styles.dividerText}>AI EXERCISE ANALYSIS</Text>
+                <View style={styles.dividerLine} />
+              </View>
+
+              <ExerciseTrackerSection
+                userWeight={todayData.weight || profile?.weight || 70}
+                onExerciseAnalyzed={onExerciseAnalyzed}
+                saving={saving}
+              />
+            </View>
+          )}
+
           <View style={{ height: spacing.xxl }} />
         </ScrollView>
       </KeyboardAvoidingView>
@@ -243,7 +340,24 @@ const styles = StyleSheet.create({
   header: { marginBottom: spacing.lg },
   title: { ...typography.h1, color: '#26466B', textAlign: 'center' },
   subtitle: { ...typography.body, color: colors.raven, marginTop: 4, textAlign: 'center' },
-  trackerTitle: { ...typography.h4, color: colors.mineShaft, marginBottom: spacing.md },
+  trackerTitle: { ...typography.h4, color: colors.mineShaft, marginBottom: spacing.md, textAlign: 'center' },
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: spacing.xl,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: colors.mercury,
+  },
+  dividerText: {
+    ...typography.caption,
+    color: colors.raven,
+    paddingHorizontal: spacing.md,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+  },
 });
 
 export default TrackingScreen;

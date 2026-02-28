@@ -1,9 +1,14 @@
 import React, { useCallback, useState } from 'react';
-import { View, Text, StyleSheet, Alert } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 
 import Button from '../../components/atoms/Button';
 import LabeledSlider from '../../components/atoms/LabeledSlider';
 import { colors, spacing, typography } from '../../theme';
+
+import activityAnim from '../../assets/animations/animation-activity.json';
+import exerciseAnim from '../../assets/animations/animation-exercise.json';
+import waterAnim from '../../assets/animations/animation-water.json';
+import sleepAnim from '../../assets/animations/animation-sleep.json';
 
 const DAILY_ACTIVITY_LABELS = [
   'Sedentary (desk job, mostly sitting)',
@@ -71,38 +76,51 @@ const LifestyleStep = ({ onSubmit, onBack, profileData, loading }) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.intro}>
-        These help us understand your daily routine and create a plan that fits
-        your lifestyle.
-      </Text>
+      <View style={styles.grid}>
+        <View style={styles.gridItem}>
+          <LabeledSlider
+            title="Daily Routine"
+            subtitle="How active is your day outside of exercise?"
+            animation={activityAnim}
+            value={dailyActivityLevel}
+            onChange={setDailyActivityLevel}
+            labels={DAILY_ACTIVITY_LABELS}
+          />
+        </View>
 
-      <LabeledSlider
-        title="Daily Activity Level"
-        value={dailyActivityLevel}
-        onChange={setDailyActivityLevel}
-        labels={DAILY_ACTIVITY_LABELS}
-      />
+        <View style={styles.gridItem}>
+          <LabeledSlider
+            title="Exercise Frequency"
+            subtitle="How often do you work out?"
+            animation={exerciseAnim}
+            value={exerciseFrequency}
+            onChange={setExerciseFrequency}
+            labels={EXERCISE_FREQ_LABELS}
+          />
+        </View>
 
-      <LabeledSlider
-        title="Exercise Frequency"
-        value={exerciseFrequency}
-        onChange={setExerciseFrequency}
-        labels={EXERCISE_FREQ_LABELS}
-      />
+        <View style={styles.gridItem}>
+          <LabeledSlider
+            title="Water Intake"
+            subtitle="How much water do you drink daily?"
+            animation={waterAnim}
+            value={waterIntake}
+            onChange={setWaterIntake}
+            labels={WATER_INTAKE_LABELS}
+          />
+        </View>
 
-      <LabeledSlider
-        title="Water Intake"
-        value={waterIntake}
-        onChange={setWaterIntake}
-        labels={WATER_INTAKE_LABELS}
-      />
-
-      <LabeledSlider
-        title="Sleep Patterns"
-        value={sleepPatterns}
-        onChange={setSleepPatterns}
-        labels={SLEEP_LABELS}
-      />
+        <View style={styles.gridItem}>
+          <LabeledSlider
+            title="Sleep Patterns"
+            subtitle="How much sleep do you get per night?"
+            animation={sleepAnim}
+            value={sleepPatterns}
+            onChange={setSleepPatterns}
+            labels={SLEEP_LABELS}
+          />
+        </View>
+      </View>
 
       <View style={styles.actions}>
         <Button
@@ -127,10 +145,15 @@ const styles = StyleSheet.create({
   container: {
     gap: spacing.lg,
   },
-  intro: {
-    ...typography.bodySmall,
-    color: colors.raven,
-    fontStyle: 'italic',
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.md,
+  },
+  gridItem: {
+    flexBasis: '47%',
+    flexGrow: 1,
+    minWidth: 280,
   },
   actions: {
     flexDirection: 'row',

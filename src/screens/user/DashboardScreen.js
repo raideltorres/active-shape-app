@@ -2,13 +2,13 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 
 import { useAuth } from '../../hooks/useAuth';
+import { useFasting } from '../../hooks/useFasting';
 import {
   useGetProfileQuery,
   useGetTrackingsQuery,
   useUpsertUserMutation,
   useGenerateDailyInsightsMutation,
 } from '../../store/api';
-import { useGetFastingPlanQuery } from '../../store/api/fastingApi';
 import { 
   NutritionSummaryCard, 
   WeeklySummaryCard,
@@ -42,10 +42,7 @@ const DashboardScreen = ({ navigation }) => {
     profile?._id,
     { skip: !profile?._id },
   );
-  const { data: fastingPlan } = useGetFastingPlanQuery(
-    profile?.fastingSettings?.fastingPlanId,
-    { skip: !profile?.fastingSettings?.fastingPlanId },
-  );
+  const { fastingPlan, fastingStarted, startFasting, stopFasting } = useFasting();
 
   const [upsertUser] = useUpsertUserMutation();
   const [generateInsights, { isLoading: isGeneratingInsights }] = useGenerateDailyInsightsMutation();
@@ -79,42 +76,16 @@ const DashboardScreen = ({ navigation }) => {
     navigation?.navigate?.('ProfileTab', { screen: 'Settings' });
   };
 
+  const handleViewFastingHistory = () => {
+    navigation?.navigate?.('FastingHistory');
+  };
+
   const handleLogProgress = () => {
     navigation?.navigate?.('TrackingTab');
   };
 
   const handleLogMeals = () => {
     navigation?.navigate?.('TrackingTab');
-  };
-
-  const handleStartFasting = async () => {
-    try {
-      await upsertUser({
-        id: profile?._id,
-        fastingSettings: { 
-          ...profile?.fastingSettings, 
-          lastFastingStarted: new Date().toISOString(), 
-          lastFastingEnded: null 
-        },
-      }).unwrap();
-    } catch (error) {
-      console.error('Error starting fast:', error);
-    }
-  };
-
-  const handleStopFasting = async () => {
-    try {
-      await upsertUser({
-        id: profile?._id,
-        fastingSettings: { 
-          ...profile?.fastingSettings, 
-          lastFastingStarted: null, 
-          lastFastingEnded: new Date().toISOString() 
-        },
-      }).unwrap();
-    } catch (error) {
-      console.error('Error stopping fast:', error);
-    }
   };
 
   const userName = profile?.name?.split(' ')[0] || user?.name?.split(' ')[0] || 'there';
@@ -206,10 +177,11 @@ const DashboardScreen = ({ navigation }) => {
       <View style={styles.section}>
         <FastingTrackerCard
           fastingPlan={fastingPlan}
-          fastingStarted={profile?.fastingSettings?.lastFastingStarted}
-          onStart={handleStartFasting}
-          onStop={handleStopFasting}
+          fastingStarted={fastingStarted}
+          onStart={startFasting}
+          onStop={stopFasting}
           onSetupFasting={handleSetupFasting}
+          onViewHistory={handleViewFastingHistory}
         />
       </View>
     </TabScreenLayout>

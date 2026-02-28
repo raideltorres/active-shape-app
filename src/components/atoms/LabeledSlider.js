@@ -1,95 +1,166 @@
-import React, { useCallback, useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import MultiSlider from '@ptomasroos/react-native-multi-slider';
+import React, { useCallback } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Pressable } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import LottieView from 'lottie-react-native';
 
 import { colors, spacing, typography, borderRadius } from '../../theme';
 
-/**
- * Single-thumb slider with labeled step descriptions.
- * Used for lifestyle habit questions (activity level, exercise frequency, etc.).
- *
- * @param {string} title
- * @param {number} value - current index
- * @param {(v: number) => void} onChange
- * @param {string[]} labels - ordered labels for each step
- */
-const LabeledSlider = ({ title, value = 0, onChange, labels = [] }) => {
-  const [sliderLength, setSliderLength] = useState(260);
+const TRACK_HEIGHT = 44;
+
+const LabeledSlider = ({
+  title,
+  subtitle,
+  animation,
+  value = 0,
+  onChange,
+  labels = [],
+}) => {
   const max = Math.max(labels.length - 1, 1);
-
-  const handleChange = useCallback(
-    (values) => {
-      onChange?.(values[0]);
-    },
-    [onChange],
-  );
-
+  const segmentCount = Math.max(labels.length - 1, 1);
   const currentLabel = labels[value] || '';
 
+  const decrement = useCallback(() => {
+    onChange?.(Math.max(0, value - 1));
+  }, [value, onChange]);
+
+  const increment = useCallback(() => {
+    onChange?.(Math.min(max, value + 1));
+  }, [value, max, onChange]);
+
+  const handleSegmentPress = useCallback(
+    (segmentIndex) => {
+      const newValue = segmentIndex + 1;
+      onChange?.(Math.min(newValue, max));
+    },
+    [onChange, max],
+  );
+
   return (
-    <View style={styles.container}>
-      {title && <Text style={styles.title}>{title}</Text>}
-      <View style={styles.labelBox}>
-        <Text style={styles.labelText}>{currentLabel}</Text>
+    <View style={styles.card}>
+      <View style={styles.header}>
+        {animation && (
+          <View style={styles.lottieWrap}>
+            <LottieView source={animation} autoPlay loop style={styles.lottie} speed={1.2} />
+          </View>
+        )}
+        <View style={styles.headerText}>
+          <Text style={styles.title}>{title}</Text>
+          {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
+        </View>
       </View>
-      <View
-        style={styles.sliderRow}
-        onLayout={(e) => setSliderLength(e.nativeEvent.layout.width - 20)}
-      >
-        <MultiSlider
-          values={[value]}
-          min={0}
-          max={max}
-          step={1}
-          sliderLength={Math.max(100, sliderLength)}
-          onValuesChangeFinish={handleChange}
-          selectedStyle={styles.selectedTrack}
-          unselectedStyle={styles.unselectedTrack}
-          markerStyle={styles.thumb}
-          touchDimensions={{ height: 40, width: 40, borderRadius: 20 }}
-        />
+
+      <View style={styles.controlRow}>
+        <TouchableOpacity style={styles.button} onPress={decrement} activeOpacity={0.7}>
+          <Ionicons name="remove" size={18} color={colors.mineShaft} />
+        </TouchableOpacity>
+
+        <View style={styles.trackWrap}>
+          {Array.from({ length: segmentCount }, (_, i) => (
+            <Pressable
+              key={i}
+              style={[
+                styles.segment,
+                i < value && styles.segmentFilled,
+                i === 0 && styles.segmentFirst,
+                i === segmentCount - 1 && styles.segmentLast,
+              ]}
+              onPress={() => handleSegmentPress(i)}
+            />
+          ))}
+        </View>
+
+        <TouchableOpacity style={styles.button} onPress={increment} activeOpacity={0.7}>
+          <Ionicons name="add" size={18} color={colors.mineShaft} />
+        </TouchableOpacity>
       </View>
+
+      <Text style={styles.label}>{currentLabel}</Text>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    marginBottom: spacing.xl,
+  card: {
+    backgroundColor: 'rgba(0,0,0,0.02)',
+    borderRadius: borderRadius.lg,
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.lg,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  lottieWrap: {
+    width: 48,
+    height: 48,
+  },
+  lottie: {
+    width: 48,
+    height: 48,
+  },
+  headerText: {
+    flex: 1,
   },
   title: {
-    ...typography.h4,
+    fontSize: 14,
+    fontWeight: '700',
     color: colors.mainBlue,
-    marginBottom: spacing.sm,
   },
-  labelBox: {
-    backgroundColor: colors.alabaster,
-    borderRadius: borderRadius.md,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-    marginBottom: spacing.sm,
+  subtitle: {
+    fontSize: 11,
+    color: colors.raven,
+    marginTop: 1,
+  },
+  controlRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  button: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: colors.gallery,
+    borderColor: colors.alto,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.white,
   },
-  labelText: {
+  trackWrap: {
+    flex: 1,
+    flexDirection: 'row',
+    height: TRACK_HEIGHT,
+    borderRadius: TRACK_HEIGHT / 2,
+    overflow: 'hidden',
+  },
+  segment: {
+    flex: 1,
+    backgroundColor: colors.alto,
+    borderRightWidth: 1,
+    borderRightColor: colors.mainBlue,
+  },
+  segmentFilled: {
+    backgroundColor: `${colors.mainOrange}CC`,
+  },
+  segmentFirst: {
+    borderTopLeftRadius: TRACK_HEIGHT / 2,
+    borderBottomLeftRadius: TRACK_HEIGHT / 2,
+  },
+  segmentLast: {
+    borderTopRightRadius: TRACK_HEIGHT / 2,
+    borderBottomRightRadius: TRACK_HEIGHT / 2,
+    borderRightWidth: 0,
+  },
+  label: {
     ...typography.body,
-    color: colors.mineShaft,
+    fontWeight: '600',
+    color: colors.mainOrange,
     textAlign: 'center',
-  },
-  sliderRow: {
-    paddingHorizontal: 10,
-  },
-  selectedTrack: {
-    backgroundColor: colors.mainOrange,
-  },
-  unselectedTrack: {
-    backgroundColor: colors.gallery,
-  },
-  thumb: {
-    backgroundColor: colors.mainOrange,
-    width: 22,
-    height: 22,
-    borderRadius: 11,
+    marginTop: spacing.sm,
+    fontStyle: 'italic',
   },
 });
 

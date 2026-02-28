@@ -29,6 +29,33 @@ export const trackingApi = createApi({
       }),
       invalidatesTags: ['Tracking', 'DailyTracking'],
     }),
+
+    updateTracking: builder.mutation({
+      query: (data) => ({
+        url: API_ENDPOINTS.TRACKING,
+        method: 'PATCH',
+        body: data,
+      }),
+      invalidatesTags: ['Tracking', 'DailyTracking'],
+    }),
+
+    deleteTrackingField: builder.mutation({
+      query: ({ userId, date, field }) => ({
+        url: API_ENDPOINTS.TRACKING_FIELD,
+        method: 'DELETE',
+        body: { userId, date, field },
+      }),
+      invalidatesTags: ['Tracking', 'DailyTracking'],
+    }),
+
+    deleteTracking: builder.mutation({
+      query: ({ userId, date }) => ({
+        url: API_ENDPOINTS.TRACKING,
+        method: 'DELETE',
+        body: { userId, date },
+      }),
+      invalidatesTags: ['Tracking', 'DailyTracking'],
+    }),
   }),
 });
 
@@ -36,4 +63,7 @@ export const {
   useGetTrackingsQuery,
   useGetDailyTrackingQuery,
   useCreateTrackingMutation,
+  useUpdateTrackingMutation,
+  useDeleteTrackingFieldMutation,
+  useDeleteTrackingMutation,
 } = trackingApi;

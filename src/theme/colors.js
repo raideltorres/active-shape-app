@@ -34,6 +34,7 @@ export const colors = {
   alabaster: '#F7F7F7',
 
   // Accents
+  cinnabar: '#E34234',
   lima: '#68af1c',
   fernFrond: '#568028',
   ripeLemon: '#F8E71C',

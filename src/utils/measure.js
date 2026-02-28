@@ -5,69 +5,100 @@ export const fromCmToFeet = (cm) => {
   return { feet, inches, totalInches };
 };
 
-export const fromInchesToCm = (inches) => inches * 2.54;
+export const fromInchesToCm = (inches) => {
+  return inches * 2.54;
+};
 
 export const fromKgToLbs = (kg) => {
   const lbs = Math.round(kg * 2.20462);
   return { kg, lbs };
 };
 
-export const fromLbsToKg = (lbs) => lbs / 2.20462;
-
-export const calculateBmi = (weight, height) => {
-  if (!weight || !height) return 0;
-  return weight / Math.pow(height / 100, 2);
+export const fromLbsToKg = (lbs) => {
+  return lbs / 2.20462;
 };
+
+// Mobile-only: used by WeightTrackerSection and TrackingScreen
+export const formatWeightKg = (kg) => String(parseFloat(Number(kg).toFixed(1)));
+export const formatWeightLbs = (lbs) => String(Math.round(Number(lbs)));
 
 export const determineBmiRange = (bmi) => {
-  if (bmi >= 18.5 && bmi < 25) return 'Normal';
-  if (bmi >= 25 && bmi < 30) return 'Overweight';
-  if (bmi >= 30 && bmi < 35) return 'Obesity Type 1';
-  if (bmi >= 35 && bmi < 40) return 'Obesity Type 2';
-  if (bmi >= 40) return 'Obesity Type 3';
-  return 'Underweight';
+  const BMI_RANGES = {
+    UNDERWEIGHT: 'Underweight',
+    NORMAL: 'Normal',
+    OVERWEIGHT: 'Overweight',
+    OBESITY_TYPE_1: 'Obesity Type 1',
+    OBESITY_TYPE_2: 'Obesity Type 2',
+    OBESITY_TYPE_3: 'Obesity Type 3',
+  };
+
+  if (bmi >= 18.5 && bmi < 25) {
+    return BMI_RANGES.NORMAL;
+  } else if (bmi >= 25 && bmi < 30) {
+    return BMI_RANGES.OVERWEIGHT;
+  } else if (bmi >= 30 && bmi < 35) {
+    return BMI_RANGES.OBESITY_TYPE_1;
+  } else if (bmi >= 35 && bmi < 40) {
+    return BMI_RANGES.OBESITY_TYPE_2;
+  } else if (bmi >= 40) {
+    return BMI_RANGES.OBESITY_TYPE_3;
+  } else {
+    return BMI_RANGES.UNDERWEIGHT;
+  }
 };
 
-export const BODY_COMPOSITION_TYPES = {
-  ATHLETIC_MUSCULAR: {
-    value: 'athletic_muscular',
-    label: 'Athletic/Very Muscular',
-    description: 'High muscle mass (athletes, bodybuilders, swimmers)',
-    bmiAdjustment: -3,
-  },
-  FIT_TONED: {
-    value: 'fit_toned',
-    label: 'Fit & Toned',
-    description: 'Good muscle mass and definition',
-    bmiAdjustment: -1.5,
-  },
-  AVERAGE: {
-    value: 'average',
-    label: 'Average Build',
-    description: 'Moderate muscle mass, typical build',
-    bmiAdjustment: 0,
-  },
-  SLIM_LOW_MUSCLE: {
-    value: 'slim_low_muscle',
-    label: 'Slim with Low Muscle',
-    description: 'Low muscle mass, naturally slim',
-    bmiAdjustment: 0.5,
-  },
-  SOFT_HIGHER_FAT: {
-    value: 'soft_higher_fat',
-    label: 'Soft/Higher Body Fat',
-    description: 'Very low muscle mass',
-    bmiAdjustment: 1,
-  },
-};
+export const determineBmiDescription = (bmi) => {
+  const BMI_RANGES = {
+    UNDERWEIGHT: `Being underweight, with a BMI below 18.5, can lead to a weakened immune system, fragile bones, and 
+            nutrient deficiencies, making it harder for your body to fight infections and recover from illness. 
+            Compared to the normal weight range, underweight individuals might struggle with energy levels and 
+            overall health. Our platform offers customized dietary plans and workout routines to help you gain
+             weight healthily, ensuring you receive the necessary nutrients to build muscle, improve your 
+             immune function, and enhance overall well-being.`,
+    NORMAL: `A normal BMI, ranging from 18.5 to 24.9, indicates a healthy weight. Maintaining this balance reduces the 
+            risk of chronic diseases like heart disease and diabetes, enhancing overall well-being and longevity. 
+            Compared to being underweight, normal weight individuals typically have better energy levels and 
+            immune function. Unlike those who are overweight or obese, they have a lower risk of developing 
+            weight-related health issues. Our diverse range of diets, workouts, and tracking tools will help 
+            you sustain this healthy weight, optimize your fitness level, and improve your quality of life.`,
+    OVERWEIGHT: `Being overweight, with a BMI between 25 and 29.9, means your weight is higher than the normal range but 
+            not yet in the obesity category. This can increase the risk of heart disease, diabetes, and other 
+            health issues compared to those with a normal BMI. Overweight individuals may experience more strain 
+            on joints and potential metabolic issues than those in the normal weight range but are not as 
+            severely impacted as those in the obesity categories. Our personalized diet plans, exercise routines, 
+            and progress tracking can assist you in losing weight safely and effectively, reducing these health 
+            risks and improving your overall fitness.`,
+    OBESITY_TYPE_1: `Obesity Type 1, with a BMI between 30 and 34.9, indicates moderate obesity. This category heightens 
+            the risk of cardiovascular diseases, diabetes, and joint problems compared to being overweight or having 
+            a normal BMI. Individuals in this category face more significant health challenges than those in the 
+            overweight category but are at a lower risk than those in the more severe obesity categories. Our 
+            comprehensive approach, combining diet plans, workout regimens, and continuous monitoring, helps you 
+            lose weight and mitigate these health risks, improving your quality of life.`,
+    OBESITY_TYPE_2: `Obesity Type 2, characterized by a BMI between 35 and 39.9, signifies severe obesity. This significantly 
+            increases the risk of serious health problems like heart disease, stroke, and certain cancers compared 
+            to those in the Obesity Type 1 and overweight categories. The health risks and challenges are more pronounced, 
+            necessitating a more intensive approach to weight loss and health improvement. We provide intensive support, 
+            including customized diets, exercise plans, and regular health tracking, to aid in significant weight loss and 
+            enhance overall health.`,
+    OBESITY_TYPE_3: `Obesity Type 3, or morbid obesity, represents the highest BMI category, with severe health risks including
+            heart disease, diabetes, and reduced life expectancy. Our platform offers specialized, medically-informed
+            diet and exercise plans, along with professional guidance, to support substantial weight loss and enhance
+            overall health.`,
+  };
 
-export const getBmiAdjustment = (bodyComposition) => {
-  const comp = Object.values(BODY_COMPOSITION_TYPES).find((c) => c.value === bodyComposition);
-  return comp?.bmiAdjustment || 0;
-};
-
-export const adjustBmiForBodyComposition = (bmi, bodyComposition = 'average') => {
-  return bmi + getBmiAdjustment(bodyComposition);
+  if (bmi >= 18.5 && bmi < 25) {
+    return BMI_RANGES.NORMAL;
+  } else if (bmi >= 25 && bmi < 30) {
+    return BMI_RANGES.OVERWEIGHT;
+  } else if (bmi >= 30 && bmi < 35) {
+    return BMI_RANGES.OBESITY_TYPE_1;
+  } else if (bmi >= 35 && bmi < 40) {
+    return BMI_RANGES.OBESITY_TYPE_2;
+  } else if (bmi >= 40) {
+    return BMI_RANGES.OBESITY_TYPE_3;
+  } else {
+    return BMI_RANGES.UNDERWEIGHT;
+  }
 };
 
 export const determineBmiMotivationalMessage = (bmi) => {
@@ -80,43 +111,150 @@ export const determineBmiMotivationalMessage = (bmi) => {
     OBESITY_TYPE_3: `Your health journey is a marathon, not a sprint. With dedication and the right support, significant improvements are possible. We're with you every step of the way, providing guidance tailored to your unique needs.`,
   };
 
-  if (bmi >= 18.5 && bmi < 25) return MOTIVATIONAL_MESSAGES.NORMAL;
-  if (bmi >= 25 && bmi < 30) return MOTIVATIONAL_MESSAGES.OVERWEIGHT;
-  if (bmi >= 30 && bmi < 35) return MOTIVATIONAL_MESSAGES.OBESITY_TYPE_1;
-  if (bmi >= 35 && bmi < 40) return MOTIVATIONAL_MESSAGES.OBESITY_TYPE_2;
-  if (bmi >= 40) return MOTIVATIONAL_MESSAGES.OBESITY_TYPE_3;
-  return MOTIVATIONAL_MESSAGES.UNDERWEIGHT;
+  if (bmi >= 18.5 && bmi < 25) {
+    return MOTIVATIONAL_MESSAGES.NORMAL;
+  } else if (bmi >= 25 && bmi < 30) {
+    return MOTIVATIONAL_MESSAGES.OVERWEIGHT;
+  } else if (bmi >= 30 && bmi < 35) {
+    return MOTIVATIONAL_MESSAGES.OBESITY_TYPE_1;
+  } else if (bmi >= 35 && bmi < 40) {
+    return MOTIVATIONAL_MESSAGES.OBESITY_TYPE_2;
+  } else if (bmi >= 40) {
+    return MOTIVATIONAL_MESSAGES.OBESITY_TYPE_3;
+  } else {
+    return MOTIVATIONAL_MESSAGES.UNDERWEIGHT;
+  }
+};
+
+export const calculateBmi = (weight, height) => {
+  return weight / Math.pow(height / 100, 2);
+};
+
+export const BODY_COMPOSITION_TYPES = {
+  ATHLETIC_MUSCULAR: {
+    value: 'athletic_muscular',
+    label: 'Athletic/Very Muscular',
+    description: 'High muscle mass (athletes, bodybuilders, swimmers)',
+    bmiAdjustment: -3,
+    muscleMass: 'high',
+    bodyFat: 'low',
+  },
+  FIT_TONED: {
+    value: 'fit_toned',
+    label: 'Fit & Toned',
+    description: 'Good muscle mass and definition',
+    bmiAdjustment: -1.5,
+    muscleMass: 'moderate-high',
+    bodyFat: 'low-moderate',
+  },
+  AVERAGE: {
+    value: 'average',
+    label: 'Average Build',
+    description: 'Moderate muscle mass, typical build',
+    bmiAdjustment: 0,
+    muscleMass: 'moderate',
+    bodyFat: 'moderate',
+  },
+  SLIM_LOW_MUSCLE: {
+    value: 'slim_low_muscle',
+    label: 'Slim with Low Muscle',
+    description: 'Low muscle mass, naturally slim',
+    bmiAdjustment: 0.5,
+    muscleMass: 'low',
+    bodyFat: 'low-moderate',
+  },
+  SOFT_HIGHER_FAT: {
+    value: 'soft_higher_fat',
+    label: 'Soft/Higher Body Fat',
+    description: 'Very low muscle mass',
+    bmiAdjustment: 1,
+    muscleMass: 'low',
+    bodyFat: 'high',
+  },
+};
+
+export const adjustBmiForBodyComposition = (bmi, bodyComposition = 'average') => {
+  const composition = Object.values(BODY_COMPOSITION_TYPES).find((c) => c.value === bodyComposition);
+  const adjustment = composition ? composition.bmiAdjustment : 0;
+  return bmi + adjustment;
+};
+
+export const getHealthAssessment = (weight, height, bodyComposition = 'average') => {
+  const rawBmi = calculateBmi(weight, height);
+  const adjustedBmi = adjustBmiForBodyComposition(rawBmi, bodyComposition);
+  const range = determineBmiRange(adjustedBmi);
+  const description = determineBmiDescription(adjustedBmi);
+
+  return {
+    rawBmi: rawBmi.toFixed(1),
+    adjustedBmi: adjustedBmi.toFixed(1),
+    range,
+    description,
+    bodyComposition,
+  };
 };
 
 export const PRIMARY_GOALS = {
-  GAIN_MUSCLE: { code: 'pg1', label: 'Gain Muscle', weightMultiplier: 1.05 },
-  MAINTAIN_WEIGHT: { code: 'pg2', label: 'Maintain Weight', weightMultiplier: 1.0 },
-  LOSE_WEIGHT: { code: 'pg3', label: 'Lose Weight', weightMultiplier: null },
-  IMPROVE_PERFORMANCE: { code: 'pg4', label: 'Improve Athletic Performance', weightMultiplier: 1.0 },
-  GENERAL_HEALTH: { code: 'pg5', label: 'General Health', weightMultiplier: 1.0 },
+  GAIN_MUSCLE: {
+    code: 'pg1',
+    label: 'Gain Muscle',
+    weightMultiplier: 1.05,
+  },
+  MAINTAIN_WEIGHT: {
+    code: 'pg2',
+    label: 'Maintain Weight',
+    weightMultiplier: 1.0,
+  },
+  LOSE_WEIGHT: {
+    code: 'pg3',
+    label: 'Lose Weight',
+    weightMultiplier: null,
+  },
+  IMPROVE_PERFORMANCE: {
+    code: 'pg4',
+    label: 'Improve Athletic Performance',
+    weightMultiplier: 1.0,
+  },
+  GENERAL_HEALTH: {
+    code: 'pg5',
+    label: 'General Health',
+    weightMultiplier: 1.0,
+  },
 };
 
-export const getPrimaryGoalByCode = (code) =>
-  Object.values(PRIMARY_GOALS).find((g) => g.code === code) || null;
+export const getPrimaryGoalByCode = (code) => {
+  return Object.values(PRIMARY_GOALS).find((goal) => goal.code === code) || null;
+};
+
+export const getBmiAdjustment = (bodyComposition) => {
+  const composition = Object.values(BODY_COMPOSITION_TYPES).find((c) => c.value === bodyComposition);
+  return composition?.bmiAdjustment || 0;
+};
 
 export const calculateGoalWeight = ({ weight, height, bodyComposition = 'average', primaryGoalCode }) => {
   const goal = getPrimaryGoalByCode(primaryGoalCode);
+
   if (goal?.weightMultiplier !== null) {
     return Math.round(weight * goal.weightMultiplier);
   }
 
   const heightM = height / 100;
   const rawBmi = weight / (heightM * heightM);
-  const bmiAdj = getBmiAdjustment(bodyComposition);
-  const adjustedBmi = rawBmi + bmiAdj;
+  const bmiAdjustment = getBmiAdjustment(bodyComposition);
+  const adjustedBmi = rawBmi + bmiAdjustment;
 
-  if (adjustedBmi >= 30) return Math.round(weight * 0.9);
-  if (adjustedBmi >= 25) {
-    const targetRawBmi = 24.9 - bmiAdj;
+  if (adjustedBmi >= 35) {
+    return Math.round(weight * 0.9);
+  } else if (adjustedBmi >= 30) {
+    return Math.round(weight * 0.9);
+  } else if (adjustedBmi >= 25) {
+    const targetAdjustedBmi = 24.9;
+    const targetRawBmi = targetAdjustedBmi - bmiAdjustment;
     const targetWeight = Math.round(targetRawBmi * heightM * heightM);
     return Math.max(targetWeight, Math.round(weight * 0.95));
+  } else {
+    return Math.round(weight * 0.97);
   }
-  return Math.round(weight * 0.97);
 };
 
 export const DIET_OPTIONS = [

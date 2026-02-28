@@ -10,6 +10,8 @@ export const API_ENDPOINTS = {
   // Auth - Standard
   SIGN_IN: '/auth/sign-in',
   SIGN_UP: '/auth/sign-up',
+  REFRESH_TOKEN: '/auth/refresh-token',
+  LOGOUT: '/auth/logout',
   PROFILE: '/users/profile',
 
   // Auth - Social
@@ -40,9 +42,16 @@ export const API_ENDPOINTS = {
   // Tracking
   TRACKING: '/trackings',
   DAILY_TRACKING: '/trackings/daily',
+  TRACKING_FIELD: '/trackings/field',
+
+  // Meal Logs
+  MEAL_LOGS: '/meal-logs',
+  MEAL_LOGS_RECIPE: '/meal-logs/recipe',
+  MEAL_LOGS_DAILY: '/meal-logs/daily',
 
   // AI Nutrition
   AI_NUTRITION_ANALYZE: '/ai-nutrition/analyze-food-image',
+  AI_EXERCISE_ANALYZE: '/ai-nutrition/analyze-exercise',
 
   // Fasting
   FASTING_PLANS: '/fasting-plans',

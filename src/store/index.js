@@ -9,6 +9,7 @@ import { fastingApi } from './api/fastingApi';
 import { constantsApi } from './api/constantsApi';
 import { aiNutritionApi } from './api/aiNutritionApi';
 import { favoritesApi } from './api/favoritesApi';
+import { mealLogsApi } from './api/mealLogsApi';
 
 export const store = configureStore({
   reducer: {
@@ -21,6 +22,7 @@ export const store = configureStore({
     [constantsApi.reducerPath]: constantsApi.reducer,
     [aiNutritionApi.reducerPath]: aiNutritionApi.reducer,
     [favoritesApi.reducerPath]: favoritesApi.reducer,
+    [mealLogsApi.reducerPath]: mealLogsApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
@@ -31,5 +33,6 @@ export const store = configureStore({
       .concat(fastingApi.middleware)
       .concat(constantsApi.middleware)
       .concat(aiNutritionApi.middleware)
-      .concat(favoritesApi.middleware),
+      .concat(favoritesApi.middleware)
+      .concat(mealLogsApi.middleware),
 });

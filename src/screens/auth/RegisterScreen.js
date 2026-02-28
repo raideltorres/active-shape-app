@@ -44,7 +44,7 @@ const RegisterScreen = ({ navigation }) => {
 
     try {
       const response = await signUp({ name, email, password }).unwrap();
-      await login(response.data, response.access_token);
+      await login(response.data, response.access_token, response.refresh_token);
     } catch (error) {
       Alert.alert('Error', error.data?.message || error.message || 'Registration failed');
     }
@@ -80,6 +80,7 @@ const RegisterScreen = ({ navigation }) => {
           placeholder="Enter your full name"
           icon="person-outline"
           autoComplete="name"
+          textContentType="name"
           autoCapitalize="words"
         />
 
@@ -91,6 +92,7 @@ const RegisterScreen = ({ navigation }) => {
           icon="mail-outline"
           keyboardType="email-address"
           autoComplete="email"
+          textContentType="emailAddress"
         />
 
         <FormInput
@@ -104,6 +106,7 @@ const RegisterScreen = ({ navigation }) => {
           showPassword={showPassword}
           onTogglePassword={() => setShowPassword(!showPassword)}
           autoComplete="password-new"
+          textContentType="newPassword"
         />
 
         <FormInput
@@ -117,6 +120,7 @@ const RegisterScreen = ({ navigation }) => {
           showPassword={showConfirmPassword}
           onTogglePassword={() => setShowConfirmPassword(!showConfirmPassword)}
           autoComplete="password-new"
+          textContentType="newPassword"
         />
 
         <Text style={styles.termsText}>
