@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 import { colors, spacing, typography, borderRadius } from '../../../theme';
@@ -11,65 +11,47 @@ const TRACKER_ICONS = {
   activity: 'fitness-outline',
 };
 
-const TrackerNavigation = ({ trackers, activeTracker, onTrackerSelect, extraCards }) => {
+const TrackerNavigation = ({ trackers, activeTracker, onTrackerSelect }) => {
   return (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      contentContainerStyle={styles.container}
-      style={styles.scroll}
-    >
-      {trackers.map((tracker) => {
-        const isActive = activeTracker === tracker.id;
-        const iconName = TRACKER_ICONS[tracker.id] || 'ellipse-outline';
+    <View style={styles.wrapper}>
+      <View style={styles.row}>
+        {trackers.map((tracker) => {
+          const isActive = activeTracker === tracker.id;
+          const iconName = TRACKER_ICONS[tracker.id] || 'ellipse-outline';
 
-        return (
-          <TouchableOpacity
-            key={tracker.id}
-            style={[styles.card, isActive && styles.cardActive]}
-            onPress={() => onTrackerSelect(tracker.id)}
-            activeOpacity={0.7}
-          >
-            <View style={[styles.iconWrap, isActive && styles.iconWrapActive]}>
-              <Ionicons name={iconName} size={22} color={isActive ? colors.white : colors.mineShaft} />
-            </View>
-            <Text style={[styles.label, isActive && styles.labelActive]}>{tracker.label}</Text>
-            <Text style={[styles.status, tracker.isTracked && styles.statusTracked]} numberOfLines={1}>
-              {tracker.statusText}
-            </Text>
-          </TouchableOpacity>
-        );
-      })}
-
-      {extraCards?.map((card) => (
-        <TouchableOpacity
-          key={card.id}
-          style={[styles.card, styles.cardAccent]}
-          onPress={card.onPress}
-          activeOpacity={0.7}
-        >
-          <View style={[styles.iconWrap, styles.iconWrapAccent]}>
-            <Ionicons name={card.icon} size={22} color={colors.white} />
-          </View>
-          <Text style={[styles.label, styles.labelAccent]}>{card.label}</Text>
-          <Text style={styles.status} numberOfLines={1}>{card.statusText}</Text>
-        </TouchableOpacity>
-      ))}
-    </ScrollView>
+          return (
+            <TouchableOpacity
+              key={tracker.id}
+              style={[styles.card, isActive && styles.cardActive]}
+              onPress={() => onTrackerSelect(tracker.id)}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.iconWrap, isActive && styles.iconWrapActive]}>
+                <Ionicons name={iconName} size={22} color={isActive ? colors.white : colors.mineShaft} />
+              </View>
+              <Text style={[styles.label, isActive && styles.labelActive]}>{tracker.label}</Text>
+              <Text style={[styles.status, tracker.isTracked && styles.statusTracked]} numberOfLines={1}>
+                {tracker.statusText}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  scroll: {
+  wrapper: {
     marginBottom: spacing.lg,
+    alignItems: 'center',
   },
-  container: {
+  row: {
     flexDirection: 'row',
     gap: spacing.sm,
-    paddingRight: spacing.sm,
   },
   card: {
-    width: 90,
+    flex: 1,
     backgroundColor: colors.white,
     borderRadius: borderRadius.xl,
     padding: spacing.md,
@@ -83,12 +65,8 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
   },
   cardActive: {
-    borderColor: colors.mainOrange,
-    backgroundColor: `${colors.mainOrange}08`,
-  },
-  cardAccent: {
     borderColor: colors.mainBlue,
-    backgroundColor: `${colors.mainBlue}08`,
+    backgroundColor: `${colors.mainBlue}06`,
   },
   iconWrap: {
     width: 40,
@@ -100,9 +78,6 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   iconWrapActive: {
-    backgroundColor: colors.mainOrange,
-  },
-  iconWrapAccent: {
     backgroundColor: colors.mainBlue,
   },
   label: {
@@ -112,9 +87,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   labelActive: {
-    color: colors.mainOrange,
-  },
-  labelAccent: {
     color: colors.mainBlue,
   },
   status: {

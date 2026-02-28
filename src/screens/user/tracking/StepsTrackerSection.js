@@ -48,6 +48,7 @@ const StepsTrackerSection = ({ totalSteps = 0, dailyGoal = 10000, onSave, saving
   return (
     <View>
       <Card>
+        <Text style={styles.cardTitle}>Activity Tracking</Text>
         <Text style={styles.description}>
           Track your daily steps to monitor your physical activity. Walking improves cardiovascular health, aids weight management, and boosts mental well-being. Aim for 7,000–10,000 daily steps.
         </Text>
@@ -157,6 +158,11 @@ const StepsTrackerSection = ({ totalSteps = 0, dailyGoal = 10000, onSave, saving
 };
 
 const styles = StyleSheet.create({
+  cardTitle: {
+    ...typography.h3,
+    color: colors.mineShaft,
+    marginBottom: spacing.sm,
+  },
   description: {
     ...typography.bodySmall,
     color: colors.raven,

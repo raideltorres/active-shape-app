@@ -8,7 +8,9 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  TouchableOpacity,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 
@@ -34,13 +36,6 @@ const TRACKER_IDS = {
   WEIGHT: 'weight',
   NUTRITION: 'nutrition',
   ACTIVITY: 'activity',
-};
-
-const TRACKER_TITLES = {
-  [TRACKER_IDS.WATER]: 'Water Intake',
-  [TRACKER_IDS.WEIGHT]: 'Weight Tracking',
-  [TRACKER_IDS.NUTRITION]: 'Nutrition Tracking',
-  [TRACKER_IDS.ACTIVITY]: 'Activity Tracking',
 };
 
 const TrackingScreen = () => {
@@ -251,21 +246,24 @@ const TrackingScreen = () => {
             <Text style={styles.title}>Track Your Daily Metrics</Text>
             <Text style={styles.subtitle}>Select a tracker below to log your daily progress</Text>
           </View>
-          <DateSelector selectedDate={selectedDate} onDateChange={handleDateChange} maxDaysBack={5} />
+          <View style={styles.dateRow}>
+            <View style={styles.dateRowSelector}>
+              <DateSelector selectedDate={selectedDate} onDateChange={handleDateChange} maxDaysBack={5} style={styles.dateSelector} />
+            </View>
+            <TouchableOpacity
+              style={styles.editButton}
+              onPress={() => navigation.navigate('TrackingHistory')}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="create-outline" size={20} color={colors.mainOrange} />
+              <Text style={styles.editButtonText}>Edit</Text>
+            </TouchableOpacity>
+          </View>
           <TrackerNavigation
             trackers={trackersList}
             activeTracker={activeTracker}
             onTrackerSelect={setActiveTracker}
-            extraCards={[{
-              id: 'history',
-              label: 'Edit',
-              statusText: 'Edit / delete',
-              icon: 'create-outline',
-              onPress: () => navigation.navigate('TrackingHistory'),
-            }]}
           />
-
-          <Text style={styles.trackerTitle}>{TRACKER_TITLES[activeTracker]}</Text>
 
           {activeTracker === TRACKER_IDS.WATER && (
             <WaterTrackerSection todayData={todayData} waterGoalLiters={waterGoalMl} onDrink={(amount) => saveTrackingField('water', amount)} saving={saving} />
@@ -340,7 +338,35 @@ const styles = StyleSheet.create({
   header: { marginBottom: spacing.lg },
   title: { ...typography.h1, color: '#26466B', textAlign: 'center' },
   subtitle: { ...typography.body, color: colors.raven, marginTop: 4, textAlign: 'center' },
-  trackerTitle: { ...typography.h4, color: colors.mineShaft, marginBottom: spacing.md, textAlign: 'center' },
+  dateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.lg,
+  },
+  dateRowSelector: {
+    flex: 1,
+  },
+  dateSelector: {
+    marginBottom: 0,
+  },
+  editButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    borderColor: colors.alto,
+    borderRadius: 16,
+    backgroundColor: colors.white,
+  },
+  editButtonText: {
+    ...typography.caption,
+    color: colors.mineShaft,
+    marginTop: 2,
+    fontWeight: '600',
+  },
   divider: {
     flexDirection: 'row',
     alignItems: 'center',
