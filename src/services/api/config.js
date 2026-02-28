@@ -47,4 +47,7 @@ export const API_ENDPOINTS = {
   // Fasting
   FASTING_PLANS: '/fasting-plans',
   FASTING_SESSIONS: '/fasting-sessions',
+
+  // Constants
+  CONSTANTS_ALL: '/constants/all',
 };

@@ -10,7 +10,7 @@ import {
   SocialButton,
 } from '../../components/atoms';
 import { useAuth, useSocialAuth } from '../../hooks';
-import { authService } from '../../services/api/auth';
+import { useSignUpMutation } from '../../store/api';
 import { SOCIAL_PROVIDERS } from '../../constants/oauth';
 import { authStyles as styles } from '../../theme/authStyles';
 
@@ -19,12 +19,12 @@ const RegisterScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const { login } = useAuth();
   const { socialLoading, handleSocialAuth } = useSocialAuth('signUp');
+  const [signUp, { isLoading }] = useSignUpMutation();
 
   const handleRegister = async () => {
     if (!name || !email || !password || !confirmPassword) {
@@ -42,14 +42,11 @@ const RegisterScreen = ({ navigation }) => {
       return;
     }
 
-    setIsLoading(true);
     try {
-      const response = await authService.register({ name, email, password });
+      const response = await signUp({ name, email, password }).unwrap();
       await login(response.data, response.access_token);
     } catch (error) {
-      Alert.alert('Error', error.message || 'Registration failed');
-    } finally {
-      setIsLoading(false);
+      Alert.alert('Error', error.data?.message || error.message || 'Registration failed');
     }
   };
 

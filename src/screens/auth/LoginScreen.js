@@ -10,7 +10,7 @@ import {
   SocialButton,
 } from '../../components/atoms';
 import { useAuth, useSocialAuth } from '../../hooks';
-import { authService } from '../../services/api/auth';
+import { useSignInMutation } from '../../store/api';
 import { API_BASE_URL } from '../../services/api/config';
 import { SOCIAL_PROVIDERS } from '../../constants/oauth';
 import { authStyles as styles } from '../../theme/authStyles';
@@ -18,11 +18,11 @@ import { authStyles as styles } from '../../theme/authStyles';
 const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   const { login } = useAuth();
   const { socialLoading, handleSocialAuth } = useSocialAuth('signIn');
+  const [signIn, { isLoading }] = useSignInMutation();
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -30,14 +30,11 @@ const LoginScreen = ({ navigation }) => {
       return;
     }
 
-    setIsLoading(true);
     try {
-      const response = await authService.login({ email, password });
+      const response = await signIn({ email, password }).unwrap();
       await login(response.data, response.access_token);
     } catch (error) {
-      Alert.alert('Error', error.message || 'Login failed');
-    } finally {
-      setIsLoading(false);
+      Alert.alert('Error', error.data?.message || error.message || 'Login failed');
     }
   };
 
@@ -46,18 +43,15 @@ const LoginScreen = ({ navigation }) => {
     if (__DEV__) {
       console.log('[DEV] Attempting dev login to:', API_BASE_URL);
     }
-    setIsLoading(true);
     try {
-      const response = await authService.login({
+      const response = await signIn({
         email: 'admin@gotowertech.com',
         password: 'Pac0peric0',
-      });
+      }).unwrap();
       await login(response.data, response.access_token);
     } catch (error) {
       if (__DEV__) console.error('[DEV] Login error:', error);
-      Alert.alert('Dev Login Error', `${error.message}\n\nAPI: ${API_BASE_URL}`);
-    } finally {
-      setIsLoading(false);
+      Alert.alert('Dev Login Error', `${error.data?.message || error.message}\n\nAPI: ${API_BASE_URL}`);
     }
   };
 

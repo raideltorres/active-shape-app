@@ -5,7 +5,7 @@ import * as Google from 'expo-auth-session/providers/google';
 import { makeRedirectUri } from 'expo-auth-session';
 
 import { useAuth } from './useAuth';
-import { socialAuthService } from '../services/api/socialAuth';
+import { useGoogleSignInMutation, useGoogleSignUpMutation } from '../store/api';
 import { API_BASE_URL } from '../services/api/config';
 import { GOOGLE_CONFIG } from '../constants/oauth';
 
@@ -19,6 +19,8 @@ WebBrowser.maybeCompleteAuthSession();
 export const useSocialAuth = (mode = 'signIn') => {
   const [socialLoading, setSocialLoading] = useState(null);
   const { login } = useAuth();
+  const [googleSignIn] = useGoogleSignInMutation();
+  const [googleSignUp] = useGoogleSignUpMutation();
 
   // Google Auth Hook
   const [googleRequest, googleResponse, googlePromptAsync] = Google.useIdTokenAuthRequest({
@@ -28,24 +30,21 @@ export const useSocialAuth = (mode = 'signIn') => {
     webClientId: GOOGLE_CONFIG.webClientId,
   });
 
-  // Handle Google auth success
   const handleGoogleSuccess = useCallback(async (idToken) => {
     try {
       if (!idToken) {
         throw new Error('No ID token received');
       }
-      const apiMethod = mode === 'signUp' 
-        ? socialAuthService.googleSignUp 
-        : socialAuthService.googleSignIn;
-      const response = await apiMethod(idToken);
+      const mutation = mode === 'signUp' ? googleSignUp : googleSignIn;
+      const response = await mutation(idToken).unwrap();
       await login(response.data, response.access_token);
     } catch (error) {
       const action = mode === 'signUp' ? 'sign up' : 'sign in';
-      Alert.alert('Error', error.message || `Google ${action} failed`);
+      Alert.alert('Error', error.data?.message || error.message || `Google ${action} failed`);
     } finally {
       setSocialLoading(null);
     }
-  }, [login, mode]);
+  }, [login, mode, googleSignIn, googleSignUp]);
 
   // Watch for Google auth response
   useEffect(() => {

@@ -19,7 +19,13 @@ import Button from "../../components/atoms/Button";
 import RangeSlider from "../../components/atoms/RangeSlider";
 import Ribbon from "../../components/atoms/Ribbon";
 import FilterCardSelect from "../../components/atoms/FilterCardSelect";
-import { recipesService, userService } from "../../services/api";
+import {
+  useLazySearchRecipesQuery,
+  useLazyGetUserRecipeFiltersQuery,
+  useSaveUserRecipeFiltersMutation,
+  useAddRecipeFavoriteMutation,
+  useRemoveRecipeFavoriteMutation,
+} from "../../store/api";
 import { colors, spacing, typography, borderRadius } from "../../theme";
 
 // Match web options (value for API, label for display)
@@ -106,6 +112,12 @@ const RecipesScreen = ({ navigation }) => {
   });
   const [error, setError] = useState(null);
 
+  const [triggerSearch] = useLazySearchRecipesQuery();
+  const [triggerGetFilters] = useLazyGetUserRecipeFiltersQuery();
+  const [saveFilters] = useSaveUserRecipeFiltersMutation();
+  const [addFavorite] = useAddRecipeFavoriteMutation();
+  const [removeFavorite] = useRemoveRecipeFavoriteMutation();
+
   const hasMore = recipes.length < totalResults;
 
   const { primaryFilterChips, otherFiltersCount } = useMemo(() => {
@@ -144,18 +156,16 @@ const RecipesScreen = ({ navigation }) => {
 
   const searchRecipes = useCallback(
     async (opts = {}) => {
-      const { page: pageNum = 1, append = false } = opts;
+      const { page: pageNum = 1, append = false, searchFilters } = opts;
+      const activeFilters = searchFilters || filters;
       const pagination = { pageSize: PAGE_SIZE, page: pageNum };
       try {
         if (append) setLoadingMore(true);
         else if (pageNum === 1) setLoading(true);
         setError(null);
-        const data = await recipesService.searchRecipes({
-          filters,
-          pagination,
-        });
-        const list = data.results || [];
-        setTotalResults(data.totalResults ?? 0);
+        const { data } = await triggerSearch({ filters: activeFilters, pagination });
+        const list = data?.results || [];
+        setTotalResults(data?.totalResults ?? 0);
         if (append) {
           setRecipes((prev) => {
             const byId = new Map(prev.map((r) => [r.id, r]));
@@ -174,14 +184,14 @@ const RecipesScreen = ({ navigation }) => {
         setLoadingMore(false);
       }
     },
-    [filters],
+    [filters, triggerSearch],
   );
 
   const loadInitialFiltersAndSearch = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await recipesService.getUserRecipeFilters();
-      const saved = data?.filters || {};
+      const { data: filtersData } = await triggerGetFilters();
+      const saved = filtersData?.filters || {};
       const next = { ...defaultFilters, ...saved };
       setFilters(next);
       setFilterForm({
@@ -201,21 +211,13 @@ const RecipesScreen = ({ navigation }) => {
         maxFiber: Number(next.maxFiber) || FIBER_MAX,
       });
       setPage(1);
-      const pagination = { pageSize: PAGE_SIZE, page: 1 };
-      const searchData = await recipesService.searchRecipes({
-        filters: next,
-        pagination,
-      });
-      setRecipes(searchData.results || []);
-      setTotalResults(searchData.totalResults ?? 0);
-      setError(null);
+      await searchRecipes({ page: 1, searchFilters: next });
     } catch (err) {
       setError(err.message || "Failed to load recipes");
       setRecipes([]);
-    } finally {
       setLoading(false);
     }
-  }, []);
+  }, [triggerGetFilters, searchRecipes]);
 
   useEffect(() => {
     loadInitialFiltersAndSearch();
@@ -234,9 +236,9 @@ const RecipesScreen = ({ navigation }) => {
   const handleFavorite = useCallback(async (id, isFavorite) => {
     try {
       if (isFavorite) {
-        await userService.removeRecipeFavorite(id);
+        await removeFavorite(id).unwrap();
       } else {
-        await userService.addRecipeFavorite(id);
+        await addFavorite(id).unwrap();
       }
       setRecipes((prev) =>
         prev.map((r) => (r.id === id ? { ...r, isFavorite: !isFavorite } : r)),
@@ -244,7 +246,7 @@ const RecipesScreen = ({ navigation }) => {
     } catch (err) {
       Alert.alert("Error", "Could not update favorite.");
     }
-  }, []);
+  }, [addFavorite, removeFavorite]);
 
   const handleApplyFilters = useCallback(async () => {
     const next = {
@@ -267,28 +269,13 @@ const RecipesScreen = ({ navigation }) => {
     setFilters(next);
     setFilterModalVisible(false);
     try {
-      await recipesService.saveUserRecipeFilters(next);
+      await saveFilters(next).unwrap();
     } catch (err) {
       // Still apply locally
     }
     setPage(1);
-    setLoading(true);
-    const pagination = { pageSize: PAGE_SIZE, page: 1 };
-    try {
-      const data = await recipesService.searchRecipes({
-        filters: next,
-        pagination,
-      });
-      setRecipes(data.results || []);
-      setTotalResults(data.totalResults ?? 0);
-      setError(null);
-    } catch (err) {
-      setError(err.message || "Failed to load recipes");
-      setRecipes([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [filterForm]);
+    await searchRecipes({ page: 1, searchFilters: next });
+  }, [filterForm, saveFilters, searchRecipes]);
 
   const renderRecipe = useCallback(
     ({ item }) => (

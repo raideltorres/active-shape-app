@@ -13,7 +13,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 
-import { recipesService, userService } from '../../services/api';
+import {
+  useGetRecipeDetailsQuery,
+  useAddRecipeFavoriteMutation,
+  useRemoveRecipeFavoriteMutation,
+} from '../../store/api';
 import Button from '../../components/atoms/Button';
 import { colors, spacing, typography, borderRadius } from '../../theme';
 
@@ -57,40 +61,16 @@ const getNetCarbs = (nutrition) => {
 
 const RecipeDetailsScreen = ({ navigation, route }) => {
   const { id, isFavorite: initialFavorite } = route.params || {};
-  const [recipe, setRecipe] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [completedSteps, setCompletedSteps] = useState(new Set());
   const [checkedIngredients, setCheckedIngredients] = useState(new Set());
   const [isFavorite, setIsFavorite] = useState(Boolean(initialFavorite));
 
-  const fetchRecipe = useCallback(async () => {
-    if (!id) {
-      setLoading(false);
-      setError('No recipe ID');
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await recipesService.getRecipeDetails(id);
-      setRecipe(data);
-      // isFavorite would come from profile; for details we don't have it in response, could fetch profile or leave as false
-    } catch (err) {
-      setError(err.message || 'Failed to load recipe');
-      setRecipe(null);
-    } finally {
-      setLoading(false);
-    }
-  }, [id]);
+  const { data: recipe, isLoading: loading, error: queryError } = useGetRecipeDetailsQuery(id, { skip: !id });
+  const error = queryError ? (queryError.data?.message || 'Failed to load recipe') : (!id ? 'No recipe ID' : null);
 
-  useFocusEffect(
-    useCallback(() => {
-      fetchRecipe();
-    }, [fetchRecipe]),
-  );
+  const [addFavoriteMutation] = useAddRecipeFavoriteMutation();
+  const [removeFavoriteMutation] = useRemoveRecipeFavoriteMutation();
 
-  // Sync favorite state when navigating to a different recipe (e.g. from list)
   React.useEffect(() => {
     if (route.params?.isFavorite !== undefined) {
       setIsFavorite(Boolean(route.params.isFavorite));
@@ -132,16 +112,16 @@ const RecipeDetailsScreen = ({ navigation, route }) => {
   const handleFavorite = useCallback(async () => {
     try {
       if (isFavorite) {
-        await userService.removeRecipeFavorite(String(id));
+        await removeFavoriteMutation(String(id)).unwrap();
         setIsFavorite(false);
       } else {
-        await userService.addRecipeFavorite(String(id));
+        await addFavoriteMutation(String(id)).unwrap();
         setIsFavorite(true);
       }
     } catch (err) {
       Alert.alert('Error', 'Could not update favorite.');
     }
-  }, [id, isFavorite]);
+  }, [id, isFavorite, addFavoriteMutation, removeFavoriteMutation]);
 
   const handleLogMeal = useCallback(() => {
     // Navigate to tracking with recipe context or show placeholder

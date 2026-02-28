@@ -7,3 +7,6 @@ export { default as LottiePlayer } from './LottiePlayer';
 export { default as RangeSlider } from './RangeSlider';
 export { default as Ribbon } from './Ribbon';
 export { default as FilterCardSelect } from './FilterCardSelect';
+export { default as OptionPicker } from './OptionPicker';
+export { default as AnimatedProgressBar } from './AnimatedProgressBar';
+export { default as LabeledSlider } from './LabeledSlider';

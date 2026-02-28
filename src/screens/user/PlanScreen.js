@@ -1,8 +1,11 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-import { userService } from '../../services/api';
+import {
+  useGetProfileQuery,
+  useGeneratePersonalizedPlanMutation,
+} from '../../store/api';
 import { Button, LottiePlayer } from '../../components/atoms';
 import { TabScreenLayout } from '../../components/templates';
 import {
@@ -21,7 +24,6 @@ import { fire, water, scale, footSteps } from '../../assets/animations';
 import { colors, spacing, typography, borderRadius } from '../../theme';
 import { isAdmin } from '../../utils/constants';
 
-// Stat card with colored top border and Lottie animation
 const StatCard = ({ animation, label, value, unit, color = colors.mainOrange }) => (
   <View style={[styles.statCard, { borderTopColor: color }]}>
     <View style={styles.statCardAnimation}>
@@ -35,42 +37,22 @@ const StatCard = ({ animation, label, value, unit, color = colors.mainOrange }) 
   </View>
 );
 
-const PlanScreen = ({ navigation }) => {
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
+const PlanScreen = () => {
   const [refreshing, setRefreshing] = useState(false);
-  const [generating, setGenerating] = useState(false);
+  const { data: profile, isLoading: loading, refetch } = useGetProfileQuery();
+  const [generatePlan, { isLoading: generating }] = useGeneratePersonalizedPlanMutation();
 
-  const fetchData = useCallback(async () => {
-    try {
-      const profileData = await userService.getProfile();
-      setProfile(profileData);
-    } catch (error) {
-      console.error('Error fetching profile:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
-
-  const onRefresh = useCallback(async () => {
+  const onRefresh = async () => {
     setRefreshing(true);
-    await fetchData();
+    await refetch();
     setRefreshing(false);
-  }, [fetchData]);
+  };
 
   const handleGeneratePlan = async () => {
-    setGenerating(true);
     try {
-      await userService.generatePersonalizedPlan();
-      await fetchData();
+      await generatePlan().unwrap();
     } catch (error) {
       console.error('Error generating plan:', error);
-    } finally {
-      setGenerating(false);
     }
   };
 
@@ -86,7 +68,6 @@ const PlanScreen = ({ navigation }) => {
     );
   }
 
-  // No plan yet - show prompt
   if (!plan) {
     return (
       <TabScreenLayout scrollable={false}>
@@ -124,7 +105,6 @@ const PlanScreen = ({ navigation }) => {
       refreshing={refreshing} 
       onRefresh={onRefresh}
     >
-      {/* Quick Stats Cards */}
       <View style={styles.statsContainer}>
         <StatCard
           animation={fire}
@@ -155,7 +135,6 @@ const PlanScreen = ({ navigation }) => {
         />
       </View>
 
-      {/* Plan Sections */}
       <WeightManagementSection weightPlan={weightPlan} />
       <NutritionPlanSection 
         nutritionPlan={nutritionPlan} 
@@ -170,7 +149,6 @@ const PlanScreen = ({ navigation }) => {
       <EducationSection education={plan.education} />
       <AdaptivePlanSection adaptive={plan.adaptive} />
 
-      {/* Regenerate Button (Admin only) */}
       {isAdmin(profile?.role) && (
         <View style={styles.regenerateSection}>
           <Button
@@ -192,7 +170,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  // Stats Cards Container
   statsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -233,13 +210,11 @@ const styles = StyleSheet.create({
     ...typography.body,
     marginLeft: 4,
   },
-  // Regenerate
   regenerateSection: {
     marginTop: spacing.md,
     marginBottom: spacing.lg,
     alignItems: 'center',
   },
-  // No plan
   noPlanContainer: {
     flex: 1,
     alignItems: 'center',

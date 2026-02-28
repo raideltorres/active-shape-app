@@ -11,8 +11,12 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { userService } from '../../services/api';
-import { DateSelector, TrackerNavigation, Card } from '../../components/molecules';
+import {
+  useGetProfileQuery,
+  useGetTrackingsQuery,
+  useCreateTrackingMutation,
+} from '../../store/api';
+import { DateSelector, TrackerNavigation } from '../../components/molecules';
 import { colors, spacing, typography } from '../../theme';
 import { getCurrentDate } from '../../utils/date';
 import { formatWeightKg } from '../../utils/measure';
@@ -30,31 +34,20 @@ const TrackingScreen = () => {
   const [activeTracker, setActiveTracker] = useState(TRACKER_IDS.WATER);
   const prevDateRef = React.useRef(selectedDate);
 
-  const [profile, setProfile] = useState(null);
-  const [trackingData, setTrackingData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-
   const [caloriesConsumed, setCaloriesConsumed] = useState('');
   const [caloriesBurned, setCaloriesBurned] = useState('');
   const [proteins, setProteins] = useState('');
   const [carbs, setCarbs] = useState('');
   const [fats, setFats] = useState('');
 
-  const fetchData = useCallback(async () => {
-    try {
-      const profileData = await userService.getProfile();
-      setProfile(profileData);
-      const data = profileData?._id ? await userService.getTrackings(profileData._id) : [];
-      setTrackingData(Array.isArray(data) ? data : []);
-    } catch (e) {
-      if (__DEV__) console.error('Tracking fetch error:', e);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const { data: profile, isLoading: profileLoading } = useGetProfileQuery();
+  const { data: trackingData = [], refetch: refetchTrackings } = useGetTrackingsQuery(
+    profile?._id,
+    { skip: !profile?._id },
+  );
+  const [createTracking, { isLoading: saving }] = useCreateTrackingMutation();
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  const loading = profileLoading;
 
   const todayData = useMemo(
     () => trackingData?.find((r) => r.date === selectedDate) || {},
@@ -77,17 +70,13 @@ const TrackingScreen = () => {
 
   const saveTrackingField = useCallback(async (field, value) => {
     if (!profile?._id) return;
-    setSaving(true);
     try {
-      await userService.createTracking({ userId: profile._id, date: selectedDate, field, value });
-      await fetchData();
+      await createTracking({ userId: profile._id, date: selectedDate, field, value }).unwrap();
     } catch (e) {
       if (__DEV__) console.error('Save tracking error:', e);
       Alert.alert('Error', 'Failed to save. Please try again.');
-    } finally {
-      setSaving(false);
     }
-  }, [profile?._id, selectedDate, fetchData]);
+  }, [profile?._id, selectedDate, createTracking]);
 
   const initialWeight = profile?.weight ?? profile?.personalizedPlan?.weightPlan?.currentWeight ?? null;
   const goalWeight = profile?.goalWeight ?? profile?.personalizedPlan?.weightPlan?.goalWeight ?? null;
@@ -134,61 +123,33 @@ const TrackingScreen = () => {
     const burned = parseInt(caloriesBurned, 10) || 0;
     const dC = consumed - (todayData.caloriesConsumed || 0);
     const dB = burned - (todayData.caloriesBurned || 0);
-    setSaving(true);
     try {
-      if (dC !== 0) await userService.createTracking({ userId: profile._id, date: selectedDate, field: 'caloriesConsumed', value: dC });
-      if (dB !== 0) await userService.createTracking({ userId: profile._id, date: selectedDate, field: 'caloriesBurned', value: dB });
-      await fetchData();
+      if (dC !== 0) await createTracking({ userId: profile._id, date: selectedDate, field: 'caloriesConsumed', value: dC }).unwrap();
+      if (dB !== 0) await createTracking({ userId: profile._id, date: selectedDate, field: 'caloriesBurned', value: dB }).unwrap();
     } catch (e) {
       if (__DEV__) console.error('Save nutrition error:', e);
       Alert.alert('Error', 'Failed to save calories.');
-    } finally {
-      setSaving(false);
     }
-  }, [profile?._id, selectedDate, caloriesConsumed, caloriesBurned, todayData.caloriesConsumed, todayData.caloriesBurned, fetchData]);
+  }, [profile?._id, selectedDate, caloriesConsumed, caloriesBurned, todayData.caloriesConsumed, todayData.caloriesBurned, createTracking]);
 
   const onFoodAnalyzed = useCallback(
     async (analysis) => {
       if (!analysis?.totalNutrition || !profile?._id) return;
       const { totalNutrition } = analysis;
-      setSaving(true);
       try {
         await Promise.all([
-          userService.createTracking({
-            userId: profile._id,
-            date: selectedDate,
-            field: 'caloriesConsumed',
-            value: totalNutrition.calories ?? 0,
-          }),
-          userService.createTracking({
-            userId: profile._id,
-            date: selectedDate,
-            field: 'proteins',
-            value: totalNutrition.proteins ?? 0,
-          }),
-          userService.createTracking({
-            userId: profile._id,
-            date: selectedDate,
-            field: 'carbs',
-            value: totalNutrition.carbs ?? 0,
-          }),
-          userService.createTracking({
-            userId: profile._id,
-            date: selectedDate,
-            field: 'fats',
-            value: totalNutrition.fats ?? 0,
-          }),
+          createTracking({ userId: profile._id, date: selectedDate, field: 'caloriesConsumed', value: totalNutrition.calories ?? 0 }).unwrap(),
+          createTracking({ userId: profile._id, date: selectedDate, field: 'proteins', value: totalNutrition.proteins ?? 0 }).unwrap(),
+          createTracking({ userId: profile._id, date: selectedDate, field: 'carbs', value: totalNutrition.carbs ?? 0 }).unwrap(),
+          createTracking({ userId: profile._id, date: selectedDate, field: 'fats', value: totalNutrition.fats ?? 0 }).unwrap(),
         ]);
-        await fetchData();
         Alert.alert('Success', `Added ${totalNutrition.calories ?? 0} kcal and macros to your daily tracking.`);
       } catch (e) {
         if (__DEV__) console.error('Log food analysis error:', e);
         Alert.alert('Error', e?.message || 'Failed to log food. Please try again.');
-      } finally {
-        setSaving(false);
       }
     },
-    [profile?._id, selectedDate, fetchData],
+    [profile?._id, selectedDate, createTracking],
   );
 
   const onMacrosSave = useCallback(async () => {
@@ -199,19 +160,15 @@ const TrackingScreen = () => {
     const dP = p - (todayData.proteins || 0);
     const dC = c - (todayData.carbs || 0);
     const dF = f - (todayData.fats || 0);
-    setSaving(true);
     try {
-      if (dP !== 0) await userService.createTracking({ userId: profile._id, date: selectedDate, field: 'proteins', value: dP });
-      if (dC !== 0) await userService.createTracking({ userId: profile._id, date: selectedDate, field: 'carbs', value: dC });
-      if (dF !== 0) await userService.createTracking({ userId: profile._id, date: selectedDate, field: 'fats', value: dF });
-      await fetchData();
+      if (dP !== 0) await createTracking({ userId: profile._id, date: selectedDate, field: 'proteins', value: dP }).unwrap();
+      if (dC !== 0) await createTracking({ userId: profile._id, date: selectedDate, field: 'carbs', value: dC }).unwrap();
+      if (dF !== 0) await createTracking({ userId: profile._id, date: selectedDate, field: 'fats', value: dF }).unwrap();
     } catch (e) {
       if (__DEV__) console.error('Save macros error:', e);
       Alert.alert('Error', 'Failed to save macronutrients.');
-    } finally {
-      setSaving(false);
     }
-  }, [profile?._id, selectedDate, proteins, carbs, fats, todayData.proteins, todayData.carbs, todayData.fats, fetchData]);
+  }, [profile?._id, selectedDate, proteins, carbs, fats, todayData.proteins, todayData.carbs, todayData.fats, createTracking]);
 
   const trackerTitle = activeTracker === TRACKER_IDS.WEIGHT ? 'Weight Tracking' : 'Nutrition Tracking';
 

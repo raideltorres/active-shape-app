@@ -16,5 +16,13 @@ export { default as FastingTrackerCard } from "./FastingTrackerCard";
 export { default as RecipeCard } from "./RecipeCard";
 export { AnimatedTabBar } from "./AnimatedTabBar";
 
+// Onboarding
+export { default as GenderPicker } from "./GenderPicker/GenderPicker";
+export { default as DateOfBirthPicker } from "./DateOfBirthPicker/DateOfBirthPicker";
+export { default as BodyCompositionPicker } from "./BodyCompositionPicker/BodyCompositionPicker";
+export { default as BmiGauge } from "./BmiGauge/BmiGauge";
+export { default as BmiGaugeWithLabels } from "./BmiGaugeWithLabels/BmiGaugeWithLabels";
+export { default as OnboardingFastingPlanCard } from "./FastingPlanCard/FastingPlanCard";
+
 // Plan sections
 export * from "./plan";

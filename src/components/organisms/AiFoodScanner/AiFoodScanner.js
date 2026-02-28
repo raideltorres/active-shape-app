@@ -13,7 +13,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 
-import { analyzeFoodImage } from '../../../services/api';
+import { useAnalyzeFoodImageMutation } from '../../../store/api';
 import { Card } from '../../molecules';
 import { Button } from '../../atoms';
 import { colors, spacing, typography } from '../../../theme';
@@ -22,10 +22,10 @@ import FoodAnalysisResultCard from './FoodAnalysisResultCard';
 const AiFoodScanner = ({ userId, onFoodAnalyzed }) => {
   const [dishContext, setDishContext] = useState('');
   const [imageUri, setImageUri] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [analysisResponse, setAnalysisResponse] = useState(null);
   const [logging, setLogging] = useState(false);
+  const [analyzeFood, { isLoading }] = useAnalyzeFoodImageMutation();
 
   const requestCameraPermission = useCallback(async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
@@ -97,18 +97,15 @@ const AiFoodScanner = ({ userId, onFoodAnalyzed }) => {
 
   const analyzeImage = useCallback(async () => {
     if (!imageUri || !userId) return;
-    setIsLoading(true);
     setError(null);
     try {
-      const data = await analyzeFoodImage(userId, imageUri, dishContext.trim());
+      const data = await analyzeFood({ userId, imageUri, context: dishContext.trim() }).unwrap();
       setAnalysisResponse(data);
     } catch (e) {
       if (__DEV__) console.error('Analyze food error:', e);
-      setError(e?.message || 'Analysis failed. Please try again with a clearer image.');
-    } finally {
-      setIsLoading(false);
+      setError(e?.data?.message || e?.message || 'Analysis failed. Please try again with a clearer image.');
     }
-  }, [imageUri, userId, dishContext]);
+  }, [imageUri, userId, dishContext, analyzeFood]);
 
   const handleLogToTracking = useCallback(async () => {
     if (!analysisResponse?.analysis || !onFoodAnalyzed) return;

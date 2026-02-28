@@ -26,21 +26,24 @@ const FormInput = ({
   keyboardType = 'default',
   autoCapitalize = 'none',
   autoComplete,
+  editable,
+  containerStyle,
+  maxLength,
 }) => {
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, containerStyle]}>
       {label && <Text style={styles.label}>{label}</Text>}
-      <View style={styles.inputContainer}>
+      <View style={[styles.inputContainer, editable === false && styles.inputContainerDisabled]}>
         {icon && (
           <Ionicons
             name={icon}
             size={20}
-            color={colors.raven}
+            color={editable === false ? colors.alto : colors.raven}
             style={styles.icon}
           />
         )}
         <TextInput
-          style={styles.input}
+          style={[styles.input, editable === false && styles.inputDisabled]}
           placeholder={placeholder}
           placeholderTextColor={colors.alto}
           value={value}
@@ -49,6 +52,8 @@ const FormInput = ({
           keyboardType={keyboardType}
           autoCapitalize={autoCapitalize}
           autoComplete={autoComplete}
+          editable={editable}
+          maxLength={maxLength}
         />
         {showPasswordToggle && (
           <TouchableOpacity onPress={onTogglePassword} style={styles.eyeButton}>
@@ -85,10 +90,17 @@ const styles = StyleSheet.create({
   icon: {
     marginRight: spacing.sm,
   },
+  inputContainerDisabled: {
+    backgroundColor: colors.concrete,
+    borderColor: colors.mercury,
+  },
   input: {
     flex: 1,
     fontSize: 16,
     color: colors.codGray,
+  },
+  inputDisabled: {
+    color: colors.raven,
   },
   eyeButton: {
     padding: spacing.xs,
