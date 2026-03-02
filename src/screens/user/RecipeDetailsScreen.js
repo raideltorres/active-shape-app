@@ -19,6 +19,7 @@ import {
   useRemoveRecipeFavoriteMutation,
 } from '../../store/api';
 import Button from '../../components/atoms/Button';
+import LogMealModal from '../../components/organisms/LogMealModal';
 import { colors, spacing, typography, borderRadius } from '../../theme';
 
 const stripLinks = (html) => {
@@ -59,11 +60,22 @@ const getNetCarbs = (nutrition) => {
   return null;
 };
 
+const NutritionRow = ({ icon, value, label }) => (
+  <View style={styles.nutritionRow}>
+    <View style={styles.nutritionIcon}>
+      <Ionicons name={icon} size={20} color={colors.mainOrange} />
+    </View>
+    <Text style={styles.nutritionValue}>{value}</Text>
+    <Text style={styles.nutritionLabel}>{label}</Text>
+  </View>
+);
+
 const RecipeDetailsScreen = ({ navigation, route }) => {
   const { id, isFavorite: initialFavorite } = route.params || {};
   const [completedSteps, setCompletedSteps] = useState(new Set());
   const [checkedIngredients, setCheckedIngredients] = useState(new Set());
   const [isFavorite, setIsFavorite] = useState(Boolean(initialFavorite));
+  const [logModalVisible, setLogModalVisible] = useState(false);
 
   const { data: recipe, isLoading: loading, error: queryError } = useGetRecipeDetailsQuery(id, { skip: !id });
   const error = queryError ? (queryError.data?.message || 'Failed to load recipe') : (!id ? 'No recipe ID' : null);
@@ -123,10 +135,7 @@ const RecipeDetailsScreen = ({ navigation, route }) => {
     }
   }, [id, isFavorite, addFavoriteMutation, removeFavoriteMutation]);
 
-  const handleLogMeal = useCallback(() => {
-    // Navigate to tracking with recipe context or show placeholder
-    navigation.navigate('TrackingTab');
-  }, [navigation]);
+  const handleLogMeal = useCallback(() => setLogModalVisible(true), []);
 
   if (loading && !recipe) {
     return (
@@ -278,72 +287,56 @@ const RecipeDetailsScreen = ({ navigation, route }) => {
 
         {nutrition && (nutrition.calories || nutrition.protein || nutrition.netCarbs || nutrition.fat) ? (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Nutrition per serving</Text>
-            <View style={styles.nutritionGrid}>
+            <View style={styles.nutritionHeader}>
+              <Text style={styles.sectionTitle}>Nutrition Facts</Text>
+              <Text style={styles.nutritionPerServing}>Per serving</Text>
+            </View>
+            <View style={styles.nutritionList}>
               {nutrition.calories && (
-                <View style={styles.nutritionItem}>
-                  <Ionicons name="flame-outline" size={22} color={colors.mainOrange} />
-                  <Text style={styles.nutritionValue}>{nutrition.calories.amount} kcal</Text>
-                  <Text style={styles.nutritionLabel}>Calories</Text>
-                </View>
+                <NutritionRow icon="flame-outline" value={`${nutrition.calories.amount} kcal`} label="Calories" />
               )}
               {nutrition.protein && (
-                <View style={styles.nutritionItem}>
-                  <Ionicons name="nutrition-outline" size={22} color={colors.mainOrange} />
-                  <Text style={styles.nutritionValue}>
-                    {nutrition.protein.amount}{nutrition.protein.unit}
-                  </Text>
-                  <Text style={styles.nutritionLabel}>Protein</Text>
-                </View>
+                <NutritionRow icon="nutrition-outline" value={`${nutrition.protein.amount}${nutrition.protein.unit}`} label="Protein" />
               )}
               {nutrition.netCarbs && (
-                <View style={styles.nutritionItem}>
-                  <Ionicons name="leaf-outline" size={22} color={colors.mainOrange} />
-                  <Text style={styles.nutritionValue}>
-                    {nutrition.netCarbs.amount}{nutrition.netCarbs.unit}
-                  </Text>
-                  <Text style={styles.nutritionLabel}>Net Carbs</Text>
-                </View>
+                <NutritionRow icon="leaf-outline" value={`${nutrition.netCarbs.amount}${nutrition.netCarbs.unit}`} label="Net Carbs" />
               )}
               {nutrition.fat && (
-                <View style={styles.nutritionItem}>
-                  <Ionicons name="water-outline" size={22} color={colors.mainOrange} />
-                  <Text style={styles.nutritionValue}>
-                    {nutrition.fat.amount}{nutrition.fat.unit}
-                  </Text>
-                  <Text style={styles.nutritionLabel}>Fat</Text>
-                </View>
+                <NutritionRow icon="water-outline" value={`${nutrition.fat.amount}${nutrition.fat.unit}`} label="Fat" />
+              )}
+              {nutrition.fiber && (
+                <NutritionRow icon="git-branch-outline" value={`${nutrition.fiber.amount}${nutrition.fiber.unit}`} label="Fiber" />
+              )}
+              {nutrition.sugar && (
+                <NutritionRow icon="flame-outline" value={`${nutrition.sugar.amount}${nutrition.sugar.unit}`} label="Sugar" />
               )}
             </View>
           </View>
         ) : null}
 
-        {(recipe.diets?.length > 0 || recipe.cuisines?.length > 0) ? (
+        {recipe.diets?.length > 0 ? (
           <View style={styles.section}>
-            {recipe.diets?.length > 0 ? (
-              <>
-                <Text style={styles.sectionTitle}>Diets</Text>
-                <View style={styles.tagRow}>
-                  {recipe.diets.map((d) => (
-                    <View key={d} style={styles.tag}>
-                      <Text style={styles.tagText}>{d}</Text>
-                    </View>
-                  ))}
+            <Text style={styles.sectionTitle}>Diets</Text>
+            <View style={styles.tagRow}>
+              {recipe.diets.map((d) => (
+                <View key={d} style={styles.dietTag}>
+                  <Text style={styles.dietTagText}>{d}</Text>
                 </View>
-              </>
-            ) : null}
-            {recipe.cuisines?.length > 0 ? (
-              <>
-                <Text style={[styles.sectionTitle, { marginTop: spacing.lg }]}>Cuisines</Text>
-                <View style={styles.tagRow}>
-                  {recipe.cuisines.map((c) => (
-                    <View key={c} style={styles.tag}>
-                      <Text style={styles.tagText}>{c}</Text>
-                    </View>
-                  ))}
+              ))}
+            </View>
+          </View>
+        ) : null}
+
+        {recipe.cuisines?.length > 0 ? (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Cuisines</Text>
+            <View style={styles.tagRow}>
+              {recipe.cuisines.map((c) => (
+                <View key={c} style={styles.cuisineTag}>
+                  <Text style={styles.cuisineTagText}>{c}</Text>
                 </View>
-              </>
-            ) : null}
+              ))}
+            </View>
           </View>
         ) : null}
 
@@ -353,6 +346,13 @@ const RecipeDetailsScreen = ({ navigation, route }) => {
 
         <View style={styles.bottomSpacer} />
       </ScrollView>
+
+      <LogMealModal
+        visible={logModalVisible}
+        onClose={() => setLogModalVisible(false)}
+        recipe={recipe}
+        nutrition={nutrition}
+      />
     </SafeAreaView>
   );
 };
@@ -570,23 +570,44 @@ const styles = StyleSheet.create({
     ...typography.body,
     lineHeight: 22,
   },
-  nutritionGrid: {
+  nutritionHeader: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.xl,
-  },
-  nutritionItem: {
+    justifyContent: 'space-between',
     alignItems: 'center',
-    minWidth: 70,
+    marginBottom: spacing.md,
+  },
+  nutritionPerServing: {
+    ...typography.bodySmall,
+    color: colors.raven,
+  },
+  nutritionList: {
+    gap: spacing.sm,
+  },
+  nutritionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.alabaster,
+    borderRadius: borderRadius.md,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md,
+  },
+  nutritionIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: `${colors.mainOrange}12`,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.md,
   },
   nutritionValue: {
     ...typography.body,
-    fontWeight: '600',
-    color: colors.mainOrange,
+    fontWeight: '700',
+    color: colors.mineShaft,
+    flex: 1,
   },
   nutritionLabel: {
-    ...typography.caption,
-    marginTop: spacing.xs,
+    ...typography.body,
     color: colors.raven,
   },
   tagRow: {
@@ -594,12 +615,38 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: spacing.sm,
   },
+  dietTag: {
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderRadius: borderRadius.full,
+    backgroundColor: `${colors.mainOrange}15`,
+    borderWidth: 1,
+    borderColor: colors.mainOrange,
+  },
+  dietTagText: {
+    ...typography.bodySmall,
+    color: colors.mainOrange,
+    fontWeight: '600',
+  },
+  cuisineTag: {
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.alabaster,
+    borderWidth: 1,
+    borderColor: colors.alto,
+  },
+  cuisineTagText: {
+    ...typography.bodySmall,
+    color: colors.mineShaft,
+    fontWeight: '500',
+  },
   logSection: {
     paddingHorizontal: spacing.lg,
     marginTop: spacing.lg,
   },
   bottomSpacer: {
-    height: spacing.xxl,
+    height: spacing.tabBarPadding,
   },
 });
 

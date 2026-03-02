@@ -280,6 +280,7 @@ const TrackingScreen = () => {
           {activeTracker === TRACKER_IDS.NUTRITION && (
             <NutritionTrackerSection
               userId={profile?._id}
+              selectedDate={selectedDate}
               onFoodAnalyzed={onFoodAnalyzed}
               caloriesConsumed={caloriesConsumed}
               caloriesBurned={caloriesBurned}

@@ -30,5 +30,8 @@ export { default as ProfileMenu } from "./ProfileMenu/ProfileMenu";
 // Workouts
 export { default as WorkoutCard, WORKOUT_TYPE_META, TypeIcon as WorkoutTypeIcon } from "./WorkoutCard";
 
+// Meal logging
+export { default as MealLogCard } from "./MealLogCard";
+
 // Plan sections
 export * from "./plan";
