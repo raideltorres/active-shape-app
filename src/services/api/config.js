@@ -27,7 +27,7 @@ export const API_ENDPOINTS = {
 
   // Users
   USERS: '/users',
-  DAILY_INSIGHTS: '/users/daily-insights',
+  DAILY_INSIGHTS: '/users/generate-daily-insights',
 
   // Recipes
   RECIPES: '/recipes',
@@ -56,6 +56,12 @@ export const API_ENDPOINTS = {
   // Fasting
   FASTING_PLANS: '/fasting-plans',
   FASTING_SESSIONS: '/fasting-sessions',
+
+  // Workouts
+  WORKOUTS: '/workouts',
+  WORKOUTS_CONFIGURATION: '/workouts/configuration',
+  USER_WORKOUTS: '/user-workouts',
+  USER_WORKOUTS_FAVORITE: '/user-workouts-favorite',
 
   // Constants
   CONSTANTS_ALL: '/constants/all',

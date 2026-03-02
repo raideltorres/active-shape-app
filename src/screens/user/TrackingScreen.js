@@ -3,10 +3,7 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
   TouchableOpacity,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -20,6 +17,7 @@ import {
   useCreateTrackingMutation,
 } from '../../store/api';
 import { DateSelector, TrackerNavigation } from '../../components/molecules';
+import { TabScreenLayout } from '../../components/templates';
 import { colors, spacing, typography } from '../../theme';
 import { getCurrentDate } from '../../utils/date';
 import { formatWeightKg } from '../../utils/measure';
@@ -239,13 +237,11 @@ const TrackingScreen = () => {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-          <View style={styles.header}>
-            <Text style={styles.title}>Track Your Daily Metrics</Text>
-            <Text style={styles.subtitle}>Select a tracker below to log your daily progress</Text>
-          </View>
+    <TabScreenLayout
+      title="Track Your Daily Metrics"
+      subtitle="Select a tracker below to log your daily progress"
+      keyboardAvoiding
+    >
           <View style={styles.dateRow}>
             <View style={styles.dateRowSelector}>
               <DateSelector selectedDate={selectedDate} onDateChange={handleDateChange} maxDaysBack={5} style={styles.dateSelector} />
@@ -324,20 +320,13 @@ const TrackingScreen = () => {
           )}
 
           <View style={{ height: spacing.xxl }} />
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+    </TabScreenLayout>
   );
 };
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.alabaster },
-  flex: { flex: 1 },
-  scrollContent: { padding: spacing.lg, paddingBottom: spacing.tabBarPadding },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  header: { marginBottom: spacing.lg },
-  title: { ...typography.h1, color: '#26466B', textAlign: 'center' },
-  subtitle: { ...typography.body, color: colors.raven, marginTop: 4, textAlign: 'center' },
   dateRow: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -49,7 +49,7 @@ const OnboardingScreen = ({ navigation }) => {
       profileData?.onboarding?.onboardingStep === 7 &&
       profileData?.onboarding?.finished
     ) {
-      navigation.replace('SubscriptionPlaceholder');
+      navigation.replace('PlanGeneration');
     }
   }, [profileData, navigation]);
 

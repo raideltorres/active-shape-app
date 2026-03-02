@@ -2,6 +2,7 @@ import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import OnboardingScreen from '../screens/onboarding/OnboardingScreen';
+import PlanGenerationScreen from '../screens/onboarding/PlanGenerationScreen';
 import SubscriptionPlaceholderScreen from '../screens/onboarding/SubscriptionPlaceholderScreen';
 
 const Stack = createNativeStackNavigator();
@@ -10,6 +11,7 @@ const OnboardingStack = () => {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Onboarding" component={OnboardingScreen} />
+      <Stack.Screen name="PlanGeneration" component={PlanGenerationScreen} />
       <Stack.Screen
         name="SubscriptionPlaceholder"
         component={SubscriptionPlaceholderScreen}

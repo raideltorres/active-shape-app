@@ -24,5 +24,11 @@ export { default as BmiGauge } from "./BmiGauge/BmiGauge";
 export { default as BmiGaugeWithLabels } from "./BmiGaugeWithLabels/BmiGaugeWithLabels";
 export { default as OnboardingFastingPlanCard } from "./FastingPlanCard/FastingPlanCard";
 
+// Profile
+export { default as ProfileMenu } from "./ProfileMenu/ProfileMenu";
+
+// Workouts
+export { default as WorkoutCard, WORKOUT_TYPE_META, TypeIcon as WorkoutTypeIcon } from "./WorkoutCard";
+
 // Plan sections
 export * from "./plan";

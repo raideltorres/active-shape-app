@@ -1,22 +1,42 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 import { colors, spacing, typography, borderRadius } from '../../theme';
 
 const DailyInsightsCard = ({ 
   insights = null, 
-  isLoading = false, 
+  isLoading = false,
+  isGenerated = false,
+  isFailed = false,
   onGenerateInsights,
   hasTrackingData = false,
 }) => {
-  // Check if insights are from today
+  const hasAttemptedGeneration = useRef(false);
+
   const isInsightsFromToday = () => {
     if (!insights?.date) return false;
     const insightsDate = new Date(insights.date).toDateString();
     const today = new Date().toDateString();
     return insightsDate === today;
   };
+
+  const needsNewInsights = !insights || !isInsightsFromToday();
+  const generationDone = isGenerated || isFailed;
+
+  useEffect(() => {
+    if (
+      needsNewInsights &&
+      hasTrackingData &&
+      !isLoading &&
+      !generationDone &&
+      onGenerateInsights &&
+      !hasAttemptedGeneration.current
+    ) {
+      hasAttemptedGeneration.current = true;
+      onGenerateInsights();
+    }
+  }, [needsNewInsights, hasTrackingData, isLoading, generationDone, onGenerateInsights]);
 
   const getMoodIcon = (mood) => {
     switch (mood) {
@@ -31,7 +51,6 @@ const DailyInsightsCard = ({
     }
   };
 
-  // No tracking data - show prompt to start tracking
   if (!hasTrackingData) {
     return (
       <View style={styles.container}>
@@ -39,17 +58,16 @@ const DailyInsightsCard = ({
           <View style={styles.emptyIconContainer}>
             <Ionicons name="analytics-outline" size={32} color={colors.raven} />
           </View>
-          <Text style={styles.emptyTitle}>No Insights Yet</Text>
+          <Text style={styles.emptyTitle}>Daily Insights</Text>
           <Text style={styles.emptyDescription}>
-            Start tracking your meals and activities to receive personalized AI insights
+            Start tracking your meals, weight, and activities to receive personalized AI insights about your progress.
           </Text>
         </View>
       </View>
     );
   }
 
-  // Has tracking but no insights or outdated insights
-  if (!insights || !isInsightsFromToday()) {
+  if (isLoading) {
     return (
       <View style={styles.container}>
         <View style={styles.header}>
@@ -63,23 +81,28 @@ const DailyInsightsCard = ({
             </View>
           </View>
         </View>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="small" color={colors.purple} />
+          <Text style={styles.loadingText}>Analyzing your progress...</Text>
+        </View>
+      </View>
+    );
+  }
 
-        {isLoading ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="small" color={colors.purple} />
-            <Text style={styles.loadingText}>Generating insights...</Text>
+  if (needsNewInsights) {
+    if (!generationDone) return null;
+
+    return (
+      <View style={styles.container}>
+        <View style={styles.emptyState}>
+          <View style={styles.emptyIconContainer}>
+            <Ionicons name="sparkles-outline" size={32} color={colors.purple} />
           </View>
-        ) : (
-          <View style={styles.generatePrompt}>
-            <Text style={styles.generateText}>
-              Generate personalized insights based on your recent tracking data
-            </Text>
-            <TouchableOpacity style={styles.generateButton} onPress={onGenerateInsights}>
-              <Ionicons name="sparkles" size={16} color={colors.white} />
-              <Text style={styles.generateButtonText}>Generate Insights</Text>
-            </TouchableOpacity>
-          </View>
-        )}
+          <Text style={styles.emptyTitle}>Daily Insights</Text>
+          <Text style={styles.emptyDescription}>
+            Keep tracking throughout the day — your AI insights will be ready tomorrow based on today's data.
+          </Text>
+        </View>
       </View>
     );
   }
@@ -103,40 +126,30 @@ const DailyInsightsCard = ({
         </View>
       </View>
 
-      {isLoading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="small" color={colors.purple} />
-          <Text style={styles.loadingText}>Generating insights...</Text>
+      {insights.summary && (
+        <View style={styles.summaryContainer}>
+          <Text style={styles.summaryText}>{insights.summary}</Text>
         </View>
-      ) : (
-        <>
-          {insights.summary && (
-            <View style={styles.summaryContainer}>
-              <Text style={styles.summaryText}>{insights.summary}</Text>
-            </View>
-          )}
+      )}
 
-          {insights.tips && insights.tips.length > 0 && (
-            <View style={styles.tipsContainer}>
-              <Text style={styles.tipsTitle}>Tips for today</Text>
-              {insights.tips.slice(0, 3).map((tip, index) => (
-                <View key={index} style={styles.tipItem}>
-                  <View style={styles.tipBullet}>
-                    <Ionicons name="checkmark-circle" size={16} color={colors.lima} />
-                  </View>
-                  <Text style={styles.tipText}>{tip}</Text>
-                </View>
-              ))}
+      {insights.tips && insights.tips.length > 0 && (
+        <View style={styles.tipsContainer}>
+          <Text style={styles.tipsTitle}>Tips for today</Text>
+          {insights.tips.slice(0, 3).map((tip, index) => (
+            <View key={index} style={styles.tipItem}>
+              <View style={styles.tipBullet}>
+                <Ionicons name="checkmark-circle" size={16} color={colors.lima} />
+              </View>
+              <Text style={styles.tipText}>{tip}</Text>
             </View>
-          )}
+          ))}
+        </View>
+      )}
 
-          {onGenerateInsights && (
-            <TouchableOpacity style={styles.refreshButton} onPress={onGenerateInsights}>
-              <Ionicons name="refresh-outline" size={16} color={colors.purple} />
-              <Text style={styles.refreshButtonText}>Refresh Insights</Text>
-            </TouchableOpacity>
-          )}
-        </>
+      {insights.encouragement && (
+        <View style={styles.encouragementContainer}>
+          <Text style={styles.encouragementText}>{insights.encouragement}</Text>
+        </View>
       )}
     </View>
   );
@@ -228,20 +241,18 @@ const styles = StyleSheet.create({
     flex: 1,
     lineHeight: 20,
   },
-  refreshButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: colors.gallery,
-    marginTop: spacing.sm,
+  encouragementContainer: {
+    backgroundColor: `${colors.lima}10`,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    borderLeftWidth: 3,
+    borderLeftColor: colors.lima,
   },
-  refreshButtonText: {
-    ...typography.bodySmall,
-    color: colors.purple,
-    fontWeight: '600',
-    marginLeft: spacing.xs,
+  encouragementText: {
+    ...typography.body,
+    color: colors.mineShaft,
+    lineHeight: 22,
+    fontStyle: 'italic',
   },
   loadingContainer: {
     alignItems: 'center',
@@ -276,30 +287,6 @@ const styles = StyleSheet.create({
     color: colors.raven,
     textAlign: 'center',
     paddingHorizontal: spacing.lg,
-  },
-  generatePrompt: {
-    alignItems: 'center',
-    paddingVertical: spacing.md,
-  },
-  generateText: {
-    ...typography.bodySmall,
-    color: colors.raven,
-    textAlign: 'center',
-    marginBottom: spacing.md,
-  },
-  generateButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.purple,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.lg,
-    borderRadius: borderRadius.lg,
-  },
-  generateButtonText: {
-    ...typography.bodySmall,
-    color: colors.white,
-    fontWeight: '600',
-    marginLeft: spacing.xs,
   },
 });
 

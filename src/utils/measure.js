@@ -258,16 +258,16 @@ export const calculateGoalWeight = ({ weight, height, bodyComposition = 'average
 };
 
 export const DIET_OPTIONS = [
-  { value: 'none', label: 'No Specific Diet' },
-  { value: 'keto', label: 'Keto' },
-  { value: 'vegetarian', label: 'Vegetarian' },
-  { value: 'vegan', label: 'Vegan' },
-  { value: 'paleo', label: 'Paleo' },
-  { value: 'pescetarian', label: 'Pescatarian' },
-  { value: 'gluten free', label: 'Gluten-Free' },
-  { value: 'low-carb', label: 'Low-Carb' },
-  { value: 'whole30', label: 'Whole30' },
-  { value: 'primal', label: 'Primal' },
+  { value: 'none', label: 'No Specific Diet', icon: 'restaurant-outline', description: 'I eat everything and have no dietary restrictions', allowed: 'All foods welcome', excluded: null },
+  { value: 'keto', label: 'Keto', icon: 'flame-outline', description: 'High-fat, very low-carb diet that puts your body into ketosis', allowed: 'Meats, fish, eggs, cheese, avocados, nuts', excluded: 'Bread, pasta, sugar' },
+  { value: 'vegetarian', label: 'Vegetarian', icon: 'leaf-outline', description: 'Plant-based diet that excludes meat and fish', allowed: 'Vegetables, fruits, grains, dairy, eggs', excluded: 'Meat, fish' },
+  { value: 'vegan', label: 'Vegan', icon: 'nutrition-outline', description: 'Strictly plant-based, no animal products whatsoever', allowed: 'Vegetables, fruits, grains, legumes', excluded: 'Meat, dairy, eggs, honey' },
+  { value: 'paleo', label: 'Paleo', icon: 'bonfire-outline', description: 'Eat like our ancestors - whole foods, no processed items', allowed: 'Meat, fish, vegetables, fruits, nuts', excluded: 'Grains, dairy, legumes' },
+  { value: 'pescetarian', label: 'Pescatarian', icon: 'fish-outline', description: 'Vegetarian diet that includes fish and seafood', allowed: 'Fish, seafood, vegetables, fruits, grains', excluded: 'Meat' },
+  { value: 'gluten free', label: 'Gluten-Free', icon: 'ban-outline', description: 'Avoid all gluten-containing grains and products', allowed: 'Rice, corn, quinoa, meat, vegetables', excluded: 'Wheat, barley, rye' },
+  { value: 'low-carb', label: 'Low-Carb', icon: 'barbell-outline', description: 'Reduced carbohydrate intake for weight management', allowed: 'Meat, fish, eggs, vegetables, nuts', excluded: 'Bread, pasta, rice (limited)' },
+  { value: 'whole30', label: 'Whole30', icon: 'sparkles-outline', description: '30-day elimination diet focusing on whole foods', allowed: 'Meat, seafood, vegetables, fruits', excluded: 'Sugar, grains, dairy, legumes' },
+  { value: 'primal', label: 'Primal', icon: 'globe-outline', description: 'Similar to Paleo but allows some dairy', allowed: 'Meat, fish, vegetables, fruits, dairy', excluded: 'Grains, legumes, processed foods' },
 ];
 
 export const MEDICATION_OPTIONS = [
@@ -304,3 +304,35 @@ export const TIMELINE_RANGES = [
   { value: '6-12m', label: '6 – 12 months', midWeeks: 39 },
   { value: '12+m', label: '12+ months', midWeeks: 65 },
 ];
+
+export const BODY_COMP_DISPLAY_LABELS = {
+  athletic_muscular: 'Athletic / Muscular',
+  fit_toned: 'Fit / Toned',
+  average: 'Average',
+  slim_low_muscle: 'Slim / Low Muscle',
+  soft_higher_fat: 'Soft / Higher Fat',
+};
+
+export const INJURY_LABELS = Object.fromEntries(
+  INJURY_OPTIONS.map((i) => [i.value, i.text]),
+);
+
+export const TIMELINE_LABELS = {
+  flexible: 'Flexible',
+  ...Object.fromEntries(TIMELINE_RANGES.map((t) => [t.value, t.label])),
+};
+
+export const DAILY_ACTIVITY_LABELS = ['Sedentary', 'Lightly Active', 'Moderately Active', 'Very Active'];
+
+export const EXERCISE_FREQUENCY_LABELS = [
+  'None / Rarely',
+  'Light (1-3 days/wk)',
+  'Moderate (3-5 days/wk)',
+  'Heavy (6-7 days/wk)',
+  'Intense (athlete)',
+];
+
+export const getDietLabel = (value) => {
+  const match = DIET_OPTIONS.find((d) => d.value === value);
+  return match?.label || value;
+};

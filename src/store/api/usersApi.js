@@ -33,15 +33,14 @@ export const usersApi = createApi({
 
     generatePersonalizedPlan: builder.mutation({
       query: () => ({
-        url: `${API_ENDPOINTS.USERS}/plan/generate`,
+        url: `${API_ENDPOINTS.USERS}/generate-plan`,
         method: 'POST',
       }),
-      invalidatesTags: ['Profile'],
     }),
 
     regeneratePersonalizedPlan: builder.mutation({
       query: () => ({
-        url: `${API_ENDPOINTS.USERS}/plan/regenerate`,
+        url: `${API_ENDPOINTS.USERS}/regenerate-plan`,
         method: 'POST',
       }),
       invalidatesTags: ['Profile'],

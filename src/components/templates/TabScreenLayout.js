@@ -1,30 +1,22 @@
-import React from 'react';
-import { View, Text, ScrollView, StyleSheet, RefreshControl, TouchableOpacity } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
+import React, { useCallback, useRef, useState } from "react";
+import {
+  View,
+  Text,
+  ScrollView,
+  StyleSheet,
+  RefreshControl,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
 
-import { colors, spacing, typography } from '../../theme';
+import { ProfileMenu } from "../molecules";
+import { colors, spacing, typography } from "../../theme";
 
-/**
- * Layout for screens within the bottom tab navigator
- * Handles SafeAreaView, header, and bottom padding for tab bar
- * 
- * @param {React.ReactNode} children - Screen content
- * @param {string} title - Header title (optional)
- * @param {string} subtitle - Header subtitle (optional)
- * @param {string} greeting - Greeting text above title (for dashboard style, optional)
- * @param {boolean} showHeader - Whether to show header (default: true if title provided)
- * @param {boolean} showProfileButton - Whether to show profile button (default: true)
- * @param {Object} contentContainerStyle - Additional styles for ScrollView content
- * @param {string} backgroundColor - Override background color (defaults to alabaster)
- * @param {boolean} scrollable - Whether content should scroll (default: true)
- * @param {boolean} refreshing - Pull-to-refresh state
- * @param {Function} onRefresh - Pull-to-refresh handler
- * @param {Array} edges - SafeAreaView edges (default: ['top'])
- */
-const TabScreenLayout = ({ 
-  children, 
+const TabScreenLayout = ({
+  children,
   title,
   subtitle,
   greeting,
@@ -33,11 +25,21 @@ const TabScreenLayout = ({
   contentContainerStyle,
   backgroundColor = colors.alabaster,
   scrollable = true,
+  keyboardAvoiding = false,
   refreshing = false,
   onRefresh,
-  edges = ['top'],
+  edges = ["top"],
 }) => {
-  const navigation = useNavigation();
+  const [menuVisible, setMenuVisible] = useState(false);
+  const [menuAnchor, setMenuAnchor] = useState(null);
+  const profileBtnRef = useRef(null);
+
+  const handleProfilePress = useCallback(() => {
+    profileBtnRef.current?.measureInWindow((x, y, width, height) => {
+      setMenuAnchor({ y: y + height + 4 });
+      setMenuVisible(true);
+    });
+  }, []);
 
   const renderHeader = () => {
     if (!showHeader || !title) return null;
@@ -50,11 +52,16 @@ const TabScreenLayout = ({
           {subtitle && <Text style={styles.headerSubtitle}>{subtitle}</Text>}
         </View>
         {showProfileButton && (
-          <TouchableOpacity 
-            style={styles.profileButton} 
-            onPress={() => navigation?.navigate?.('ProfileTab')}
+          <TouchableOpacity
+            ref={profileBtnRef}
+            style={styles.profileButton}
+            onPress={handleProfilePress}
           >
-            <Ionicons name="person-circle-outline" size={40} color={colors.mainOrange} />
+            <Ionicons
+              name="person-circle-outline"
+              size={40}
+              color={colors.mainOrange}
+            />
           </TouchableOpacity>
         )}
       </View>
@@ -63,40 +70,69 @@ const TabScreenLayout = ({
 
   if (!scrollable) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor }]} edges={edges}>
+      <SafeAreaView
+        style={[styles.container, { backgroundColor }]}
+        edges={edges}
+      >
         <View style={[styles.content, contentContainerStyle]}>
           {renderHeader()}
           {children}
         </View>
-        <View style={styles.tabBarSpacer} />
+        <ProfileMenu
+          visible={menuVisible}
+          onClose={() => setMenuVisible(false)}
+          anchorPosition={menuAnchor}
+        />
       </SafeAreaView>
     );
   }
 
+  const scrollView = (
+    <ScrollView
+      contentContainerStyle={[styles.scrollContent, contentContainerStyle]}
+      showsVerticalScrollIndicator={false}
+      keyboardShouldPersistTaps={keyboardAvoiding ? "handled" : undefined}
+      refreshControl={
+        onRefresh ? (
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.mainOrange}
+          />
+        ) : undefined
+      }
+    >
+      {renderHeader()}
+      {children}
+    </ScrollView>
+  );
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor }]} edges={edges}>
-      <ScrollView
-        contentContainerStyle={[styles.scrollContent, contentContainerStyle]}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          onRefresh ? (
-            <RefreshControl 
-              refreshing={refreshing} 
-              onRefresh={onRefresh} 
-              tintColor={colors.mainOrange} 
-            />
-          ) : undefined
-        }
-      >
-        {renderHeader()}
-        {children}
-      </ScrollView>
+      {keyboardAvoiding ? (
+        <KeyboardAvoidingView
+          style={styles.flex}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+        >
+          {scrollView}
+        </KeyboardAvoidingView>
+      ) : (
+        scrollView
+      )}
+      <ProfileMenu
+        visible={menuVisible}
+        onClose={() => setMenuVisible(false)}
+        anchorPosition={menuAnchor}
+      />
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+  },
+  flex: {
     flex: 1,
   },
   content: {
@@ -111,9 +147,9 @@ const styles = StyleSheet.create({
     height: spacing.tabBarPadding,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
     marginBottom: spacing.lg,
   },
   headerLeft: {

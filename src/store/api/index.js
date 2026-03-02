@@ -7,3 +7,6 @@ export { fastingApi, useGetFastingPlansQuery, useGetFastingPlanQuery, useGetOngo
 export { constantsApi, useGetAllConstantsQuery } from './constantsApi';
 export { aiNutritionApi, useAnalyzeFoodImageMutation, useAnalyzeExerciseMutation } from './aiNutritionApi';
 export { favoritesApi, useAddRecipeFavoriteMutation, useRemoveRecipeFavoriteMutation } from './favoritesApi';
+export { ingredientsApi, useAutocompleteIngredientsMutation } from './ingredientsApi';
+export { workoutsApi, useGetWorkoutConfigurationsQuery, useGetWorkoutsQuery, useGetWorkoutByIdQuery } from './workoutsApi';
+export { userWorkoutsApi, useCreateUserWorkoutMutation, useGetUserFavoriteWorkoutsQuery, useAddUserFavoriteWorkoutMutation, useDeleteUserFavoriteWorkoutMutation } from './userWorkoutsApi';

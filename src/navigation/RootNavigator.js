@@ -18,7 +18,8 @@ const RootNavigator = () => {
 
   const onboardingFinished =
     profile?.onboarding?.finished === true &&
-    profile?.onboarding?.onboardingStep >= 7;
+    profile?.onboarding?.onboardingStep >= 7 &&
+    !!profile?.personalizedPlan;
 
   const renderStack = () => {
     if (!isAuthenticated) return <AuthStack />;

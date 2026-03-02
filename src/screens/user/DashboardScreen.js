@@ -45,7 +45,7 @@ const DashboardScreen = ({ navigation }) => {
   const { fastingPlan, fastingStarted, startFasting, stopFasting } = useFasting();
 
   const [upsertUser] = useUpsertUserMutation();
-  const [generateInsights, { isLoading: isGeneratingInsights }] = useGenerateDailyInsightsMutation();
+  const [generateInsights, { isLoading: isGeneratingInsights, isSuccess: insightsGenerated, isError: insightsFailed }] = useGenerateDailyInsightsMutation();
 
   const todayTracking = useMemo(() => {
     const today = getTodayDate();
@@ -132,6 +132,8 @@ const DashboardScreen = ({ navigation }) => {
           insights={profile?.dailyInsights}
           hasTrackingData={trackingData?.length > 0}
           isLoading={isGeneratingInsights}
+          isGenerated={insightsGenerated}
+          isFailed={insightsFailed}
           onGenerateInsights={handleGenerateInsights}
         />
       </View>
