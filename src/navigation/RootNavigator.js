@@ -8,6 +8,7 @@ import MainStack from './MainStack';
 import OnboardingStack from './OnboardingStack';
 import { useAuth } from '../hooks/useAuth';
 import { useGetProfileQuery } from '../store/api';
+import { useSubscriptionStatus } from '../hooks/useSubscriptionStatus';
 import { colors } from '../theme';
 
 const RootNavigator = () => {
@@ -15,6 +16,7 @@ const RootNavigator = () => {
   const { data: profile, isLoading } = useGetProfileQuery(undefined, {
     skip: !isAuthenticated,
   });
+  const { canAccessPaidFeatures, isLoading: subscriptionLoading } = useSubscriptionStatus();
 
   const onboardingFinished =
     profile?.onboarding?.finished === true &&
@@ -24,7 +26,7 @@ const RootNavigator = () => {
   const renderStack = () => {
     if (!isAuthenticated) return <AuthStack />;
 
-    if (isLoading && !profile) {
+    if ((isLoading && !profile) || (isAuthenticated && subscriptionLoading && !profile)) {
       return (
         <View style={styles.loading}>
           <ActivityIndicator size="large" color={colors.mainBlue} />
@@ -33,6 +35,7 @@ const RootNavigator = () => {
     }
 
     if (!onboardingFinished) return <OnboardingStack />;
+    if (!canAccessPaidFeatures) return <OnboardingStack initialRouteName="Pricing" />;
 
     return <MainStack />;
   };

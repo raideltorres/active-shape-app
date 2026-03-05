@@ -15,8 +15,11 @@ import {
   useGetProfileQuery,
   useGetTrackingsQuery,
   useCreateTrackingMutation,
+  useGetDailySupplementSummaryQuery,
+  useLogSupplementMutation,
+  useUnlogSupplementMutation,
 } from '../../store/api';
-import { DateSelector, TrackerNavigation } from '../../components/molecules';
+import { DateSelector, TrackerNavigation, SupplementsCard } from '../../components/molecules';
 import { TabScreenLayout } from '../../components/templates';
 import { colors, spacing, typography } from '../../theme';
 import { getCurrentDate } from '../../utils/date';
@@ -28,12 +31,14 @@ import {
   StepsTrackerSection,
   ExerciseTrackerSection,
 } from './tracking';
+import SupplementsTab from './profile/SupplementsTab';
 
 const TRACKER_IDS = {
   WATER: 'water',
   WEIGHT: 'weight',
   NUTRITION: 'nutrition',
   ACTIVITY: 'activity',
+  SUPPLEMENTS: 'supplements',
 };
 
 const TrackingScreen = () => {
@@ -56,6 +61,10 @@ const TrackingScreen = () => {
   );
   const [createTracking, { isLoading: saving }] = useCreateTrackingMutation();
 
+  const { data: supplementSummary, isFetching: isFetchingSupplements } = useGetDailySupplementSummaryQuery(selectedDate);
+  const [logSupplement] = useLogSupplementMutation();
+  const [unlogSupplement] = useUnlogSupplementMutation();
+
   const loading = profileLoading;
 
   const todayData = useMemo(
@@ -70,6 +79,21 @@ const TrackingScreen = () => {
     setCarbs(String(todayData.carbs ?? ''));
     setFats(String(todayData.fats ?? ''));
   }, [selectedDate, todayData.caloriesConsumed, todayData.caloriesBurned, todayData.proteins, todayData.carbs, todayData.fats]);
+
+  const supplementCount = supplementSummary?.totalActive || 0;
+  const supplementsTaken = supplementSummary?.totalTaken || 0;
+
+  const handleToggleSupplement = useCallback(async (supplementId, date, currentlyTaken) => {
+    try {
+      if (currentlyTaken) {
+        await unlogSupplement({ supplementId, date }).unwrap();
+      } else {
+        await logSupplement({ supplementId, date }).unwrap();
+      }
+    } catch (error) {
+      if (__DEV__) console.error('Failed to toggle supplement:', error);
+    }
+  }, [logSupplement, unlogSupplement]);
 
   const trackersList = useMemo(() => {
     const waterConsumed = todayData.water || 0;
@@ -102,8 +126,14 @@ const TrackingScreen = () => {
         statusText: stepsCount > 0 ? `${stepsCount.toLocaleString()} steps` : '—',
         isTracked: stepsCount > 0,
       },
+      {
+        id: TRACKER_IDS.SUPPLEMENTS,
+        label: 'Supps',
+        statusText: supplementCount > 0 ? `${supplementsTaken}/${supplementCount}` : '—',
+        isTracked: supplementsTaken > 0,
+      },
     ];
-  }, [todayData]);
+  }, [todayData, supplementCount, supplementsTaken]);
 
   const saveTrackingField = useCallback(async (field, value) => {
     if (!profile?._id) return;
@@ -317,6 +347,18 @@ const TrackingScreen = () => {
                 onExerciseAnalyzed={onExerciseAnalyzed}
                 saving={saving}
               />
+            </View>
+          )}
+          {activeTracker === TRACKER_IDS.SUPPLEMENTS && (
+            <View>
+              <SupplementsCard
+                dailySummary={supplementSummary}
+                isLoading={isFetchingSupplements}
+                onToggle={handleToggleSupplement}
+              />
+              <View style={{ marginTop: spacing.lg }}>
+                <SupplementsTab />
+              </View>
             </View>
           )}
 

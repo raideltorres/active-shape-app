@@ -13,6 +13,7 @@ export { default as WeightProgressCard } from "./WeightProgressCard";
 export { default as BmiCard } from "./BmiCard";
 export { default as PlanProgressCard } from "./PlanProgressCard";
 export { default as FastingTrackerCard } from "./FastingTrackerCard";
+export { default as SupplementsCard } from "./SupplementsCard";
 export { default as RecipeCard } from "./RecipeCard";
 export { AnimatedTabBar } from "./AnimatedTabBar";
 
@@ -32,6 +33,9 @@ export { default as WorkoutCard, WORKOUT_TYPE_META, TypeIcon as WorkoutTypeIcon 
 
 // Meal logging
 export { default as MealLogCard } from "./MealLogCard";
+
+// Pricing
+export { default as PlanCard } from "./PlanCard";
 
 // Plan sections
 export * from "./plan";

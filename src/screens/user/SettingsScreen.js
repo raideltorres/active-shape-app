@@ -16,7 +16,14 @@ const SettingsScreen = ({ navigation }) => {
         { icon: 'person-outline', label: 'Edit Profile', screen: 'Profile' },
         { icon: 'notifications-outline', label: 'Notifications', hasToggle: true },
         { icon: 'lock-closed-outline', label: 'Privacy & Security' },
-        { icon: 'card-outline', label: 'Payment Methods' },
+      ],
+    },
+    {
+      title: 'Subscription',
+      items: [
+        { icon: 'diamond-outline', label: 'My Subscription', screen: 'Subscription' },
+        { icon: 'card-outline', label: 'Payment Methods', screen: 'PaymentMethods' },
+        { icon: 'receipt-outline', label: 'Billing History', screen: 'Invoices' },
       ],
     },
     {
@@ -68,6 +75,8 @@ const SettingsScreen = ({ navigation }) => {
                     styles.settingItem,
                     itemIndex < group.items.length - 1 && styles.settingItemBorder,
                   ]}
+                  onPress={() => item.screen && navigation.navigate(item.screen)}
+                  activeOpacity={item.screen ? 0.7 : 1}
                 >
                   <View style={styles.settingLeft}>
                     <View style={styles.settingIconContainer}>

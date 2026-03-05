@@ -9,6 +9,7 @@ const TRACKER_ICONS = {
   weight: 'scale-outline',
   nutrition: 'nutrition-outline',
   activity: 'fitness-outline',
+  supplements: 'medical-outline',
 };
 
 const TrackerNavigation = ({ trackers, activeTracker, onTrackerSelect }) => {

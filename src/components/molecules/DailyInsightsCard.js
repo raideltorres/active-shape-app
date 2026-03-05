@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 
 import { colors, spacing, typography, borderRadius } from '../../theme';
 
@@ -107,7 +108,9 @@ const DailyInsightsCard = ({
     );
   }
 
+  const navigation = useNavigation();
   const moodIcon = getMoodIcon(insights.mood);
+  const hasDetailedInsights = insights.overallScore != null;
 
   return (
     <View style={styles.container}>
@@ -121,9 +124,15 @@ const DailyInsightsCard = ({
             <Text style={styles.subtitle}>AI-powered recommendations</Text>
           </View>
         </View>
-        <View style={[styles.moodBadge, { backgroundColor: `${moodIcon.color}15` }]}>
-          <Ionicons name={moodIcon.name} size={16} color={moodIcon.color} />
-        </View>
+        {hasDetailedInsights ? (
+          <View style={styles.scoreBadge}>
+            <Text style={styles.scoreBadgeText}>{insights.overallScore}</Text>
+          </View>
+        ) : (
+          <View style={[styles.moodBadge, { backgroundColor: `${moodIcon.color}15` }]}>
+            <Ionicons name={moodIcon.name} size={16} color={moodIcon.color} />
+          </View>
+        )}
       </View>
 
       {insights.summary && (
@@ -150,6 +159,17 @@ const DailyInsightsCard = ({
         <View style={styles.encouragementContainer}>
           <Text style={styles.encouragementText}>{insights.encouragement}</Text>
         </View>
+      )}
+
+      {hasDetailedInsights && (
+        <TouchableOpacity
+          style={styles.reportBtn}
+          activeOpacity={0.8}
+          onPress={() => navigation.navigate('InsightsDetail')}
+        >
+          <Text style={styles.reportBtnText}>View Full Report</Text>
+          <Ionicons name="arrow-forward" size={16} color={colors.white} />
+        </TouchableOpacity>
       )}
     </View>
   );
@@ -203,6 +223,33 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  scoreBadge: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: colors.purple,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  scoreBadgeText: {
+    color: colors.white,
+    fontWeight: '700',
+    fontSize: 13,
+  },
+  reportBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    backgroundColor: colors.mainBlue,
+    borderRadius: borderRadius.lg,
+    paddingVertical: spacing.md,
+    marginTop: spacing.md,
+  },
+  reportBtnText: {
+    ...typography.label,
+    color: colors.white,
   },
   summaryContainer: {
     backgroundColor: `${colors.purple}08`,

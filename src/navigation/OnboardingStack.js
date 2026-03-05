@@ -3,19 +3,16 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import OnboardingScreen from '../screens/onboarding/OnboardingScreen';
 import PlanGenerationScreen from '../screens/onboarding/PlanGenerationScreen';
-import SubscriptionPlaceholderScreen from '../screens/onboarding/SubscriptionPlaceholderScreen';
+import PricingScreen from '../screens/pricing/PricingScreen';
 
 const Stack = createNativeStackNavigator();
 
-const OnboardingStack = () => {
+const OnboardingStack = ({ initialRouteName = 'Onboarding' }) => {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName={initialRouteName}>
       <Stack.Screen name="Onboarding" component={OnboardingScreen} />
       <Stack.Screen name="PlanGeneration" component={PlanGenerationScreen} />
-      <Stack.Screen
-        name="SubscriptionPlaceholder"
-        component={SubscriptionPlaceholderScreen}
-      />
+      <Stack.Screen name="Pricing" component={PricingScreen} />
     </Stack.Navigator>
   );
 };

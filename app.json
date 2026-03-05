@@ -16,11 +16,15 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.activeshape.app",
-      "associatedDomains": ["applinks:activeshape.com"],
+      "associatedDomains": [
+        "applinks:activeshape.com"
+      ],
       "infoPlist": {
         "CFBundleURLTypes": [
           {
-            "CFBundleURLSchemes": ["activeshape"]
+            "CFBundleURLSchemes": [
+              "activeshape"
+            ]
           }
         ],
         "ITSAppUsesNonExemptEncryption": false
@@ -44,6 +48,13 @@
         {
           "cameraPermission": "Allow Active Shape to access your camera to take photos of your meals.",
           "photosPermission": "Allow Active Shape to access your photos to choose food images."
+        }
+      ],
+      [
+        "@stripe/stripe-react-native",
+        {
+          "merchantIdentifier": "merchant.com.activeshape.app",
+          "enableGooglePay": true
         }
       ]
     ],

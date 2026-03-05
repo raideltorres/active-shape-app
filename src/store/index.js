@@ -11,8 +11,11 @@ import { aiNutritionApi } from './api/aiNutritionApi';
 import { favoritesApi } from './api/favoritesApi';
 import { mealLogsApi } from './api/mealLogsApi';
 import { ingredientsApi } from './api/ingredientsApi';
+import { supplementsApi } from './api/supplementsApi';
 import { workoutsApi } from './api/workoutsApi';
 import { userWorkoutsApi } from './api/userWorkoutsApi';
+import { pricingApi } from './api/pricingApi';
+import { stripeApi } from './api/stripeApi';
 
 export const store = configureStore({
   reducer: {
@@ -27,8 +30,11 @@ export const store = configureStore({
     [favoritesApi.reducerPath]: favoritesApi.reducer,
     [mealLogsApi.reducerPath]: mealLogsApi.reducer,
     [ingredientsApi.reducerPath]: ingredientsApi.reducer,
+    [supplementsApi.reducerPath]: supplementsApi.reducer,
     [workoutsApi.reducerPath]: workoutsApi.reducer,
     [userWorkoutsApi.reducerPath]: userWorkoutsApi.reducer,
+    [pricingApi.reducerPath]: pricingApi.reducer,
+    [stripeApi.reducerPath]: stripeApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
@@ -42,6 +48,9 @@ export const store = configureStore({
       .concat(favoritesApi.middleware)
       .concat(mealLogsApi.middleware)
       .concat(ingredientsApi.middleware)
+      .concat(supplementsApi.middleware)
       .concat(workoutsApi.middleware)
-      .concat(userWorkoutsApi.middleware),
+      .concat(userWorkoutsApi.middleware)
+      .concat(pricingApi.middleware)
+      .concat(stripeApi.middleware),
 });

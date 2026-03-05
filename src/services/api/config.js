@@ -65,4 +65,16 @@ export const API_ENDPOINTS = {
 
   // Constants
   CONSTANTS_ALL: '/constants/all',
+
+  // Pricing Plans
+  PRICING_PLANS: '/pricing-plans',
+
+  // Stripe
+  STRIPE_SETUP_CREATE_INTENT: '/stripe/setup/create-intent',
+  STRIPE_SETUP_CONFIRM: '/stripe/setup/confirm',
+  STRIPE_PAYMENT_METHODS: '/stripe/payment-methods',
+  STRIPE_PAYMENT_METHODS_DEFAULT: '/stripe/payment-methods/default',
+  STRIPE_SUBSCRIPTIONS: '/stripe/subscriptions',
+  STRIPE_SUBSCRIPTIONS_CURRENT: '/stripe/subscriptions/current',
+  STRIPE_INVOICES: '/stripe/invoices',
 };

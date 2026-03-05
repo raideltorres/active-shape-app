@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import { StatusBar } from "expo-status-bar";
 import { View, ActivityIndicator, StyleSheet } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { StripeProvider } from "@stripe/stripe-react-native";
 import { Provider } from "react-redux";
 import Toast from "react-native-toast-message";
 
@@ -11,6 +12,8 @@ import { useAuth } from "./src/hooks/useAuth";
 import { onUnauthorized } from "./src/utils/authEvents";
 import { colors } from "./src/theme";
 import { toastConfig } from "./src/config/toastConfig";
+
+const STRIPE_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 
 const AppContent = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -52,11 +55,16 @@ const AppContent = () => {
 export default function App() {
   return (
     <Provider store={store}>
-      <SafeAreaProvider>
-        <StatusBar style="auto" />
-        <AppContent />
-        <Toast config={toastConfig} topOffset={70} />
-      </SafeAreaProvider>
+      <StripeProvider
+        publishableKey={STRIPE_PUBLISHABLE_KEY}
+        merchantIdentifier="merchant.com.activeshape.app"
+      >
+        <SafeAreaProvider>
+          <StatusBar style="auto" />
+          <AppContent />
+          <Toast config={toastConfig} topOffset={70} />
+        </SafeAreaProvider>
+      </StripeProvider>
     </Provider>
   );
 }
