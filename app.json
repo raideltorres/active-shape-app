@@ -56,7 +56,8 @@
           "merchantIdentifier": "merchant.com.activeshape.app",
           "enableGooglePay": true
         }
-      ]
+      ],
+      "expo-secure-store"
     ],
     "extra": {
       "eas": {

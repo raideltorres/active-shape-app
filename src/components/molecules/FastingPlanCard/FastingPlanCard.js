@@ -6,6 +6,16 @@ import Svg, { Circle as SvgCircle } from 'react-native-svg';
 
 import { colors, spacing, typography, borderRadius } from '../../../theme';
 
+const sanitizeHtml = (html) => {
+  if (!html) return '';
+  return html
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/<iframe[\s\S]*?<\/iframe>/gi, '')
+    .replace(/<object[\s\S]*?<\/object>/gi, '')
+    .replace(/<embed[\s\S]*?>/gi, '')
+    .replace(/\s+on\w+\s*=/gi, ' data-removed=');
+};
+
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
@@ -209,7 +219,7 @@ const FastingPlanCard = ({ _id, title, fastingTime, feedingWindow, description, 
             <View style={styles.descriptionWrap}>
               <RenderHtml
                 contentWidth={contentWidth}
-                source={{ html: description }}
+                source={{ html: sanitizeHtml(description) }}
                 tagsStyles={htmlTagsStyles}
                 renderers={renderers}
               />

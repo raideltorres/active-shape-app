@@ -12,7 +12,6 @@ import {
 } from '../../components/atoms';
 import { useAuth, useSocialAuth } from '../../hooks';
 import { useSignInMutation } from '../../store/api';
-import { API_BASE_URL } from '../../services/api/config';
 import { SOCIAL_PROVIDERS } from '../../constants/oauth';
 import { authStyles as styles } from '../../theme/authStyles';
 
@@ -36,23 +35,6 @@ const LoginScreen = ({ navigation }) => {
       await login(response.data, response.access_token, response.refresh_token);
     } catch (error) {
       Toast.show({ type: 'error', text1: 'Login Failed', text2: error.data?.message || error.message || 'Please try again.' });
-    }
-  };
-
-  // DEV ONLY: Quick login for testing
-  const handleDevLogin = async () => {
-    if (__DEV__) {
-      console.log('[DEV] Attempting dev login to:', API_BASE_URL);
-    }
-    try {
-      const response = await signIn({
-        email: 'admin@gotowertech.com',
-        password: 'Pac0peric0',
-      }).unwrap();
-      await login(response.data, response.access_token, response.refresh_token);
-    } catch (error) {
-      if (__DEV__) console.error('[DEV] Login error:', error);
-      Toast.show({ type: 'error', text1: 'Dev Login Error', text2: error.data?.message || error.message });
     }
   };
 
@@ -124,18 +106,6 @@ const LoginScreen = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      {/* DEV ONLY */}
-      {__DEV__ && (
-        <TouchableOpacity
-          style={styles.devButton}
-          onPress={handleDevLogin}
-          disabled={isLoading}
-        >
-          <Text style={styles.devButtonText}>
-            🔧 Dev Login (admin@gotowertech.com)
-          </Text>
-        </TouchableOpacity>
-      )}
     </ScrollableFormLayout>
   );
 };
