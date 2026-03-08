@@ -54,6 +54,22 @@ export const authApi = createApi({
         body: { accessToken },
       }),
     }),
+
+    forgotPassword: builder.mutation({
+      query: (email) => ({
+        url: API_ENDPOINTS.FORGOT_PASSWORD,
+        method: 'POST',
+        body: { email },
+      }),
+    }),
+
+    resetPassword: builder.mutation({
+      query: (data) => ({
+        url: API_ENDPOINTS.RESET_PASSWORD,
+        method: 'POST',
+        body: data,
+      }),
+    }),
   }),
 });
 
@@ -64,4 +80,6 @@ export const {
   useGoogleSignUpMutation,
   useFacebookSignInMutation,
   useFacebookSignUpMutation,
+  useForgotPasswordMutation,
+  useResetPasswordMutation,
 } = authApi;

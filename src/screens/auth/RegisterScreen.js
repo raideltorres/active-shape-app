@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import Toast from 'react-native-toast-message';
+import * as WebBrowser from 'expo-web-browser';
 
 import { ScrollableFormLayout } from '../../components/templates';
 import {
@@ -14,6 +15,11 @@ import { useAuth, useSocialAuth } from '../../hooks';
 import { useSignUpMutation } from '../../store/api';
 import { SOCIAL_PROVIDERS } from '../../constants/oauth';
 import { authStyles as styles } from '../../theme/authStyles';
+
+const WEB_URLS = {
+  terms: 'https://www.active-shape.com/terms-of-service',
+  privacy: 'https://www.active-shape.com/privacy-policy',
+};
 
 const validatePassword = (password) => {
   if (password.length < 8) {
@@ -144,8 +150,13 @@ const RegisterScreen = ({ navigation }) => {
 
         <Text style={styles.termsText}>
           By creating an account, you agree to our{' '}
-          <Text style={styles.termsLink}>Terms of Service</Text> and{' '}
-          <Text style={styles.termsLink}>Privacy Policy</Text>
+          <Text style={styles.termsLink} onPress={() => WebBrowser.openBrowserAsync(WEB_URLS.terms)}>
+            Terms of Service
+          </Text>
+          {' '}and{' '}
+          <Text style={styles.termsLink} onPress={() => WebBrowser.openBrowserAsync(WEB_URLS.privacy)}>
+            Privacy Policy
+          </Text>
         </Text>
 
         <Button

@@ -1,4 +1,4 @@
-export { authApi, useSignInMutation, useSignUpMutation, useGoogleSignInMutation, useGoogleSignUpMutation, useFacebookSignInMutation, useFacebookSignUpMutation } from './authApi';
+export { authApi, useSignInMutation, useSignUpMutation, useGoogleSignInMutation, useGoogleSignUpMutation, useFacebookSignInMutation, useFacebookSignUpMutation, useForgotPasswordMutation, useResetPasswordMutation } from './authApi';
 export { usersApi, useGetProfileQuery, useUpdateProfileMutation, useUpsertUserMutation, useGeneratePersonalizedPlanMutation, useRegeneratePersonalizedPlanMutation, useGenerateDailyInsightsMutation } from './usersApi';
 export { trackingApi, useGetTrackingsQuery, useGetDailyTrackingQuery, useCreateTrackingMutation, useUpdateTrackingMutation, useDeleteTrackingFieldMutation, useDeleteTrackingMutation } from './trackingApi';
 export { mealLogsApi, useLogMealFromRecipeMutation, useGetDailySummaryQuery, useGetMealsForDateRangeQuery, useDeleteMealMutation } from './mealLogsApi';

@@ -2,12 +2,26 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import * as WebBrowser from 'expo-web-browser';
 
 import { useAuth } from '../../hooks/useAuth';
 import { colors, spacing, typography, borderRadius } from '../../theme';
 
+const WEB_URLS = {
+  terms: 'https://www.active-shape.com/terms-of-service',
+  privacy: 'https://www.active-shape.com/privacy-policy',
+};
+
 const SettingsScreen = ({ navigation }) => {
   const { signOut } = useAuth();
+
+  const handleItemPress = (item) => {
+    if (item.screen) {
+      navigation.navigate(item.screen);
+    } else if (item.url) {
+      WebBrowser.openBrowserAsync(item.url);
+    }
+  };
 
   const settingsGroups = [
     {
@@ -39,8 +53,8 @@ const SettingsScreen = ({ navigation }) => {
       items: [
         { icon: 'help-circle-outline', label: 'Help Center' },
         { icon: 'chatbubble-outline', label: 'Contact Us' },
-        { icon: 'document-text-outline', label: 'Terms of Service' },
-        { icon: 'shield-checkmark-outline', label: 'Privacy Policy' },
+        { icon: 'document-text-outline', label: 'Terms of Service', url: WEB_URLS.terms },
+        { icon: 'shield-checkmark-outline', label: 'Privacy Policy', url: WEB_URLS.privacy },
       ],
     },
   ];
@@ -53,7 +67,7 @@ const SettingsScreen = ({ navigation }) => {
       >
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity 
+          <TouchableOpacity
             onPress={() => navigation.goBack()}
             style={styles.backButton}
           >
@@ -75,8 +89,8 @@ const SettingsScreen = ({ navigation }) => {
                     styles.settingItem,
                     itemIndex < group.items.length - 1 && styles.settingItemBorder,
                   ]}
-                  onPress={() => item.screen && navigation.navigate(item.screen)}
-                  activeOpacity={item.screen ? 0.7 : 1}
+                  onPress={() => handleItemPress(item)}
+                  activeOpacity={item.screen || item.url ? 0.7 : 1}
                 >
                   <View style={styles.settingLeft}>
                     <View style={styles.settingIconContainer}>
