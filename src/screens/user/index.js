@@ -7,3 +7,4 @@ export { default as WorkoutDetailScreen } from './WorkoutDetailScreen';
 export { default as TrackingScreen } from './TrackingScreen';
 export { default as SettingsScreen } from './SettingsScreen';
 export { default as GoalsScreen } from './GoalsScreen';
+export { default as ReferralsScreen } from './ReferralsScreen';

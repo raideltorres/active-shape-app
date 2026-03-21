@@ -336,3 +336,9 @@ export const getDietLabel = (value) => {
   const match = DIET_OPTIONS.find((d) => d.value === value);
   return match?.label || value;
 };
+
+export const COMMISSION_TIERS = [
+  { minReferrals: 1, maxReferrals: 9, label: '1–9 active referrals', rate: 0.1 },
+  { minReferrals: 10, maxReferrals: 24, label: '10–24 active referrals', rate: 0.15 },
+  { minReferrals: 25, maxReferrals: null, label: '25+ active referrals', rate: 0.2 },
+];

@@ -38,6 +38,7 @@ const SettingsScreen = ({ navigation }) => {
         { icon: 'diamond-outline', label: 'My Subscription', screen: 'Subscription' },
         { icon: 'card-outline', label: 'Payment Methods', screen: 'PaymentMethods' },
         { icon: 'receipt-outline', label: 'Billing History', screen: 'Invoices' },
+        { icon: 'share-social-outline', label: 'Referral Program', screen: 'Referrals' },
       ],
     },
     {

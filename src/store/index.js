@@ -16,6 +16,7 @@ import { workoutsApi } from './api/workoutsApi';
 import { userWorkoutsApi } from './api/userWorkoutsApi';
 import { pricingApi } from './api/pricingApi';
 import { stripeApi } from './api/stripeApi';
+import { referralsApi } from './api/referralsApi';
 
 export const store = configureStore({
   reducer: {
@@ -35,6 +36,7 @@ export const store = configureStore({
     [userWorkoutsApi.reducerPath]: userWorkoutsApi.reducer,
     [pricingApi.reducerPath]: pricingApi.reducer,
     [stripeApi.reducerPath]: stripeApi.reducer,
+    [referralsApi.reducerPath]: referralsApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
@@ -52,5 +54,6 @@ export const store = configureStore({
       .concat(workoutsApi.middleware)
       .concat(userWorkoutsApi.middleware)
       .concat(pricingApi.middleware)
-      .concat(stripeApi.middleware),
+      .concat(stripeApi.middleware)
+      .concat(referralsApi.middleware),
 });

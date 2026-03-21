@@ -8,6 +8,7 @@ import { colors, spacing, typography, borderRadius } from '../../../theme';
 
 const MENU_ITEMS = [
   { key: 'profile', label: 'Profile', icon: 'person-outline', tab: 'ProfileTab' },
+  { key: 'referrals', label: 'Referrals', icon: 'share-social-outline', tab: 'ProfileTab', screen: 'Referrals' },
   { key: 'settings', label: 'Settings', icon: 'settings-outline', tab: 'ProfileTab', screen: 'Settings' },
   { key: 'logout', label: 'Sign Out', icon: 'log-out-outline', danger: true },
 ];
