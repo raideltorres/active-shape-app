@@ -9,7 +9,8 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { BlurView } from "expo-blur";
 import { Ionicons } from "@expo/vector-icons";
 
 import { ProfileMenu } from "../molecules";
@@ -30,6 +31,7 @@ const TabScreenLayout = ({
   onRefresh,
   edges = ["top"],
 }) => {
+  const insets = useSafeAreaInsets();
   const [menuVisible, setMenuVisible] = useState(false);
   const [menuAnchor, setMenuAnchor] = useState(null);
   const profileBtnRef = useRef(null);
@@ -74,6 +76,13 @@ const TabScreenLayout = ({
         style={[styles.container, { backgroundColor }]}
         edges={edges}
       >
+        {edges.includes("top") && (
+          <BlurView
+            intensity={50}
+            tint="light"
+            style={[styles.statusBarOverlay, { height: insets.top }]}
+          />
+        )}
         <View style={[styles.content, contentContainerStyle]}>
           {renderHeader()}
           {children}
@@ -109,16 +118,25 @@ const TabScreenLayout = ({
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor }]} edges={edges}>
-      {keyboardAvoiding ? (
-        <KeyboardAvoidingView
-          style={styles.flex}
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-        >
-          {scrollView}
-        </KeyboardAvoidingView>
-      ) : (
-        scrollView
+      {edges.includes("top") && (
+        <BlurView
+          intensity={50}
+          tint="light"
+          style={[styles.statusBarOverlay, { height: insets.top }]}
+        />
       )}
+      <View style={styles.scrollWrapper}>
+        {keyboardAvoiding ? (
+          <KeyboardAvoidingView
+            style={styles.flex}
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+          >
+            {scrollView}
+          </KeyboardAvoidingView>
+        ) : (
+          scrollView
+        )}
+      </View>
       <ProfileMenu
         visible={menuVisible}
         onClose={() => setMenuVisible(false)}
@@ -135,11 +153,23 @@ const styles = StyleSheet.create({
   flex: {
     flex: 1,
   },
+  statusBarOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10,
+  },
+  scrollWrapper: {
+    flex: 1,
+    overflow: "hidden",
+  },
   content: {
     flex: 1,
     padding: spacing.lg,
   },
   scrollContent: {
+    flexGrow: 1,
     padding: spacing.lg,
     paddingBottom: spacing.tabBarPadding,
   },

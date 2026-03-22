@@ -8,7 +8,8 @@ import {
   Animated,
   Image,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -84,8 +85,11 @@ const FeatureCard = ({ icon, title, description, color, index }) => {
 };
 
 const WelcomeScreen = ({ navigation }) => {
+  const insets = useSafeAreaInsets();
+
   return (
     <View style={styles.container}>
+      <BlurView intensity={50} tint="light" style={[styles.statusBarOverlay, { height: insets.top }]} />
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
@@ -167,6 +171,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.white,
+  },
+  statusBarOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'transparent',
+    zIndex: 1,
   },
   scrollView: {
     flex: 1,

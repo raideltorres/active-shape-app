@@ -337,6 +337,29 @@ export const getDietLabel = (value) => {
   return match?.label || value;
 };
 
+export const EXERCISE_INTENSITY_LABELS = {
+  low: 'Low Intensity',
+  moderate: 'Moderate',
+  vigorous: 'Vigorous',
+  very_vigorous: 'Very Vigorous',
+};
+
+export const EXERCISE_EXAMPLE_INPUTS = [
+  '30 minutes of running at moderate pace',
+  '1 hour weight training session',
+  '45 min cycling + 15 min stretching',
+  'Played basketball for 1 hour',
+  '20 min HIIT workout',
+];
+
+export const MEAL_EXAMPLE_INPUTS = [
+  '2 eggs, toast with butter, and orange juice',
+  'Chicken breast with rice and salad',
+  'Protein shake with banana and oats',
+  'Caesar salad with grilled chicken',
+  'Bowl of oatmeal with berries and honey',
+];
+
 export const COMMISSION_TIERS = [
   { minReferrals: 1, maxReferrals: 9, label: '1–9 active referrals', rate: 0.1 },
   { minReferrals: 10, maxReferrals: 24, label: '10–24 active referrals', rate: 0.15 },

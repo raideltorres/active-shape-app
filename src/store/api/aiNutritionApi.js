@@ -97,6 +97,16 @@ export const aiNutritionApi = createApi({
       },
     }),
 
+    analyzeFoodText: builder.mutation({
+      query: ({ userId, description }) => {
+        const formData = new FormData();
+        formData.append('userId', userId);
+        formData.append('context', `Describe this meal and provide full nutritional analysis: ${description}`);
+
+        return { url: API_ENDPOINTS.AI_NUTRITION_ANALYZE, body: formData };
+      },
+    }),
+
     analyzeExercise: builder.mutation({
       queryFn: async ({ description, userWeight }, _api, _extra) => {
         let token = await storage.getItem('token');
@@ -158,4 +168,4 @@ export const aiNutritionApi = createApi({
   }),
 });
 
-export const { useAnalyzeFoodImageMutation, useAnalyzeExerciseMutation } = aiNutritionApi;
+export const { useAnalyzeFoodImageMutation, useAnalyzeFoodTextMutation, useAnalyzeExerciseMutation } = aiNutritionApi;

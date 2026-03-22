@@ -1,32 +1,37 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
-import Toast from 'react-native-toast-message';
+import React, { useState } from "react";
+import { View, Text, TouchableOpacity } from "react-native";
+import Toast from "react-native-toast-message";
 
-import { ScrollableFormLayout } from '../../components/templates';
+import { ScrollableFormLayout } from "../../components/templates";
 import {
   Button,
   BackButton,
   Divider,
   FormInput,
   SocialButton,
-} from '../../components/atoms';
-import { useAuth, useSocialAuth } from '../../hooks';
-import { useSignInMutation } from '../../store/api';
-import { SOCIAL_PROVIDERS } from '../../constants/oauth';
-import { authStyles as styles } from '../../theme/authStyles';
+} from "../../components/atoms";
+import { useAuth, useSocialAuth } from "../../hooks";
+import { useSignInMutation } from "../../store/api";
+import { API_BASE_URL } from "../../services/api/config";
+import { SOCIAL_PROVIDERS } from "../../constants/oauth";
+import { authStyles as styles } from "../../theme/authStyles";
 
 const LoginScreen = ({ navigation }) => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
   const { login } = useAuth();
-  const { socialLoading, handleSocialAuth } = useSocialAuth('signIn');
+  const { socialLoading, handleSocialAuth } = useSocialAuth("signIn");
   const [signIn, { isLoading }] = useSignInMutation();
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Toast.show({ type: 'error', text1: 'Error', text2: 'Please fill in all fields.' });
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Please fill in all fields.",
+      });
       return;
     }
 
@@ -34,7 +39,35 @@ const LoginScreen = ({ navigation }) => {
       const response = await signIn({ email, password }).unwrap();
       await login(response.data, response.access_token, response.refresh_token);
     } catch (error) {
-      Toast.show({ type: 'error', text1: 'Login Failed', text2: error.data?.message || error.message || 'Please try again.' });
+      Toast.show({
+        type: "error",
+        text1: "Login Failed",
+        text2: error.data?.message || error.message || "Please try again.",
+      });
+    }
+  };
+
+  const handleDevLogin = async () => {
+    if (__DEV__) {
+      console.log("[DEV] Attempting dev login to:", API_BASE_URL);
+      try {
+        const response = await signIn({
+          email: "admin@gotowertech.com",
+          password: "Pac0peric0*",
+        }).unwrap();
+        await login(
+          response.data,
+          response.access_token,
+          response.refresh_token,
+        );
+      } catch (error) {
+        if (__DEV__) console.error("[DEV] login error:", error);
+        Toast.show({
+          type: "error",
+          text1: "Dev Login Error",
+          text2: error.data?.message || error.message,
+        });
+      }
     }
   };
 
@@ -88,12 +121,15 @@ const LoginScreen = ({ navigation }) => {
           textContentType="password"
         />
 
-        <TouchableOpacity style={styles.forgotPassword} onPress={() => navigation.navigate('ForgotPassword')}>
+        <TouchableOpacity
+          style={styles.forgotPassword}
+          onPress={() => navigation.navigate("ForgotPassword")}
+        >
           <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
         </TouchableOpacity>
 
         <Button
-          title={isLoading ? 'Signing in...' : 'Sign In'}
+          title={isLoading ? "Signing in..." : "Sign In"}
           onPress={handleLogin}
           disabled={isLoading}
         />
@@ -101,11 +137,22 @@ const LoginScreen = ({ navigation }) => {
 
       <View style={styles.footer}>
         <Text style={styles.footerText}>Don't have an account? </Text>
-        <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+        <TouchableOpacity onPress={() => navigation.navigate("Register")}>
           <Text style={styles.footerLink}>Sign Up</Text>
         </TouchableOpacity>
       </View>
 
+      {__DEV__ && (
+        <TouchableOpacity
+          style={styles.devButton}
+          onPress={handleDevLogin}
+          disabled={isLoading}
+        >
+          <Text style={styles.devButtonText}>
+            Dev login (admin@gotowertech.com)
+          </Text>
+        </TouchableOpacity>
+      )}
     </ScrollableFormLayout>
   );
 };

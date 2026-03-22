@@ -4,18 +4,18 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  ScrollView,
   TextInput,
   Alert,
   Linking,
   ActivityIndicator,
   Share,
+  ScrollView as HorizontalScrollView,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 
 import { Card } from '../../components/molecules';
+import { TabScreenLayout } from '../../components/templates';
 import { colors, spacing, typography, borderRadius } from '../../theme';
 import { COMMISSION_TIERS } from '../../utils/measure';
 import {
@@ -151,20 +151,43 @@ const ReferralsScreen = ({ navigation }) => {
     return [...pricingPlansData.data].sort((a, _b) => a.level - _b.level);
   }, [pricingPlansData]);
 
+  const [simRows, setSimRows] = useState([{ id: 1, planId: null, billing: 'monthly', count: 10 }]);
+
+  const handleSimRowChange = useCallback((id, field, value) => {
+    setSimRows((prev) => prev.map((r) => (r.id === id ? { ...r, [field]: value } : r)));
+  }, []);
+
+  const handleAddRow = useCallback(() => {
+    setSimRows((prev) => [
+      ...prev,
+      { id: Date.now(), planId: sortedPlans[0]?._id || null, billing: 'monthly', count: 5 },
+    ]);
+  }, [sortedPlans]);
+
+  const handleRemoveRow = useCallback((id) => {
+    setSimRows((prev) => (prev.length > 1 ? prev.filter((r) => r.id !== id) : prev));
+  }, []);
+
   const simResults = useMemo(() => {
-    const totalRefs = stats?.totalReferrals || 0;
+    const planMap = new Map(sortedPlans.map((p) => [p._id, p]));
+    const totalCount = simRows.reduce((sum, r) => sum + (r.count || 0), 0);
     let rate = 0;
-    if (totalRefs >= 25) rate = 0.2;
-    else if (totalRefs >= 10) rate = 0.15;
-    else if (totalRefs >= 1) rate = 0.1;
+    if (totalCount >= 25) rate = 0.2;
+    else if (totalCount >= 10) rate = 0.15;
+    else if (totalCount >= 1) rate = 0.1;
 
-    const avgMonthly = sortedPlans.length > 0
-      ? sortedPlans.reduce((sum, p) => sum + (p.monthlyPrice || 0), 0) / sortedPlans.length / 100
-      : 14;
+    let monthly = 0;
+    for (const row of simRows) {
+      const plan = planMap.get(row.planId) || sortedPlans[0];
+      if (!plan) continue;
+      const monthlyRevenue = row.billing === 'yearly'
+        ? (plan.yearlyPrice || 0) / 12 / 100
+        : (plan.monthlyPrice || 0) / 100;
+      monthly += (row.count || 0) * monthlyRevenue * rate;
+    }
 
-    const monthly = totalRefs * avgMonthly * rate;
-    return { rate, monthly, yearly: monthly * 12 };
-  }, [stats?.totalReferrals, sortedPlans]);
+    return { rate, totalCount, monthly, yearly: monthly * 12 };
+  }, [simRows, sortedPlans]);
 
   const getStatValue = (item) => {
     const raw = stats?.[item.key];
@@ -175,11 +198,11 @@ const ReferralsScreen = ({ navigation }) => {
 
   if (isLoadingStats) {
     return (
-      <SafeAreaView style={styles.container}>
+      <TabScreenLayout title="Referral Program" showProfileButton={false}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.mainOrange} />
         </View>
-      </SafeAreaView>
+      </TabScreenLayout>
     );
   }
 
@@ -299,35 +322,143 @@ const ReferralsScreen = ({ navigation }) => {
         </View>
       </Card>
 
-      {/* Estimated Earnings */}
-      {(stats?.totalReferrals || 0) > 0 && (
-        <Card>
-          <View style={styles.calcHeader}>
-            <Ionicons name="calculator-outline" size={18} color={colors.mainOrange} />
-            <Text style={styles.calcTitle}>Estimated Earnings</Text>
+      {/* Earnings Calculator */}
+      <Card>
+        <View style={styles.calcHeader}>
+          <Ionicons name="calculator-outline" size={18} color={colors.mainOrange} />
+          <View style={styles.calcHeaderText}>
+            <Text style={styles.calcTitle}>Earnings Calculator</Text>
+            <Text style={styles.calcSubtitle}>
+              Estimates based on current pricing. Plan prices may change, but your commission tier rates are locked in and guaranteed.
+            </Text>
           </View>
-          <View style={styles.calcResults}>
-            <View style={styles.calcResultCard}>
-              <View style={[styles.calcResultIcon, { backgroundColor: '#10b981' }]}>
-                <Ionicons name="cash-outline" size={16} color={colors.white} />
-              </View>
-              <View>
-                <Text style={styles.calcResultValue}>{`$${simResults.monthly.toFixed(2)}`}</Text>
-                <Text style={styles.calcResultLabel}>Monthly</Text>
+        </View>
+
+        {simRows.map((row) => {
+          const selectedPlan = sortedPlans.find((p) => p._id === row.planId) || sortedPlans[0];
+          return (
+            <View key={row.id} style={styles.calcRow}>
+              <HorizontalScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.calcPlanPicker}>
+                {sortedPlans.map((plan) => {
+                  const isSelected = (row.planId || sortedPlans[0]?._id) === plan._id;
+                  return (
+                    <TouchableOpacity
+                      key={plan._id}
+                      style={[styles.calcPlanChip, isSelected && styles.calcPlanChipActive]}
+                      onPress={() => handleSimRowChange(row.id, 'planId', plan._id)}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={[styles.calcPlanChipText, isSelected && styles.calcPlanChipTextActive]}>
+                        {plan.title}
+                      </Text>
+                      <Text style={[styles.calcPlanChipPrice, isSelected && styles.calcPlanChipPriceActive]}>
+                        ${((plan.monthlyPrice || 0) / 100).toFixed(0)}/mo
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </HorizontalScrollView>
+
+              <View style={styles.calcRowControls}>
+                <View style={styles.calcBillingToggle}>
+                  <TouchableOpacity
+                    style={[styles.calcBillingBtn, row.billing === 'monthly' && styles.calcBillingBtnActive]}
+                    onPress={() => handleSimRowChange(row.id, 'billing', 'monthly')}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[styles.calcBillingText, row.billing === 'monthly' && styles.calcBillingTextActive]}>
+                      Monthly
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.calcBillingBtn, row.billing === 'yearly' && styles.calcBillingBtnActive]}
+                    onPress={() => handleSimRowChange(row.id, 'billing', 'yearly')}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[styles.calcBillingText, row.billing === 'yearly' && styles.calcBillingTextActive]}>
+                      Yearly
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+
+                <View style={styles.calcCountGroup}>
+                  <TouchableOpacity
+                    style={styles.calcCountBtn}
+                    onPress={() => handleSimRowChange(row.id, 'count', Math.max(1, (row.count || 1) - 1))}
+                    activeOpacity={0.7}
+                  >
+                    <Ionicons name="remove" size={16} color={colors.mineShaft} />
+                  </TouchableOpacity>
+                  <Text style={styles.calcCountValue}>{row.count || 0}</Text>
+                  <TouchableOpacity
+                    style={styles.calcCountBtn}
+                    onPress={() => handleSimRowChange(row.id, 'count', Math.min(500, (row.count || 0) + 1))}
+                    activeOpacity={0.7}
+                  >
+                    <Ionicons name="add" size={16} color={colors.mineShaft} />
+                  </TouchableOpacity>
+                </View>
+
+                {simRows.length > 1 && (
+                  <TouchableOpacity
+                    style={styles.calcRemoveBtn}
+                    onPress={() => handleRemoveRow(row.id)}
+                    activeOpacity={0.7}
+                  >
+                    <Ionicons name="trash-outline" size={16} color={colors.error} />
+                  </TouchableOpacity>
+                )}
               </View>
             </View>
-            <View style={styles.calcResultCard}>
-              <View style={[styles.calcResultIcon, { backgroundColor: '#8b5cf6' }]}>
-                <Ionicons name="trending-up-outline" size={16} color={colors.white} />
-              </View>
-              <View>
-                <Text style={styles.calcResultValue}>{`$${simResults.yearly.toFixed(2)}`}</Text>
-                <Text style={styles.calcResultLabel}>Yearly</Text>
-              </View>
+          );
+        })}
+
+        <TouchableOpacity style={styles.calcAddBtn} onPress={handleAddRow} activeOpacity={0.7}>
+          <Ionicons name="add-circle-outline" size={18} color={colors.mainOrange} />
+          <Text style={styles.calcAddBtnText}>Add plan</Text>
+        </TouchableOpacity>
+
+        <View style={styles.calcDivider} />
+
+        <View style={styles.calcResultsGrid}>
+          <View style={styles.calcResultCard}>
+            <View style={[styles.calcResultIcon, { backgroundColor: '#667eea' }]}>
+              <Ionicons name="people-outline" size={16} color={colors.white} />
+            </View>
+            <View>
+              <Text style={styles.calcResultValue}>{simResults.totalCount}</Text>
+              <Text style={styles.calcResultLabel}>Referrals</Text>
             </View>
           </View>
-        </Card>
-      )}
+          <View style={styles.calcResultCard}>
+            <View style={[styles.calcResultIcon, { backgroundColor: '#f59e0b' }]}>
+              <Ionicons name="ribbon-outline" size={16} color={colors.white} />
+            </View>
+            <View>
+              <Text style={styles.calcResultValue}>{`${simResults.rate * 100}%`}</Text>
+              <Text style={styles.calcResultLabel}>Rate</Text>
+            </View>
+          </View>
+          <View style={styles.calcResultCard}>
+            <View style={[styles.calcResultIcon, { backgroundColor: '#10b981' }]}>
+              <Ionicons name="cash-outline" size={16} color={colors.white} />
+            </View>
+            <View>
+              <Text style={styles.calcResultValue}>{`$${simResults.monthly.toFixed(2)}`}</Text>
+              <Text style={styles.calcResultLabel}>Monthly</Text>
+            </View>
+          </View>
+          <View style={styles.calcResultCard}>
+            <View style={[styles.calcResultIcon, { backgroundColor: '#8b5cf6' }]}>
+              <Ionicons name="trending-up-outline" size={16} color={colors.white} />
+            </View>
+            <View>
+              <Text style={styles.calcResultValue}>{`$${simResults.yearly.toFixed(2)}`}</Text>
+              <Text style={styles.calcResultLabel}>Yearly</Text>
+            </View>
+          </View>
+        </View>
+      </Card>
     </View>
   );
 
@@ -528,17 +659,11 @@ const ReferralsScreen = ({ navigation }) => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color={colors.mineShaft} />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Referral Program</Text>
-          <View style={styles.headerPlaceholder} />
-        </View>
-
+    <TabScreenLayout
+      title="Referral Program"
+      subtitle="Earn recurring commissions by inviting others to Active Shape."
+      showProfileButton={false}
+    >
         {/* Stats Grid */}
         <View style={styles.statsGrid}>
           {STAT_ITEMS.map((item) => (
@@ -575,47 +700,16 @@ const ReferralsScreen = ({ navigation }) => {
         {activeTab === 'overview' && renderOverview()}
         {activeTab === 'referrals' && renderReferrals()}
         {activeTab === 'payouts' && renderPayouts()}
-
-        <View style={{ height: spacing.xxl }} />
-      </ScrollView>
-    </SafeAreaView>
+    </TabScreenLayout>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.alabaster,
-  },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  scrollContent: {
-    padding: spacing.lg,
-  },
-
-  // Header
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: spacing.xl,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: borderRadius.lg,
-    backgroundColor: colors.white,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerTitle: {
-    ...typography.h2,
-    color: colors.mineShaft,
-  },
-  headerPlaceholder: { width: 40 },
 
   // Stats
   statsGrid: {
@@ -855,23 +949,140 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 
-  // Calculator / Estimated Earnings
+  // Earnings Calculator
   calcHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
     gap: spacing.sm,
-    marginBottom: spacing.md,
+    marginBottom: spacing.lg,
+  },
+  calcHeaderText: {
+    flex: 1,
   },
   calcTitle: {
     ...typography.label,
     color: colors.mineShaft,
+    marginBottom: 4,
   },
-  calcResults: {
+  calcSubtitle: {
+    ...typography.caption,
+    color: colors.raven,
+    lineHeight: 18,
+  },
+  calcRow: {
+    marginBottom: spacing.md,
+    backgroundColor: colors.athensGray,
+    borderRadius: borderRadius.xl,
+    padding: spacing.md,
+  },
+  calcPlanPicker: {
+    marginBottom: spacing.sm,
+  },
+  calcPlanChip: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.lg,
+    backgroundColor: colors.white,
+    marginRight: spacing.xs,
+    borderWidth: 1,
+    borderColor: colors.mercury,
+    alignItems: 'center',
+  },
+  calcPlanChipActive: {
+    backgroundColor: `${colors.mainOrange}12`,
+    borderColor: colors.mainOrange,
+  },
+  calcPlanChipText: {
+    ...typography.caption,
+    color: colors.mineShaft,
+    fontWeight: '600',
+  },
+  calcPlanChipTextActive: {
+    color: colors.mainOrange,
+  },
+  calcPlanChipPrice: {
+    ...typography.caption,
+    color: colors.raven,
+    fontSize: 10,
+    marginTop: 1,
+  },
+  calcPlanChipPriceActive: {
+    color: colors.mainOrange,
+  },
+  calcRowControls: {
     flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  calcBillingToggle: {
+    flexDirection: 'row',
+    backgroundColor: colors.white,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: colors.mercury,
+    overflow: 'hidden',
+  },
+  calcBillingBtn: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+  calcBillingBtnActive: {
+    backgroundColor: colors.mainOrange,
+  },
+  calcBillingText: {
+    ...typography.caption,
+    color: colors.raven,
+    fontWeight: '600',
+  },
+  calcBillingTextActive: {
+    color: colors.white,
+  },
+  calcCountGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.white,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: colors.mercury,
+    overflow: 'hidden',
+  },
+  calcCountBtn: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.sm,
+  },
+  calcCountValue: {
+    ...typography.label,
+    color: colors.mineShaft,
+    minWidth: 32,
+    textAlign: 'center',
+  },
+  calcRemoveBtn: {
+    padding: spacing.sm,
+    marginLeft: 'auto',
+  },
+  calcAddBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
+    paddingVertical: spacing.sm,
+    marginBottom: spacing.sm,
+  },
+  calcAddBtnText: {
+    ...typography.label,
+    color: colors.mainOrange,
+  },
+  calcDivider: {
+    height: 1,
+    backgroundColor: colors.mercury,
+    marginBottom: spacing.md,
+  },
+  calcResultsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: spacing.sm,
   },
   calcResultCard: {
-    flex: 1,
+    width: '48%',
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,

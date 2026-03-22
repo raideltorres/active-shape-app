@@ -21,6 +21,7 @@ import {
 } from '../../store/api';
 import { DateSelector, TrackerNavigation, SupplementsCard } from '../../components/molecules';
 import { TabScreenLayout } from '../../components/templates';
+import { useExerciseLog, useFoodLog } from '../../hooks';
 import { colors, spacing, typography } from '../../theme';
 import { getCurrentDate } from '../../utils/date';
 import { formatWeightKg } from '../../utils/measure';
@@ -60,6 +61,8 @@ const TrackingScreen = () => {
     { skip: !profile?._id },
   );
   const [createTracking, { isLoading: saving }] = useCreateTrackingMutation();
+  const { logExercise } = useExerciseLog(profile?._id, selectedDate);
+  const { logFood } = useFoodLog(profile?._id, selectedDate);
 
   const { data: supplementSummary, isFetching: isFetchingSupplements } = useGetDailySupplementSummaryQuery(selectedDate);
   const [logSupplement] = useLogSupplementMutation();
@@ -200,25 +203,6 @@ const TrackingScreen = () => {
     }
   }, [profile?._id, selectedDate, caloriesConsumed, caloriesBurned, todayData.caloriesConsumed, todayData.caloriesBurned, createTracking]);
 
-  const onFoodAnalyzed = useCallback(
-    async (analysis) => {
-      if (!analysis?.totalNutrition || !profile?._id) return;
-      const { totalNutrition } = analysis;
-      try {
-        await Promise.all([
-          createTracking({ userId: profile._id, date: selectedDate, field: 'caloriesConsumed', value: totalNutrition.calories ?? 0 }).unwrap(),
-          createTracking({ userId: profile._id, date: selectedDate, field: 'proteins', value: totalNutrition.proteins ?? 0 }).unwrap(),
-          createTracking({ userId: profile._id, date: selectedDate, field: 'carbs', value: totalNutrition.carbs ?? 0 }).unwrap(),
-          createTracking({ userId: profile._id, date: selectedDate, field: 'fats', value: totalNutrition.fats ?? 0 }).unwrap(),
-        ]);
-        Toast.show({ type: 'success', text1: 'Success', text2: `Added ${totalNutrition.calories ?? 0} kcal and macros to your daily tracking.` });
-      } catch (e) {
-        if (__DEV__) console.error('Log food analysis error:', e);
-        Toast.show({ type: 'error', text1: 'Error', text2: e?.message || 'Failed to log food. Please try again.' });
-      }
-    },
-    [profile?._id, selectedDate, createTracking],
-  );
 
   const onMacrosSave = useCallback(async () => {
     if (!profile?._id) return;
@@ -238,23 +222,6 @@ const TrackingScreen = () => {
     }
   }, [profile?._id, selectedDate, proteins, carbs, fats, todayData.proteins, todayData.carbs, todayData.fats, createTracking]);
 
-  const onExerciseAnalyzed = useCallback(
-    async (analysis) => {
-      if (!analysis || !profile?._id) return;
-      const { totalCaloriesBurned = 0, totalDuration = 0 } = analysis;
-      try {
-        await Promise.all([
-          totalCaloriesBurned > 0 && createTracking({ userId: profile._id, date: selectedDate, field: 'caloriesBurned', value: totalCaloriesBurned }).unwrap(),
-          totalDuration > 0 && createTracking({ userId: profile._id, date: selectedDate, field: 'exerciseDuration', value: totalDuration }).unwrap(),
-        ].filter(Boolean));
-        Toast.show({ type: 'success', text1: 'Exercise Logged', text2: `${totalCaloriesBurned} kcal burned · ${totalDuration} min of exercise` });
-      } catch (e) {
-        if (__DEV__) console.error('Log exercise error:', e);
-        Toast.show({ type: 'error', text1: 'Error', text2: e?.message || 'Failed to log exercise.' });
-      }
-    },
-    [profile?._id, selectedDate, createTracking],
-  );
 
   if (loading) {
     return (
@@ -278,7 +245,7 @@ const TrackingScreen = () => {
             </View>
             <TouchableOpacity
               style={styles.editButton}
-              onPress={() => navigation.navigate('TrackingHistory')}
+              onPress={() => navigation.navigate('TrackingHistory', { date: selectedDate })}
               activeOpacity={0.7}
             >
               <Ionicons name="create-outline" size={20} color={colors.mainOrange} />
@@ -311,7 +278,7 @@ const TrackingScreen = () => {
             <NutritionTrackerSection
               userId={profile?._id}
               selectedDate={selectedDate}
-              onFoodAnalyzed={onFoodAnalyzed}
+              onFoodAnalyzed={logFood}
               caloriesConsumed={caloriesConsumed}
               caloriesBurned={caloriesBurned}
               proteins={proteins}
@@ -344,7 +311,7 @@ const TrackingScreen = () => {
 
               <ExerciseTrackerSection
                 userWeight={todayData.weight || profile?.weight || 70}
-                onExerciseAnalyzed={onExerciseAnalyzed}
+                onExerciseAnalyzed={logExercise}
                 saving={saving}
               />
             </View>

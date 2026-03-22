@@ -10,3 +10,4 @@ export { default as FilterCardSelect } from './FilterCardSelect';
 export { default as OptionPicker } from './OptionPicker';
 export { default as AnimatedProgressBar } from './AnimatedProgressBar';
 export { default as LabeledSlider } from './LabeledSlider';
+export { default as ConfirmModal } from './ConfirmModal';

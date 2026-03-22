@@ -11,29 +11,16 @@ import Toast from 'react-native-toast-message';
 import { Ionicons } from '@expo/vector-icons';
 
 import { Card } from '../../../components/molecules';
-import { Button } from '../../../components/atoms';
+import { Button, ConfirmModal } from '../../../components/atoms';
 import { useAnalyzeExerciseMutation } from '../../../store/api';
+import { EXERCISE_INTENSITY_LABELS, EXERCISE_EXAMPLE_INPUTS } from '../../../utils/measure';
 import { colors, spacing, typography, borderRadius } from '../../../theme';
-
-const INTENSITY_LABELS = {
-  low: 'Low Intensity',
-  moderate: 'Moderate',
-  vigorous: 'Vigorous',
-  very_vigorous: 'Very Vigorous',
-};
-
-const EXAMPLE_INPUTS = [
-  '30 min running at moderate pace',
-  '1 hour weight training',
-  '45 min cycling + 15 min stretching',
-  'Played basketball for 1 hour',
-  '20 min HIIT workout',
-];
 
 const ExerciseTrackerSection = ({ userWeight, onExerciseAnalyzed, saving }) => {
   const [description, setDescription] = useState('');
-  const [analyzeExercise, { data: analysisResponse, isLoading, error }] = useAnalyzeExerciseMutation();
+  const [analyzeExercise, { data: analysisResponse, isLoading, error, reset: resetAnalysis }] = useAnalyzeExerciseMutation();
   const [logging, setLogging] = useState(false);
+  const [confirmVisible, setConfirmVisible] = useState(false);
 
   const canAnalyze = description.trim().length > 3;
   const analysis = analysisResponse?.analysis;
@@ -48,8 +35,9 @@ const ExerciseTrackerSection = ({ userWeight, onExerciseAnalyzed, saving }) => {
     }
   }, [description, userWeight, analyzeExercise, canAnalyze]);
 
-  const handleLog = useCallback(async () => {
+  const handleLogConfirm = useCallback(async () => {
     if (!analysis) return;
+    setConfirmVisible(false);
     setLogging(true);
     try {
       await onExerciseAnalyzed?.(analysis);
@@ -64,10 +52,11 @@ const ExerciseTrackerSection = ({ userWeight, onExerciseAnalyzed, saving }) => {
 
   const handleReset = useCallback(() => {
     setDescription('');
-  }, []);
+    resetAnalysis();
+  }, [resetAnalysis]);
 
   if (analysis && !isLoading) {
-    const { exercises = [], totalCaloriesBurned, totalDuration, suggestions, intensityLevel } = analysis;
+    const { exercises = [], totalCaloriesBurned, totalDuration, estimatedSteps = 0, suggestions, intensityLevel } = analysis;
 
     return (
       <View>
@@ -97,9 +86,16 @@ const ExerciseTrackerSection = ({ userWeight, onExerciseAnalyzed, saving }) => {
             </View>
             <View style={[styles.heroCard, styles.heroIntensity]}>
               <Ionicons name="flash" size={20} color={colors.lima} />
-              <Text style={styles.heroValue}>{INTENSITY_LABELS[intensityLevel] || intensityLevel}</Text>
+              <Text style={styles.heroValue}>{EXERCISE_INTENSITY_LABELS[intensityLevel] || intensityLevel}</Text>
               <Text style={styles.heroLabel}>intensity</Text>
             </View>
+            {estimatedSteps > 0 && (
+              <View style={[styles.heroCard, styles.heroSteps]}>
+                <Ionicons name="footsteps" size={20} color={colors.havelockBlue} />
+                <Text style={styles.heroValue}>~{estimatedSteps.toLocaleString()}</Text>
+                <Text style={styles.heroLabel}>steps</Text>
+              </View>
+            )}
           </View>
 
           <Text style={styles.sectionTitle}>Exercises Breakdown</Text>
@@ -133,7 +129,7 @@ const ExerciseTrackerSection = ({ userWeight, onExerciseAnalyzed, saving }) => {
           <View style={styles.actions}>
             <Button
               title="Log to Tracking"
-              onPress={handleLog}
+              onPress={() => setConfirmVisible(true)}
               disabled={logging}
               icon="checkmark-circle-outline"
               style={styles.logBtn}
@@ -146,6 +142,17 @@ const ExerciseTrackerSection = ({ userWeight, onExerciseAnalyzed, saving }) => {
             />
           </View>
         </Card>
+
+        <ConfirmModal
+          visible={confirmVisible}
+          title="Log Exercise"
+          message={`Log ${totalCaloriesBurned} kcal burned, ${totalDuration} minutes of exercise${estimatedSteps > 0 ? `, and ~${estimatedSteps.toLocaleString()} steps` : ''} to your daily tracking?`}
+          icon="fitness"
+          iconColor={colors.mainBlue}
+          confirmText="Log"
+          onConfirm={handleLogConfirm}
+          onCancel={() => setConfirmVisible(false)}
+        />
       </View>
     );
   }
@@ -183,7 +190,7 @@ const ExerciseTrackerSection = ({ userWeight, onExerciseAnalyzed, saving }) => {
 
             <Text style={styles.examplesLabel}>Examples:</Text>
             <View style={styles.examplesWrap}>
-              {EXAMPLE_INPUTS.map((example) => (
+              {EXERCISE_EXAMPLE_INPUTS.map((example) => (
                 <TouchableOpacity
                   key={example}
                   style={styles.chip}
@@ -315,11 +322,13 @@ const styles = StyleSheet.create({
   resultHeaderSubtitle: { ...typography.caption, color: colors.raven },
   heroRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: spacing.sm,
     marginBottom: spacing.lg,
   },
   heroCard: {
-    flex: 1,
+    minWidth: '30%',
+    flexGrow: 1,
     padding: spacing.md,
     borderRadius: borderRadius.lg,
     alignItems: 'center',
@@ -327,6 +336,7 @@ const styles = StyleSheet.create({
   heroCalories: { backgroundColor: `${colors.mainOrange}14` },
   heroDuration: { backgroundColor: `${colors.mainBlue}14` },
   heroIntensity: { backgroundColor: `${colors.lima}14` },
+  heroSteps: { backgroundColor: `${colors.havelockBlue}14` },
   heroValue: { ...typography.h4, color: colors.mineShaft, marginTop: 4, textAlign: 'center' },
   heroLabel: { ...typography.caption, color: colors.raven, textAlign: 'center' },
   sectionTitle: {

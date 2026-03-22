@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
 
 import {
@@ -23,6 +23,9 @@ import {
   useDeleteTrackingMutation,
 } from '../../store/api';
 import { DateSelector } from '../../components/molecules';
+import { ExerciseTrackerSection } from './tracking';
+import { AiFoodTextAnalyzer } from '../../components/organisms/AiFoodTextAnalyzer';
+import { useExerciseLog, useFoodLog } from '../../hooks';
 import { colors, spacing, typography, borderRadius } from '../../theme';
 import { getCurrentDate } from '../../utils/date';
 
@@ -40,7 +43,8 @@ const FIELD_CONFIG = [
 
 const TrackingHistoryScreen = () => {
   const navigation = useNavigation();
-  const [selectedDate, setSelectedDate] = useState(getCurrentDate());
+  const route = useRoute();
+  const [selectedDate, setSelectedDate] = useState(route.params?.date || getCurrentDate());
   const [editingField, setEditingField] = useState(null);
   const [editValue, setEditValue] = useState('');
 
@@ -154,6 +158,10 @@ const TrackingHistoryScreen = () => {
       ],
     );
   }, [profile?._id, selectedDate, deleteTracking]);
+
+  const userWeight = todayData.weight || profile?.weight || 70;
+  const { logExercise, isSaving } = useExerciseLog(profile?._id, selectedDate);
+  const { logFood } = useFoodLog(profile?._id, selectedDate);
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -272,6 +280,28 @@ const TrackingHistoryScreen = () => {
             </View>
           </>
         )}
+
+        <View style={styles.aiSection}>
+          <View style={styles.aiDivider}>
+            <View style={styles.aiDividerLine} />
+            <Text style={styles.aiDividerText}>AI MEAL ANALYSIS</Text>
+            <View style={styles.aiDividerLine} />
+          </View>
+          <AiFoodTextAnalyzer userId={profile?._id} onFoodAnalyzed={logFood} />
+        </View>
+
+        <View style={styles.aiSection}>
+          <View style={styles.aiDivider}>
+            <View style={styles.aiDividerLine} />
+            <Text style={styles.aiDividerText}>AI EXERCISE ANALYSIS</Text>
+            <View style={styles.aiDividerLine} />
+          </View>
+          <ExerciseTrackerSection
+            userWeight={userWeight}
+            onExerciseAnalyzed={logExercise}
+            saving={isSaving}
+          />
+        </View>
 
         <View style={{ height: spacing.xxl }} />
       </ScrollView>
@@ -496,6 +526,26 @@ const styles = StyleSheet.create({
   },
   modalSaveDisabled: { opacity: 0.6 },
   modalSaveText: { ...typography.body, color: colors.white, fontWeight: '600' },
+  aiSection: {
+    marginTop: spacing.xl,
+  },
+  aiDivider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.lg,
+  },
+  aiDividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: colors.mercury,
+  },
+  aiDividerText: {
+    ...typography.caption,
+    color: colors.raven,
+    paddingHorizontal: spacing.md,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+  },
 });
 
 export default TrackingHistoryScreen;
