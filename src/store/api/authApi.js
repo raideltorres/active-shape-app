@@ -32,10 +32,10 @@ export const authApi = createApi({
     }),
 
     googleSignUp: builder.mutation({
-      query: (token) => ({
+      query: ({ token, referralCode }) => ({
         url: API_ENDPOINTS.GOOGLE_SIGN_UP,
         method: 'POST',
-        body: { token },
+        body: { token, ...(referralCode && { referralCode }) },
       }),
     }),
 

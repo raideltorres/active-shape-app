@@ -57,6 +57,8 @@ const GenderPicker = ({ value, onChange, question }) => {
 const styles = StyleSheet.create({
   container: {
     gap: spacing.md,
+    marginTop: spacing.xl,
+    marginBottom: spacing.xl,
   },
   question: {
     ...typography.bodySmall,

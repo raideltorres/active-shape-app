@@ -14,6 +14,7 @@ import {
 import { useAuth, useSocialAuth } from '../../hooks';
 import { useSignUpMutation } from '../../store/api';
 import { SOCIAL_PROVIDERS } from '../../constants/oauth';
+import { getStoredReferralCode, clearStoredReferralCode } from '../../utils/referral';
 import { authStyles as styles } from '../../theme/authStyles';
 
 const WEB_URLS = {
@@ -68,7 +69,10 @@ const RegisterScreen = ({ navigation }) => {
     }
 
     try {
-      const response = await signUp({ name, email, password }).unwrap();
+      const referralCode = await getStoredReferralCode();
+      const body = { name, email, password, ...(referralCode && { referralCode }) };
+      const response = await signUp(body).unwrap();
+      await clearStoredReferralCode();
       await login(response.data, response.access_token, response.refresh_token);
     } catch (error) {
       Toast.show({ type: 'error', text1: 'Registration Failed', text2: error.data?.message || error.message || 'Please try again.' });

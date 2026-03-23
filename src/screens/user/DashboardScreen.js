@@ -77,7 +77,7 @@ const DashboardScreen = ({ navigation }) => {
   };
 
   const handleViewFastingHistory = () => {
-    navigation?.navigate?.('FastingHistory');
+    navigation?.navigate?.('FastingCalendar');
   };
 
   const handleLogProgress = () => {

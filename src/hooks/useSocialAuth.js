@@ -9,6 +9,7 @@ import { useAuth } from './useAuth';
 import { useGoogleSignInMutation, useGoogleSignUpMutation } from '../store/api';
 import { API_BASE_URL } from '../services/api/config';
 import { GOOGLE_CONFIG } from '../constants/oauth';
+import { getStoredReferralCode, clearStoredReferralCode } from '../utils/referral';
 
 // Required for web browser auth sessions
 WebBrowser.maybeCompleteAuthSession();
@@ -36,9 +37,15 @@ export const useSocialAuth = (mode = 'signIn') => {
       if (!idToken) {
         throw new Error('No ID token received');
       }
-      const mutation = mode === 'signUp' ? googleSignUp : googleSignIn;
-      const response = await mutation(idToken).unwrap();
-      await login(response.data, response.access_token, response.refresh_token);
+      if (mode === 'signUp') {
+        const referralCode = await getStoredReferralCode();
+        const response = await googleSignUp({ token: idToken, ...(referralCode && { referralCode }) }).unwrap();
+        await clearStoredReferralCode();
+        await login(response.data, response.access_token, response.refresh_token);
+      } else {
+        const response = await googleSignIn(idToken).unwrap();
+        await login(response.data, response.access_token, response.refresh_token);
+      }
     } catch (error) {
       const action = mode === 'signUp' ? 'sign up' : 'sign in';
       Toast.show({ type: 'error', text1: 'Error', text2: error.data?.message || error.message || `Google ${action} failed.` });
@@ -100,20 +107,26 @@ export const useSocialAuth = (mode = 'signIn') => {
 
         case 'facebook': {
           const fbRedirectUri = makeRedirectUri({ scheme: 'activeshape', path: 'auth/facebook' });
+          const fbRefCode = mode === 'signUp' ? await getStoredReferralCode() : null;
+          const fbParams = `redirect=${encodeURIComponent(fbRedirectUri)}${fbRefCode ? `&referralCode=${encodeURIComponent(fbRefCode)}` : ''}`;
           const fbResult = await WebBrowser.openAuthSessionAsync(
-            `${API_BASE_URL}/auth/facebook?redirect=${encodeURIComponent(fbRedirectUri)}`,
+            `${API_BASE_URL}/auth/facebook?${fbParams}`,
             fbRedirectUri
           );
+          if (fbResult.type === 'success' && fbRefCode) clearStoredReferralCode();
           await handleBrowserAuthResult(fbResult, 'Facebook');
           break;
         }
 
         case 'twitter': {
           const twitterRedirectUri = makeRedirectUri({ scheme: 'activeshape', path: 'auth/twitter' });
+          const twRefCode = mode === 'signUp' ? await getStoredReferralCode() : null;
+          const twParams = `redirect=${encodeURIComponent(twitterRedirectUri)}${twRefCode ? `&referralCode=${encodeURIComponent(twRefCode)}` : ''}`;
           const twitterResult = await WebBrowser.openAuthSessionAsync(
-            `${API_BASE_URL}/auth/twitter?redirect=${encodeURIComponent(twitterRedirectUri)}`,
+            `${API_BASE_URL}/auth/twitter?${twParams}`,
             twitterRedirectUri
           );
+          if (twitterResult.type === 'success' && twRefCode) clearStoredReferralCode();
           await handleBrowserAuthResult(twitterResult, 'X');
           break;
         }

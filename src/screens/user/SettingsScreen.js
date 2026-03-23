@@ -1,15 +1,22 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
-import * as WebBrowser from 'expo-web-browser';
+import React from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Switch,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
+import * as WebBrowser from "expo-web-browser";
 
-import { useAuth } from '../../hooks/useAuth';
-import { colors, spacing, typography, borderRadius } from '../../theme';
+import { useAuth } from "../../hooks/useAuth";
+import { colors, spacing, typography, borderRadius } from "../../theme";
 
 const WEB_URLS = {
-  terms: 'https://www.active-shape.com/terms-of-service',
-  privacy: 'https://www.active-shape.com/privacy-policy',
+  terms: "https://www.active-shape.com/terms-of-service",
+  privacy: "https://www.active-shape.com/privacy-policy",
 };
 
 const SettingsScreen = ({ navigation }) => {
@@ -25,37 +32,69 @@ const SettingsScreen = ({ navigation }) => {
 
   const settingsGroups = [
     {
-      title: 'Account',
+      title: "Account",
       items: [
-        { icon: 'person-outline', label: 'Edit Profile', screen: 'Profile' },
-        { icon: 'notifications-outline', label: 'Notifications', hasToggle: true },
-        { icon: 'lock-closed-outline', label: 'Privacy & Security' },
+        { icon: "person-outline", label: "Edit Profile", screen: "Profile" },
+        {
+          icon: "notifications-outline",
+          label: "Notifications",
+          hasToggle: true,
+        },
+        { icon: "lock-closed-outline", label: "Privacy & Security" },
       ],
     },
     {
-      title: 'Subscription',
+      title: "Subscription",
       items: [
-        { icon: 'diamond-outline', label: 'My Subscription', screen: 'Subscription' },
-        { icon: 'card-outline', label: 'Payment Methods', screen: 'PaymentMethods' },
-        { icon: 'receipt-outline', label: 'Billing History', screen: 'Invoices' },
-        { icon: 'share-social-outline', label: 'Referral Program', screen: 'Referrals' },
+        {
+          icon: "diamond-outline",
+          label: "My Subscription",
+          screen: "Subscription",
+        },
+        {
+          icon: "card-outline",
+          label: "Payment Methods",
+          screen: "PaymentMethods",
+        },
+        {
+          icon: "receipt-outline",
+          label: "Billing History",
+          screen: "Invoices",
+        },
+        {
+          icon: "share-social-outline",
+          label: "Referral Program",
+          screen: "Referrals",
+        },
       ],
     },
     {
-      title: 'Preferences',
+      title: "Preferences",
       items: [
-        { icon: 'moon-outline', label: 'Dark Mode', hasToggle: true },
-        { icon: 'language-outline', label: 'Language', value: 'English' },
-        { icon: 'fitness-outline', label: 'Units', value: 'Metric' },
+        { icon: "moon-outline", label: "Dark Mode", hasToggle: true },
+        { icon: "language-outline", label: "Language", value: "English" },
+        { icon: "fitness-outline", label: "Units", value: "Metric" },
       ],
     },
     {
-      title: 'Support',
+      title: "Support",
       items: [
-        { icon: 'help-circle-outline', label: 'Help Center' },
-        { icon: 'chatbubble-outline', label: 'Contact Us' },
-        { icon: 'document-text-outline', label: 'Terms of Service', url: WEB_URLS.terms },
-        { icon: 'shield-checkmark-outline', label: 'Privacy Policy', url: WEB_URLS.privacy },
+        {
+          icon: "help-circle-outline",
+          label: "Help & Support",
+          screen: "Help",
+        },
+        { icon: "chatbubble-outline", label: "Contact Us" },
+        {
+          icon: "document-text-outline",
+          label: "Terms of Service",
+          url: WEB_URLS.terms,
+        },
+        {
+          icon: "shield-checkmark-outline",
+          label: "Privacy Policy",
+          url: WEB_URLS.privacy,
+        },
       ],
     },
   ];
@@ -88,14 +127,19 @@ const SettingsScreen = ({ navigation }) => {
                   key={itemIndex}
                   style={[
                     styles.settingItem,
-                    itemIndex < group.items.length - 1 && styles.settingItemBorder,
+                    itemIndex < group.items.length - 1 &&
+                      styles.settingItemBorder,
                   ]}
                   onPress={() => handleItemPress(item)}
                   activeOpacity={item.screen || item.url ? 0.7 : 1}
                 >
                   <View style={styles.settingLeft}>
                     <View style={styles.settingIconContainer}>
-                      <Ionicons name={item.icon} size={20} color={colors.mineShaft} />
+                      <Ionicons
+                        name={item.icon}
+                        size={20}
+                        color={colors.mineShaft}
+                      />
                     </View>
                     <Text style={styles.settingLabel}>{item.label}</Text>
                   </View>
@@ -103,13 +147,20 @@ const SettingsScreen = ({ navigation }) => {
                     {item.hasToggle ? (
                       <Switch
                         value={false}
-                        trackColor={{ false: colors.gallery, true: colors.mainOrange }}
+                        trackColor={{
+                          false: colors.gallery,
+                          true: colors.mainOrange,
+                        }}
                         thumbColor={colors.white}
                       />
                     ) : item.value ? (
                       <Text style={styles.settingValue}>{item.value}</Text>
                     ) : (
-                      <Ionicons name="chevron-forward" size={20} color={colors.raven} />
+                      <Ionicons
+                        name="chevron-forward"
+                        size={20}
+                        color={colors.raven}
+                      />
                     )}
                   </View>
                 </TouchableOpacity>
@@ -126,8 +177,6 @@ const SettingsScreen = ({ navigation }) => {
 
         {/* App Version */}
         <Text style={styles.version}>Version 1.0.0</Text>
-
-        <View style={{ height: spacing.xxl }} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -140,11 +189,12 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: spacing.lg,
+    paddingBottom: spacing.tabBarPadding,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     marginBottom: spacing.xl,
   },
   backButton: {
@@ -152,8 +202,8 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 12,
     backgroundColor: colors.white,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   title: {
     ...typography.h2,
@@ -168,7 +218,7 @@ const styles = StyleSheet.create({
   groupTitle: {
     ...typography.caption,
     color: colors.raven,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
     letterSpacing: 1,
     marginBottom: spacing.sm,
     marginLeft: spacing.xs,
@@ -176,7 +226,7 @@ const styles = StyleSheet.create({
   groupCard: {
     backgroundColor: colors.white,
     borderRadius: borderRadius.xl,
-    overflow: 'hidden',
+    overflow: "hidden",
     shadowColor: colors.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
@@ -184,9 +234,9 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   settingItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     padding: spacing.md,
   },
   settingItemBorder: {
@@ -194,16 +244,16 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.gallery,
   },
   settingLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   settingIconContainer: {
     width: 36,
     height: 36,
     borderRadius: 10,
     backgroundColor: colors.alabaster,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginRight: spacing.md,
   },
   settingLabel: {
@@ -211,8 +261,8 @@ const styles = StyleSheet.create({
     color: colors.mineShaft,
   },
   settingRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   settingValue: {
     ...typography.body,
@@ -220,9 +270,9 @@ const styles = StyleSheet.create({
     marginRight: spacing.xs,
   },
   signOutButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     backgroundColor: colors.white,
     borderRadius: borderRadius.xl,
     padding: spacing.md,
@@ -236,12 +286,12 @@ const styles = StyleSheet.create({
   signOutText: {
     ...typography.body,
     color: colors.error,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   version: {
     ...typography.caption,
     color: colors.raven,
-    textAlign: 'center',
+    textAlign: "center",
     marginTop: spacing.xl,
   },
 });

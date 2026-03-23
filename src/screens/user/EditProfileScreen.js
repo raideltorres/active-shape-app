@@ -187,7 +187,6 @@ const EditProfileScreen = ({ navigation }) => {
             </View>
           </View>
 
-          <View style={{ height: spacing.xxxl }} />
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -231,6 +230,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.xxxl,
   },
   section: {
     marginBottom: spacing.xl,

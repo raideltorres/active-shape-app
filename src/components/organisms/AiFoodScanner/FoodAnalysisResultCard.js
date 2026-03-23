@@ -36,8 +36,34 @@ const FoodAnalysisResultCard = ({ analysis, onLogToTracking, onAnalyzeAnother, l
           <Text style={styles.sectionTitle}>Detected foods</Text>
           {foods.map((food, index) => (
             <View key={index} style={styles.foodRow}>
-              <Text style={styles.foodName}>{food.name}</Text>
-              {food.portion ? <Text style={styles.foodPortion}>{food.portion}</Text> : null}
+              <View style={styles.foodTop}>
+                <Text style={styles.foodName}>{food.name}</Text>
+                {food.portion ? <Text style={styles.foodPortion}>{food.portion}</Text> : null}
+              </View>
+              {food.nutrition && (() => {
+                const p = food.nutrition.proteins || 0;
+                const c = food.nutrition.carbs || 0;
+                const f = food.nutrition.fats || 0;
+                const total = p + c + f;
+                const pPct = total > 0 ? (p / total) * 100 : 0;
+                const cPct = total > 0 ? (c / total) * 100 : 0;
+                const fPct = total > 0 ? (f / total) * 100 : 0;
+                const r1 = (v) => Math.round(v * 10) / 10;
+                return (
+                  <View style={styles.foodMacros}>
+                    <View style={styles.foodMacroBar}>
+                      <View style={[styles.foodMacroFill, styles.fillProtein, { width: `${pPct}%` }]} />
+                      <View style={[styles.foodMacroFill, styles.fillCarbs, { width: `${cPct}%` }]} />
+                      <View style={[styles.foodMacroFill, styles.fillFats, { width: `${fPct}%` }]} />
+                    </View>
+                    <View style={styles.foodMacroLegend}>
+                      <Text style={[styles.foodMacroVal, styles.valProtein]}>{r1(p)}g prot</Text>
+                      <Text style={[styles.foodMacroVal, styles.valCarbs]}>{r1(c)}g carbs</Text>
+                      <Text style={[styles.foodMacroVal, styles.valFats]}>{r1(f)}g fats</Text>
+                    </View>
+                  </View>
+                );
+              })()}
             </View>
           ))}
         </View>
@@ -144,15 +170,58 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   foodRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 4,
+    paddingVertical: 8,
     borderBottomWidth: 1,
     borderBottomColor: colors.gallery,
   },
-  foodName: { ...typography.body, color: colors.mineShaft },
+  foodTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  foodName: { ...typography.body, color: colors.mineShaft, fontWeight: '500' },
   foodPortion: { ...typography.bodySmall, color: colors.raven },
+  foodMacros: {
+    marginTop: 8,
+  },
+  foodMacroBar: {
+    flexDirection: 'row',
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: colors.gallery,
+    overflow: 'hidden',
+    marginBottom: 5,
+  },
+  foodMacroFill: {
+    height: 5,
+  },
+  fillProtein: {
+    backgroundColor: colors.mariner,
+  },
+  fillCarbs: {
+    backgroundColor: colors.buttercup,
+  },
+  fillFats: {
+    backgroundColor: colors.cinnabar,
+  },
+  foodMacroLegend: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  foodMacroVal: {
+    ...typography.bodySmall,
+    fontSize: 11,
+    fontWeight: '500',
+  },
+  valProtein: {
+    color: colors.mariner,
+  },
+  valCarbs: {
+    color: colors.buttercup,
+  },
+  valFats: {
+    color: colors.cinnabar,
+  },
   nutritionGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',

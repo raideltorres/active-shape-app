@@ -6,16 +6,23 @@ import {
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import Toast from "react-native-toast-message";
 
-import { useGetFastingCalendarQuery } from "../../store/api";
-import { getCurrentStage } from "../../constants/fasting";
+import {
+  useGetFastingCalendarQuery,
+  useGetFastingHistoryQuery,
+  useDeleteFastingSessionMutation,
+} from "../../store/api";
+import { FASTING_STAGES, getCurrentStage } from "../../constants/fasting";
 import { getMonthRange, secondsToShortTime } from "../../utils/fasting";
 import { colors, spacing, typography, borderRadius } from "../../theme";
 
-const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const WEEKDAYS = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
 const MONTHS = [
   "January",
   "February",
@@ -30,14 +37,6 @@ const MONTHS = [
   "November",
   "December",
 ];
-
-const getIntensityColor = (hours) => {
-  if (hours >= 20) return colors.mainOrange;
-  if (hours >= 16) return `${colors.mainOrange}CC`;
-  if (hours >= 12) return `${colors.mainOrange}88`;
-  if (hours >= 6) return `${colors.mainOrange}55`;
-  return `${colors.mainOrange}30`;
-};
 
 const FastingCalendarScreen = ({ navigation }) => {
   const today = new Date();
@@ -86,7 +85,8 @@ const FastingCalendarScreen = ({ navigation }) => {
   }, [month]);
 
   const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const firstDayOfWeek = new Date(year, month, 1).getDay();
+  const rawDay = new Date(year, month, 1).getDay();
+  const firstDayOfWeek = (rawDay + 6) % 7;
 
   const calendarDays = useMemo(() => {
     const days = [];
@@ -105,7 +105,50 @@ const FastingCalendarScreen = ({ navigation }) => {
     return days;
   }, [year, month, daysInMonth, firstDayOfWeek, calendarMap]);
 
+  const { data: monthSessions } = useGetFastingHistoryQuery({
+    startDate,
+    endDate,
+    limit: 100,
+  });
+
+  const [deleteSession] = useDeleteFastingSessionMutation();
+
   const selectedDayData = selectedDate ? calendarMap[selectedDate] : null;
+
+  const selectedDaySessions = useMemo(() => {
+    if (!selectedDate || !monthSessions?.sessions?.length) return [];
+    const dayStart = new Date(selectedDate + "T00:00:00").getTime();
+    const dayEnd = dayStart + 86400000;
+    return monthSessions.sessions.filter((s) => {
+      const sStart = new Date(s.startTime).getTime();
+      const sEnd = s.endTime ? new Date(s.endTime).getTime() : Date.now();
+      return sStart < dayEnd && sEnd > dayStart;
+    });
+  }, [selectedDate, monthSessions]);
+
+  const handleDeleteSession = useCallback(
+    (sessionId) => {
+      Alert.alert(
+        "Delete Session",
+        "Are you sure you want to delete this fasting session?",
+        [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Delete",
+            style: "destructive",
+            onPress: async () => {
+              try {
+                await deleteSession(sessionId).unwrap();
+              } catch {
+                Toast.show({ type: "error", text1: "Failed to delete session" });
+              }
+            },
+          },
+        ],
+      );
+    },
+    [deleteSession],
+  );
 
   return (
     <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
@@ -118,14 +161,6 @@ const FastingCalendarScreen = ({ navigation }) => {
       </View>
 
       <View style={styles.tabs}>
-        <TouchableOpacity
-          style={styles.tab}
-          onPress={() => navigation.navigate("FastingHistory")}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="list-outline" size={16} color={colors.raven} />
-          <Text style={styles.tabText}>History</Text>
-        </TouchableOpacity>
         <TouchableOpacity
           style={[styles.tab, styles.tabActive]}
           activeOpacity={0.7}
@@ -153,18 +188,14 @@ const FastingCalendarScreen = ({ navigation }) => {
       >
         {/* Month navigation */}
         <View style={styles.monthNav}>
-          <TouchableOpacity onPress={prevMonth} hitSlop={8}>
-            <Ionicons name="chevron-back" size={22} color={colors.mainBlue} />
+          <TouchableOpacity style={styles.navBtn} onPress={prevMonth} hitSlop={8}>
+            <Ionicons name="chevron-back" size={14} color={colors.mineShaft} />
           </TouchableOpacity>
           <Text style={styles.monthTitle}>
             {MONTHS[month]} {year}
           </Text>
-          <TouchableOpacity onPress={nextMonth} hitSlop={8}>
-            <Ionicons
-              name="chevron-forward"
-              size={22}
-              color={colors.mainBlue}
-            />
+          <TouchableOpacity style={styles.navBtn} onPress={nextMonth} hitSlop={8}>
+            <Ionicons name="chevron-forward" size={14} color={colors.mineShaft} />
           </TouchableOpacity>
         </View>
 
@@ -199,46 +230,67 @@ const FastingCalendarScreen = ({ navigation }) => {
                   month === today.getMonth() &&
                   year === today.getFullYear();
 
-                return (
-                  <TouchableOpacity
-                    key={item.key}
-                    style={[
-                      styles.dayCell,
-                      isSelected && styles.dayCellSelected,
-                      isToday && !isSelected && styles.dayCellToday,
-                    ]}
-                    onPress={() => setSelectedDate(item.date)}
-                    activeOpacity={0.7}
-                  >
+                const cellContent = (
+                  <>
                     <Text
                       style={[
                         styles.dayText,
-                        isSelected && styles.dayTextSelected,
-                        isToday && !isSelected && styles.dayTextToday,
+                        hasFasting && styles.dayTextFasting,
+                        isToday && !hasFasting && styles.dayTextToday,
                       ]}
                     >
                       {item.day}
                     </Text>
-                    <View
-                      style={[
-                        styles.dayDot,
-                        {
-                          backgroundColor: hasFasting
-                            ? isSelected
-                              ? colors.white
-                              : getIntensityColor(item.data.totalHours || 0)
-                            : "transparent",
-                        },
-                      ]}
-                    />
+                    {hasFasting && (
+                      <View style={styles.dayIndicator}>
+                        <Ionicons name="flame" size={9} color="rgba(255,255,255,0.9)" />
+                        <Text style={styles.dayIndicatorText}>
+                          {(item.data.totalHours || 0).toFixed(1)}h
+                        </Text>
+                      </View>
+                    )}
+                  </>
+                );
+
+                return (
+                  <TouchableOpacity
+                    key={item.key}
+                    style={styles.dayCellOuter}
+                    onPress={() => setSelectedDate(item.date)}
+                    activeOpacity={0.7}
+                  >
+                    {hasFasting ? (
+                      <LinearGradient
+                        colors={["#667eea", "#764ba2"]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={[
+                          styles.dayGradient,
+                          isToday && styles.dayCellToday,
+                          isSelected && styles.dayCellSelected,
+                        ]}
+                      >
+                        {cellContent}
+                      </LinearGradient>
+                    ) : (
+                      <View
+                        style={[
+                          styles.dayInner,
+                          isToday && styles.dayCellToday,
+                          isSelected && styles.dayCellSelected,
+                        ]}
+                      >
+                        {cellContent}
+                      </View>
+                    )}
                   </TouchableOpacity>
                 );
               })}
             </View>
 
-            {/* Selected day detail */}
+            {/* Selected day detail + sessions */}
             {selectedDate && (
-              <View style={styles.dayDetail}>
+              <View style={styles.dayDetailWrap}>
                 <Text style={styles.dayDetailDate}>
                   {new Date(selectedDate + "T12:00:00").toLocaleDateString(
                     "en-US",
@@ -251,25 +303,17 @@ const FastingCalendarScreen = ({ navigation }) => {
                 </Text>
 
                 {selectedDayData ? (
-                  <View style={styles.dayDetailContent}>
+                  <View style={styles.dayDetailSummary}>
                     <View style={styles.dayDetailRow}>
                       <View style={styles.dayDetailStat}>
-                        <Ionicons
-                          name="timer-outline"
-                          size={18}
-                          color={colors.mainBlue}
-                        />
+                        <Ionicons name="timer-outline" size={18} color={colors.mainBlue} />
                         <Text style={styles.dayDetailValue}>
                           {(selectedDayData.totalHours || 0).toFixed(1)}h
                         </Text>
                         <Text style={styles.dayDetailLabel}>Total</Text>
                       </View>
                       <View style={styles.dayDetailStat}>
-                        <Ionicons
-                          name="list-outline"
-                          size={18}
-                          color={colors.mainOrange}
-                        />
+                        <Ionicons name="list-outline" size={18} color={colors.mainOrange} />
                         <Text style={styles.dayDetailValue}>
                           {selectedDayData.sessionCount || 0}
                         </Text>
@@ -277,17 +321,9 @@ const FastingCalendarScreen = ({ navigation }) => {
                       </View>
                       <View style={styles.dayDetailStat}>
                         <Ionicons
-                          name={
-                            selectedDayData.goalAchieved
-                              ? "checkmark-circle"
-                              : "close-circle-outline"
-                          }
+                          name={selectedDayData.goalAchieved ? "checkmark-circle" : "close-circle-outline"}
                           size={18}
-                          color={
-                            selectedDayData.goalAchieved
-                              ? colors.lima
-                              : colors.raven
-                          }
+                          color={selectedDayData.goalAchieved ? colors.lima : colors.raven}
                         />
                         <Text style={styles.dayDetailValue}>
                           {selectedDayData.goalAchieved ? "Yes" : "No"}
@@ -301,32 +337,83 @@ const FastingCalendarScreen = ({ navigation }) => {
                     No fasting sessions on this day
                   </Text>
                 )}
+
+                {selectedDaySessions.length > 0 && (
+                  <View style={styles.sessionList}>
+                    <Text style={styles.sessionListTitle}>Sessions</Text>
+                    {selectedDaySessions.map((session) => {
+                      const durationSeconds = session.actualDurationSeconds || 0;
+                      const stage = getCurrentStage(durationSeconds);
+                      const startDate = new Date(session.startTime);
+                      const dateStr = startDate.toLocaleDateString("en-US", {
+                        weekday: "short",
+                        month: "short",
+                        day: "numeric",
+                      });
+                      const timeStr = startDate.toLocaleTimeString("en-US", {
+                        hour: "numeric",
+                        minute: "2-digit",
+                      });
+
+                      return (
+                        <View key={session._id} style={styles.sessionCard}>
+                          <View style={styles.sessionHeader}>
+                            <View>
+                              <Text style={styles.sessionPlan}>
+                                {session.fastingPlanTitle || "Custom Fast"}
+                              </Text>
+                              <Text style={styles.sessionTime}>
+                                {dateStr}, {timeStr}
+                                {session.endTime
+                                  ? ` → ${new Date(session.endTime).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}`
+                                  : " → Ongoing"}
+                              </Text>
+                            </View>
+                            <View style={styles.sessionActions}>
+                              {session.goalAchieved && (
+                                <View style={styles.goalBadge}>
+                                  <Ionicons name="checkmark-circle" size={14} color={colors.lima} />
+                                </View>
+                              )}
+                              <TouchableOpacity onPress={() => handleDeleteSession(session._id)} hitSlop={8}>
+                                <Ionicons name="trash-outline" size={16} color={colors.raven} />
+                              </TouchableOpacity>
+                            </View>
+                          </View>
+
+                          <View style={styles.sessionBody}>
+                            <View style={[styles.stageIndicator, { backgroundColor: `${stage.color}20` }]}>
+                              <Ionicons name={stage.icon} size={18} color={stage.color} />
+                            </View>
+                            <View style={styles.sessionDetails}>
+                              <Text style={styles.sessionDuration}>{secondsToShortTime(durationSeconds)}</Text>
+                              <Text style={[styles.sessionStageText, { color: stage.color }]}>{stage.label}</Text>
+                            </View>
+                          </View>
+
+                          {(() => {
+                            const matched = session.stagesReached?.length
+                              ? FASTING_STAGES.filter((s) => session.stagesReached.includes(s.label))
+                              : [];
+                            if (!matched.length) return null;
+                            return (
+                              <View style={styles.stagesRow}>
+                                {matched.map((s) => (
+                                  <View key={s.label} style={[styles.stageChip, { backgroundColor: `${s.color}15` }]}>
+                                    <View style={[styles.stageChipDot, { backgroundColor: s.color }]} />
+                                    <Text style={[styles.stageChipText, { color: s.color }]}>{s.label}</Text>
+                                  </View>
+                                ))}
+                              </View>
+                            );
+                          })()}
+                        </View>
+                      );
+                    })}
+                  </View>
+                )}
               </View>
             )}
-
-            {/* Legend */}
-            <View style={styles.legend}>
-              <Text style={styles.legendTitle}>Fasting Hours</Text>
-              <View style={styles.legendRow}>
-                {[
-                  { label: "<6h", color: `${colors.mainOrange}30` },
-                  { label: "6-12h", color: `${colors.mainOrange}55` },
-                  { label: "12-16h", color: `${colors.mainOrange}88` },
-                  { label: "16-20h", color: `${colors.mainOrange}CC` },
-                  { label: "20h+", color: colors.mainOrange },
-                ].map((item) => (
-                  <View key={item.label} style={styles.legendItem}>
-                    <View
-                      style={[
-                        styles.legendDot,
-                        { backgroundColor: item.color },
-                      ]}
-                    />
-                    <Text style={styles.legendLabel}>{item.label}</Text>
-                  </View>
-                ))}
-              </View>
-            </View>
           </>
         )}
       </ScrollView>
@@ -388,6 +475,14 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginBottom: spacing.md,
   },
+  navBtn: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: colors.gallery,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   monthTitle: {
     ...typography.h4,
     color: colors.mineShaft,
@@ -405,6 +500,9 @@ const styles = StyleSheet.create({
     ...typography.caption,
     fontWeight: "600",
     color: colors.raven,
+    textTransform: "uppercase",
+    fontSize: 11,
+    letterSpacing: 0.5,
   },
   calendarGrid: {
     flexDirection: "row",
@@ -412,51 +510,72 @@ const styles = StyleSheet.create({
   },
   dayCell: {
     width: `${100 / 7}%`,
-    height: 50,
-    alignItems: "center",
-    justifyContent: "center",
+    aspectRatio: 1,
+    padding: 2,
   },
-  dayCellSelected: {
-    backgroundColor: colors.mainOrange,
-    borderRadius: borderRadius.md,
+  dayCellOuter: {
+    width: `${100 / 7}%`,
+    aspectRatio: 1,
+    padding: 2,
   },
   dayCellToday: {
-    backgroundColor: `${colors.mainBlue}15`,
-    borderRadius: borderRadius.md,
+    borderWidth: 2,
+    borderColor: colors.mainOrange,
+  },
+  dayCellSelected: {
+    borderWidth: 2.5,
+    borderColor: colors.mainBlue,
+  },
+  dayGradient: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: borderRadius.md - 1,
+  },
+  dayInner: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.alabaster,
+    borderRadius: borderRadius.md - 1,
   },
   dayText: {
-    fontSize: 14,
-    fontWeight: "500",
+    fontSize: 13,
+    fontWeight: "600",
     color: colors.mineShaft,
   },
-  dayTextSelected: {
+  dayTextFasting: {
     color: colors.white,
-    fontWeight: "700",
   },
   dayTextToday: {
-    color: colors.mainBlue,
+    color: colors.mainOrange,
     fontWeight: "700",
   },
-  dayDot: {
-    position: "absolute",
-    bottom: 6,
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+  dayIndicator: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 1,
+    marginTop: 1,
   },
-  dayDetail: {
+  dayIndicatorText: {
+    fontSize: 9,
+    color: "rgba(255,255,255,0.9)",
+    fontWeight: "500",
+  },
+  dayDetailWrap: {
     marginTop: spacing.lg,
-    backgroundColor: colors.alabaster,
-    borderRadius: borderRadius.xl,
-    padding: spacing.lg,
+    gap: spacing.md,
   },
   dayDetailDate: {
     ...typography.h4,
     color: colors.mineShaft,
-    marginBottom: spacing.md,
     textAlign: "center",
   },
-  dayDetailContent: {},
+  dayDetailSummary: {
+    backgroundColor: colors.alabaster,
+    borderRadius: borderRadius.xl,
+    padding: spacing.lg,
+  },
   dayDetailRow: {
     flexDirection: "row",
     justifyContent: "space-around",
@@ -479,33 +598,100 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontStyle: "italic",
   },
-  legend: {
-    marginTop: spacing.xl,
+
+  sessionList: {
+    gap: spacing.sm,
+  },
+  sessionListTitle: {
+    ...typography.caption,
+    fontWeight: "700",
+    color: colors.mineShaft,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  sessionCard: {
+    backgroundColor: colors.white,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.gallery,
+    gap: spacing.sm,
+  },
+  sessionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+  },
+  sessionPlan: {
+    ...typography.bodySmall,
+    fontWeight: "600",
+    color: colors.mineShaft,
+  },
+  sessionTime: {
+    ...typography.caption,
+    color: colors.raven,
+    marginTop: 2,
+  },
+  sessionActions: {
+    flexDirection: "row",
     alignItems: "center",
     gap: spacing.sm,
   },
-  legendTitle: {
+  goalBadge: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: `${colors.lima}15`,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  sessionBody: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+  },
+  stageIndicator: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  sessionDetails: {
+    flex: 1,
+  },
+  sessionDuration: {
+    ...typography.h4,
+    color: colors.mineShaft,
+  },
+  sessionStageText: {
     ...typography.caption,
     fontWeight: "600",
-    color: colors.raven,
   },
-  legendRow: {
+  stagesRow: {
     flexDirection: "row",
-    gap: spacing.md,
+    flexWrap: "wrap",
+    gap: spacing.xs,
+    paddingTop: spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: colors.gallery,
   },
-  legendItem: {
+  stageChip: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 3,
+    borderRadius: borderRadius.md,
   },
-  legendDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+  stageChipDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
-  legendLabel: {
+  stageChipText: {
     fontSize: 10,
-    color: colors.raven,
+    fontWeight: "600",
   },
 });
 

@@ -23,6 +23,8 @@ const TabScreenLayout = ({
   greeting,
   showHeader = true,
   showProfileButton = true,
+  showBackButton = false,
+  onBackPress,
   contentContainerStyle,
   backgroundColor = colors.alabaster,
   scrollable = true,
@@ -48,6 +50,11 @@ const TabScreenLayout = ({
 
     return (
       <View style={styles.header}>
+        {showBackButton && (
+          <TouchableOpacity style={styles.backButton} onPress={onBackPress} activeOpacity={0.7}>
+            <Ionicons name="arrow-back" size={22} color={colors.mineShaft} />
+          </TouchableOpacity>
+        )}
         <View style={styles.headerLeft}>
           {greeting && <Text style={styles.headerGreeting}>{greeting}</Text>}
           <Text style={styles.headerTitle}>{title}</Text>
@@ -202,6 +209,21 @@ const styles = StyleSheet.create({
   },
   profileButton: {
     marginLeft: spacing.md,
+  },
+  backButton: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: colors.white,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: spacing.sm,
+    marginTop: 2,
+    shadowColor: colors.black,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 1,
   },
 });
 

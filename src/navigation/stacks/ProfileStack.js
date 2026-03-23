@@ -10,6 +10,7 @@ import SubscriptionScreen from '../../screens/pricing/SubscriptionScreen';
 import PaymentMethodsScreen from '../../screens/pricing/PaymentMethodsScreen';
 import InvoicesScreen from '../../screens/pricing/InvoicesScreen';
 import ChangePlanScreen from '../../screens/pricing/ChangePlanScreen';
+import HelpScreen from '../../screens/user/HelpScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -25,6 +26,7 @@ const ProfileStack = () => {
       <Stack.Screen name="PaymentMethods" component={PaymentMethodsScreen} />
       <Stack.Screen name="Invoices" component={InvoicesScreen} />
       <Stack.Screen name="ChangePlan" component={ChangePlanScreen} />
+      <Stack.Screen name="Help" component={HelpScreen} />
     </Stack.Navigator>
   );
 };

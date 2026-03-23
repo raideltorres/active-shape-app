@@ -365,3 +365,26 @@ export const COMMISSION_TIERS = [
   { minReferrals: 10, maxReferrals: 24, label: '10–24 active referrals', rate: 0.15 },
   { minReferrals: 25, maxReferrals: null, label: '25+ active referrals', rate: 0.2 },
 ];
+
+export const BUG_CATEGORIES = [
+  { value: 'ui', name: 'UI / Visual' },
+  { value: 'performance', name: 'Performance' },
+  { value: 'crash', name: 'App Crash' },
+  { value: 'data', name: 'Data / Sync' },
+  { value: 'payment', name: 'Payment' },
+  { value: 'other', name: 'Other' },
+];
+
+export const SUGGESTION_CATEGORIES = [
+  { value: 'feature', name: 'New Feature' },
+  { value: 'improvement', name: 'Improvement' },
+  { value: 'design', name: 'Design' },
+  { value: 'content', name: 'Content' },
+  { value: 'other', name: 'Other' },
+];
+
+export const BUG_STATUS_COLORS = { open: 'orange', in_progress: 'blue', resolved: 'green', closed: 'default' };
+export const BUG_STATUS_LABELS = { open: 'Open', in_progress: 'In Progress', resolved: 'Resolved', closed: 'Closed' };
+
+export const SUGGESTION_STATUS_COLORS = { pending: 'default', under_review: 'blue', accepted: 'green', rejected: 'red', implemented: 'purple' };
+export const SUGGESTION_STATUS_LABELS = { pending: 'Pending', under_review: 'Under Review', accepted: 'Accepted', rejected: 'Rejected', implemented: 'Implemented' };
