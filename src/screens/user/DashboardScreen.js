@@ -20,6 +20,7 @@ import {
 } from '../../components/molecules';
 import { TabScreenLayout } from '../../components/templates';
 import { spacing } from '../../theme';
+import { calculateEnergyBalance, DAILY_ACTIVITY_LABELS } from '../../utils/measure';
 
 const getTodayDate = () => {
   return new Date().toISOString().split('T')[0];
@@ -101,9 +102,27 @@ const DashboardScreen = ({ navigation }) => {
 
   const consumedData = {
     calories: todayTracking?.caloriesConsumed || 0,
+    caloriesBurned: todayTracking?.caloriesBurned || 0,
     water: todayTracking?.water || todayTracking?.waterConsumed || 0,
     steps: todayTracking?.steps || 0,
   };
+
+  const energyBalance = useMemo(() => {
+    if (!profile?.height || !profile?.birthDate) return null;
+    const weight = todayTracking?.weight || profile.weight;
+    if (!weight) return null;
+    return calculateEnergyBalance({
+      weightKg: weight,
+      heightCm: profile.height,
+      birthDate: profile.birthDate,
+      gender: profile.gender,
+      dailyActivityLevel: profile.onboarding?.currentLifestyleAndHabits?.dailyActivityLevel ?? 0,
+      caloriesConsumed: todayTracking?.caloriesConsumed || 0,
+      caloriesBurned: todayTracking?.caloriesBurned || 0,
+    });
+  }, [profile, todayTracking]);
+
+  const activityLabel = DAILY_ACTIVITY_LABELS[profile?.onboarding?.currentLifestyleAndHabits?.dailyActivityLevel ?? 0] || 'Sedentary';
 
   const weightRecords = trackingData
     ?.filter((record) => record.weight != null)
@@ -163,6 +182,8 @@ const DashboardScreen = ({ navigation }) => {
         <PlanProgressCard
           plan={personalizedPlan}
           consumed={consumedData}
+          energyBalance={energyBalance}
+          activityLabel={activityLabel}
           onCreatePlan={handleCreatePlan}
           onLogProgress={handleLogProgress}
         />
@@ -172,6 +193,7 @@ const DashboardScreen = ({ navigation }) => {
         <NutritionSummaryCard 
           nutrition={nutritionData} 
           goals={nutritionGoals} 
+          restingBurn={energyBalance?.restingBurn}
           onLogMeals={handleLogMeals}
         />
       </View>

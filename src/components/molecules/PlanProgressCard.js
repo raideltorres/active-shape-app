@@ -42,6 +42,8 @@ const ProgressRing = ({ progress, size = 56, strokeWidth = 5, color }) => {
 const PlanProgressCard = ({ 
   plan = null, 
   consumed = { calories: 0, water: 0, steps: 0 },
+  energyBalance = null,
+  activityLabel = '',
   onCreatePlan,
   onLogProgress,
 }) => {
@@ -62,7 +64,7 @@ const PlanProgressCard = ({
     return {
       calories: {
         consumed: consumed.calories,
-        goal: calorieGoal,
+        limit: calorieGoal,
         progress: calorieProgress,
       },
       water: {
@@ -130,7 +132,7 @@ const PlanProgressCard = ({
           </View>
           <Text style={styles.progressLabel}>Calories</Text>
           <Text style={styles.progressValue}>
-            {progressData.calories.consumed}/{progressData.calories.goal}
+            {progressData.calories.consumed}/{progressData.calories.limit}
           </Text>
         </View>
 
@@ -160,6 +162,37 @@ const PlanProgressCard = ({
           </Text>
         </View>
       </View>
+
+      {/* Energy Balance */}
+      {energyBalance && energyBalance.restingBurn > 0 && (
+        <View style={styles.energySection}>
+          <Text style={styles.energySectionTitle}>Energy Balance</Text>
+          <View style={styles.energyRows}>
+            <View style={styles.energyRow}>
+              <Text style={styles.energyLabel}>Resting burn</Text>
+              <Text style={[styles.energyValue, { color: colors.havelockBlue }]}>{energyBalance.restingBurn.toLocaleString()} kcal</Text>
+            </View>
+            <View style={styles.energyRow}>
+              <Text style={styles.energyLabel}>Exercise</Text>
+              <Text style={[styles.energyValue, { color: colors.lima }]}>{energyBalance.exerciseBurned.toLocaleString()} kcal</Text>
+            </View>
+            <View style={styles.energyDivider} />
+            <View style={styles.energyRow}>
+              <Text style={styles.energyLabel}>Total burn</Text>
+              <Text style={styles.energyTotalValue}>{energyBalance.totalBurn.toLocaleString()} kcal</Text>
+            </View>
+            <View style={styles.energyRow}>
+              <Text style={styles.energyLabel}>Net</Text>
+              <Text style={[styles.energyNetValue, { color: energyBalance.isDeficit ? colors.lima : colors.mainOrange }]}>
+                {energyBalance.net > 0 ? '+' : ''}{energyBalance.net.toLocaleString()} kcal
+              </Text>
+            </View>
+          </View>
+          <Text style={styles.energyHint}>
+            Based on BMR ({energyBalance.bmr.toLocaleString()} kcal) × {energyBalance.activityMultiplier} ({activityLabel})
+          </Text>
+        </View>
+      )}
 
       {/* CTA Button */}
       {onLogProgress && (
@@ -254,6 +287,56 @@ const styles = StyleSheet.create({
     color: colors.mineShaft,
     fontWeight: '600',
     marginTop: 2,
+  },
+  energySection: {
+    marginTop: spacing.lg,
+    backgroundColor: colors.athensGray,
+    borderRadius: 12,
+    padding: spacing.md,
+  },
+  energySectionTitle: {
+    ...typography.caption,
+    fontWeight: '600',
+    color: colors.raven,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: spacing.sm,
+  },
+  energyRows: {
+    gap: 6,
+  },
+  energyRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  energyLabel: {
+    ...typography.bodySmall,
+    color: colors.raven,
+  },
+  energyValue: {
+    ...typography.bodySmall,
+    fontWeight: '600',
+  },
+  energyDivider: {
+    height: 1,
+    backgroundColor: colors.gallery,
+    marginVertical: 4,
+  },
+  energyTotalValue: {
+    ...typography.body,
+    fontWeight: '700',
+    color: colors.mineShaft,
+  },
+  energyNetValue: {
+    ...typography.body,
+    fontWeight: '700',
+  },
+  energyHint: {
+    ...typography.caption,
+    color: colors.osloGray,
+    marginTop: spacing.sm,
+    fontSize: 10,
   },
   ctaButton: {
     marginTop: spacing.xxl,

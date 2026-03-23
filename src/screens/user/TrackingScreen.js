@@ -24,7 +24,7 @@ import { TabScreenLayout } from '../../components/templates';
 import { useExerciseLog, useFoodLog } from '../../hooks';
 import { colors, spacing, typography } from '../../theme';
 import { getCurrentDate } from '../../utils/date';
-import { formatWeightKg } from '../../utils/measure';
+import { formatWeightKg, calculateEnergyBalance } from '../../utils/measure';
 import {
   WaterTrackerSection,
   WeightTrackerSection,
@@ -74,6 +74,20 @@ const TrackingScreen = () => {
     () => trackingData?.find((r) => r.date === selectedDate) || {},
     [trackingData, selectedDate],
   );
+
+  const restingBurn = useMemo(() => {
+    if (!profile?.height || !profile?.birthDate) return 0;
+    const weight = todayData.weight || profile.weight;
+    if (!weight) return 0;
+    const eb = calculateEnergyBalance({
+      weightKg: weight,
+      heightCm: profile.height,
+      birthDate: profile.birthDate,
+      gender: profile.gender,
+      dailyActivityLevel: profile.onboarding?.currentLifestyleAndHabits?.dailyActivityLevel ?? 0,
+    });
+    return eb.restingBurn;
+  }, [profile, todayData.weight]);
 
   useEffect(() => {
     setCaloriesConsumed(String(todayData.caloriesConsumed ?? ''));
@@ -284,6 +298,7 @@ const TrackingScreen = () => {
               proteins={proteins}
               carbs={carbs}
               fats={fats}
+              restingBurn={restingBurn}
               onCaloriesConsumedChange={setCaloriesConsumed}
               onCaloriesBurnedChange={setCaloriesBurned}
               onProteinsChange={setProteins}

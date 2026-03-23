@@ -9,7 +9,7 @@ import { colors, spacing, typography } from '../../theme';
 /**
  * Card showing today's nutrition summary
  */
-const NutritionSummaryCard = ({ nutrition = {}, goals = {}, onLogMeals }) => {
+const NutritionSummaryCard = ({ nutrition = {}, goals = {}, restingBurn, onLogMeals }) => {
   const { calories = 0, proteins = 0, carbs = 0, fats = 0 } = nutrition;
   const calorieGoal = goals?.dailyCalories || 2000;
 
@@ -34,7 +34,7 @@ const NutritionSummaryCard = ({ nutrition = {}, goals = {}, onLogMeals }) => {
       <View style={styles.caloriesSection}>
         <View style={styles.caloriesHeader}>
           <Text style={styles.caloriesValue}>{calories}</Text>
-          <Text style={styles.caloriesGoal}>/ {calorieGoal} kcal</Text>
+          <Text style={styles.caloriesGoal}>/ {calorieGoal} kcal limit</Text>
         </View>
         <View style={styles.progressBar}>
           <View style={[styles.progressFill, { width: `${calorieProgress}%` }]} />
@@ -54,6 +54,14 @@ const NutritionSummaryCard = ({ nutrition = {}, goals = {}, onLogMeals }) => {
           </View>
         ))}
       </View>
+
+      {/* Resting burn hint */}
+      {restingBurn > 0 && (
+        <View style={styles.restingHint}>
+          <Ionicons name="flash-outline" size={14} color={colors.raven} />
+          <Text style={styles.restingHintText}>Your body burns ~{restingBurn.toLocaleString()} kcal/day at rest</Text>
+        </View>
+      )}
 
       {/* CTA Button */}
       {onLogMeals && (
@@ -141,6 +149,19 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: colors.raven,
     marginTop: 2,
+  },
+  restingHint: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: spacing.md,
+    paddingTop: spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: colors.gallery,
+  },
+  restingHintText: {
+    ...typography.caption,
+    color: colors.raven,
   },
   ctaButton: {
     marginTop: spacing.xxl,

@@ -388,3 +388,49 @@ export const BUG_STATUS_LABELS = { open: 'Open', in_progress: 'In Progress', res
 
 export const SUGGESTION_STATUS_COLORS = { pending: 'default', under_review: 'blue', accepted: 'green', rejected: 'red', implemented: 'purple' };
 export const SUGGESTION_STATUS_LABELS = { pending: 'Pending', under_review: 'Under Review', accepted: 'Accepted', rejected: 'Rejected', implemented: 'Implemented' };
+
+// --- Energy Balance / BMR Utilities ---
+
+export const DAILY_ACTIVITY_MULTIPLIERS = [1.2, 1.375, 1.55, 1.725];
+
+/**
+ * Mifflin-St Jeor BMR equation (matches the AI plan generation prompt).
+ * Only the daily activity multiplier is applied — exercise is tracked separately
+ * to avoid double-counting.
+ */
+export const calculateBMR = (weightKg, heightCm, ageYears, gender) => {
+  if (!weightKg || !heightCm || !ageYears) return 0;
+  const base = 10 * weightKg + 6.25 * heightCm - 5 * ageYears;
+  return Math.round(gender === 'female' ? base - 161 : base + 5);
+};
+
+export const calculateAgeFromBirthDate = (birthDate) => {
+  if (!birthDate) return 0;
+  const birth = new Date(birthDate);
+  const today = new Date();
+  let age = today.getFullYear() - birth.getFullYear();
+  const monthDiff = today.getMonth() - birth.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+    age--;
+  }
+  return age;
+};
+
+export const calculateRestingDailyBurn = (bmr, dailyActivityLevel = 0) => {
+  const multiplier = DAILY_ACTIVITY_MULTIPLIERS[dailyActivityLevel] ?? 1.2;
+  return Math.round(bmr * multiplier);
+};
+
+/**
+ * Computes full energy balance from profile + tracking data.
+ * @returns {{ bmr, restingBurn, exerciseBurned, totalBurn, net, isDeficit, activityMultiplier }}
+ */
+export const calculateEnergyBalance = ({ weightKg, heightCm, birthDate, gender, dailyActivityLevel, caloriesConsumed = 0, caloriesBurned = 0 }) => {
+  const age = calculateAgeFromBirthDate(birthDate);
+  const bmr = calculateBMR(weightKg, heightCm, age, gender);
+  const activityMultiplier = DAILY_ACTIVITY_MULTIPLIERS[dailyActivityLevel] ?? 1.2;
+  const restingBurn = calculateRestingDailyBurn(bmr, dailyActivityLevel);
+  const totalBurn = restingBurn + caloriesBurned;
+  const net = caloriesConsumed - totalBurn;
+  return { bmr, restingBurn, exerciseBurned: caloriesBurned, totalBurn, net, isDeficit: net < 0, activityMultiplier };
+};

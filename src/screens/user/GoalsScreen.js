@@ -163,7 +163,7 @@ const GoalsScreen = ({ navigation }) => {
               />
               <GoalDisplayCard
                 icon="flame-outline"
-                title="Daily Calories"
+                title="Daily Calorie Limit"
                 current={`${calories.toLocaleString()}`}
                 target={`${calories.toLocaleString()} kcal`}
                 progress={100}
@@ -235,7 +235,7 @@ const GoalsScreen = ({ navigation }) => {
             </View>
 
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Daily Nutrition Goals</Text>
+              <Text style={styles.sectionTitle}>Daily Nutrition Limits</Text>
               <View style={styles.card}>
                 <ValuePicker
                   title="Calories"

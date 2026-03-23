@@ -17,6 +17,7 @@ const NutritionTrackerSection = ({
   proteins,
   carbs,
   fats,
+  restingBurn = 0,
   onCaloriesConsumedChange,
   onCaloriesBurnedChange,
   onProteinsChange,
@@ -103,6 +104,24 @@ const NutritionTrackerSection = ({
             placeholder="0"
           />
         </View>
+        {restingBurn > 0 && (
+          <View style={styles.netSummary}>
+            <View style={styles.netRow}>
+              <Text style={styles.netLabel}>Resting burn</Text>
+              <Text style={[styles.netValue, { color: colors.havelockBlue }]}>{restingBurn.toLocaleString()} kcal</Text>
+            </View>
+            <View style={styles.netRow}>
+              <Text style={styles.netLabel}>Total burn</Text>
+              <Text style={styles.netTotalValue}>{(restingBurn + (parseInt(caloriesBurned, 10) || 0)).toLocaleString()} kcal</Text>
+            </View>
+            <View style={styles.netRow}>
+              <Text style={styles.netLabel}>Net</Text>
+              <Text style={[styles.netTotalValue, { color: ((parseInt(caloriesConsumed, 10) || 0) - (restingBurn + (parseInt(caloriesBurned, 10) || 0))) < 0 ? colors.lima : colors.mainOrange }]}>
+                {((parseInt(caloriesConsumed, 10) || 0) - (restingBurn + (parseInt(caloriesBurned, 10) || 0))).toLocaleString()} kcal
+              </Text>
+            </View>
+          </View>
+        )}
         <Button title="Save calories" onPress={onNutritionSave} disabled={saving} style={styles.saveBtn} />
       </Card>
       <Card style={styles.macrosCard}>
@@ -150,6 +169,31 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     ...typography.body,
+  },
+  netSummary: {
+    backgroundColor: colors.athensGray,
+    borderRadius: borderRadius.md,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
+    gap: 6,
+  },
+  netRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  netLabel: {
+    ...typography.bodySmall,
+    color: colors.raven,
+  },
+  netValue: {
+    ...typography.bodySmall,
+    fontWeight: '600',
+  },
+  netTotalValue: {
+    ...typography.body,
+    fontWeight: '700',
+    color: colors.mineShaft,
   },
   saveBtn: { marginTop: spacing.sm },
   macrosCard: { marginTop: spacing.lg },
