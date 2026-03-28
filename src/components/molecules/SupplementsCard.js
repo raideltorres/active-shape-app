@@ -4,18 +4,14 @@ import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'rea
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { colors, spacing, typography, borderRadius } from '../../theme';
-
-const getTodayDate = () => {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-};
+import { getCurrentDate } from '../../utils/date';
 
 const SupplementsCard = ({
   dailySummary,
   isLoading = false,
   onToggle,
 }) => {
-  const todayStr = useMemo(() => getTodayDate(), []);
+  const todayStr = useMemo(() => getCurrentDate(), []);
 
   const handleToggle = useCallback(
     (supplement) => {

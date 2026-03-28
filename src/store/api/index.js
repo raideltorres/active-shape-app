@@ -1,6 +1,6 @@
 export { authApi, useSignInMutation, useSignUpMutation, useGoogleSignInMutation, useGoogleSignUpMutation, useFacebookSignInMutation, useFacebookSignUpMutation, useForgotPasswordMutation, useResetPasswordMutation } from './authApi';
 export { usersApi, useGetProfileQuery, useUpdateProfileMutation, useUpsertUserMutation, useGeneratePersonalizedPlanMutation, useRegeneratePersonalizedPlanMutation, useGenerateDailyInsightsMutation } from './usersApi';
-export { trackingApi, useGetTrackingsQuery, useGetDailyTrackingQuery, useCreateTrackingMutation, useUpdateTrackingMutation, useDeleteTrackingFieldMutation, useDeleteTrackingMutation } from './trackingApi';
+export { trackingApi, useGetTrackingsQuery, useGetDailyTrackingQuery, useCreateTrackingMutation, useUpdateTrackingMutation, useDeleteTrackingFieldMutation, useDeleteTrackingMutation, useRecordWorkoutMutation } from './trackingApi';
 export { mealLogsApi, useLogMealFromRecipeMutation, useGetDailySummaryQuery, useGetMealsForDateRangeQuery, useDeleteMealMutation } from './mealLogsApi';
 export { recipesApi, useSearchRecipesQuery, useLazySearchRecipesQuery, useGetRecipeDetailsQuery, useGetUserRecipeFiltersQuery, useLazyGetUserRecipeFiltersQuery, useSaveUserRecipeFiltersMutation } from './recipesApi';
 export { fastingApi, useGetFastingPlansQuery, useGetFastingPlanQuery, useGetOngoingSessionQuery, useStartFastingSessionMutation, useEndFastingSessionMutation, useGetFastingHistoryQuery, useGetFastingStatsQuery, useGetFastingCalendarQuery, useDeleteFastingSessionMutation } from './fastingApi';
@@ -10,7 +10,7 @@ export { favoritesApi, useAddRecipeFavoriteMutation, useRemoveRecipeFavoriteMuta
 export { ingredientsApi, useAutocompleteIngredientsMutation } from './ingredientsApi';
 export { workoutsApi, useGetWorkoutConfigurationsQuery, useGetWorkoutsQuery, useGetWorkoutByIdQuery } from './workoutsApi';
 export { supplementsApi, useGetSupplementsQuery, useCreateSupplementMutation, useUpdateSupplementMutation, useDeleteSupplementMutation, useGetDailySupplementSummaryQuery, useLogSupplementMutation, useUnlogSupplementMutation } from './supplementsApi';
-export { userWorkoutsApi, useCreateUserWorkoutMutation, useGetUserFavoriteWorkoutsQuery, useAddUserFavoriteWorkoutMutation, useDeleteUserFavoriteWorkoutMutation } from './userWorkoutsApi';
+export { userWorkoutsApi, useGetUserFavoriteWorkoutsQuery, useAddUserFavoriteWorkoutMutation, useDeleteUserFavoriteWorkoutMutation } from './userWorkoutsApi';
 export { pricingApi, useGetPricingPlansQuery } from './pricingApi';
 export { stripeApi, useCreateSetupIntentMutation, useConfirmSetupIntentMutation, useGetPaymentMethodsQuery, useLazyGetPaymentMethodsQuery, useGetDefaultPaymentMethodQuery, useSetDefaultPaymentMethodMutation, useDeletePaymentMethodMutation, useCreateSubscriptionMutation, useGetCurrentSubscriptionQuery, useUpdateSubscriptionMutation, useCancelSubscriptionMutation, useResumeSubscriptionMutation, useGetInvoicesQuery } from './stripeApi';
 export { referralsApi, useGetReferralCodeQuery, useGenerateReferralCodeMutation, useSetCustomSlugMutation, useGetReferralStatsQuery, useGetReferralsListQuery, useGetPayoutHistoryQuery, useGetPendingCommissionsQuery, useGetTaxSummaryQuery, useSetupStripeConnectMutation, useGetConnectStatusQuery, useRequestPayoutMutation } from './referralsApi';

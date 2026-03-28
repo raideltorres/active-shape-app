@@ -11,12 +11,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { useDispatch } from 'react-redux';
-
 import {
   useGetProfileQuery,
   useGeneratePersonalizedPlanMutation,
-  usersApi,
 } from '../../store/api';
 import { colors, spacing, typography } from '../../theme';
 
@@ -86,7 +83,6 @@ const StepItem = ({ step, index, currentStep }) => {
 };
 
 const PlanGenerationScreen = () => {
-  const dispatch = useDispatch();
   const [currentStep, setCurrentStep] = useState(0);
   const hasStarted = useRef(false);
   const successFadeAnim = useRef(new Animated.Value(0)).current;
@@ -142,12 +138,7 @@ const PlanGenerationScreen = () => {
       useNativeDriver: true,
     }).start();
 
-    const timeout = setTimeout(() => {
-      dispatch(usersApi.util.invalidateTags(['Profile']));
-    }, SUCCESS_DISPLAY_MS);
-
-    return () => clearTimeout(timeout);
-  }, [isSuccess, successFadeAnim, dispatch]);
+  }, [isSuccess, successFadeAnim]);
 
   return (
     <LinearGradient

@@ -36,6 +36,7 @@ export const usersApi = createApi({
         url: `${API_ENDPOINTS.USERS}/generate-plan`,
         method: 'POST',
       }),
+      invalidatesTags: ['Profile'],
     }),
 
     regeneratePersonalizedPlan: builder.mutation({

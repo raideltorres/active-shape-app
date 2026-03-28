@@ -21,14 +21,7 @@ import {
 import { TabScreenLayout } from '../../components/templates';
 import { spacing } from '../../theme';
 import { calculateEnergyBalance, DAILY_ACTIVITY_LABELS } from '../../utils/measure';
-
-const getTodayDate = () => {
-  const d = new Date();
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-};
+import { getCurrentDate } from '../../utils/date';
 
 const getGreeting = () => {
   const hour = new Date().getHours();
@@ -53,7 +46,7 @@ const DashboardScreen = ({ navigation }) => {
   const [generateInsights, { isLoading: isGeneratingInsights, isSuccess: insightsGenerated, isError: insightsFailed }] = useGenerateDailyInsightsMutation();
 
   const todayTracking = useMemo(() => {
-    const today = getTodayDate();
+    const today = getCurrentDate();
     return trackingData?.find?.((t) => t.date === today) || {};
   }, [trackingData]);
 

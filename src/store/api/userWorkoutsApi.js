@@ -8,14 +8,6 @@ export const userWorkoutsApi = createApi({
   baseQuery: baseQueryWithReauth,
   tagTypes: ['UserFavoriteWorkouts'],
   endpoints: (builder) => ({
-    createUserWorkout: builder.mutation({
-      query: (data) => ({
-        url: API_ENDPOINTS.USER_WORKOUTS,
-        method: 'POST',
-        body: data,
-      }),
-    }),
-
     getUserFavoriteWorkouts: builder.query({
       query: () => API_ENDPOINTS.USER_WORKOUTS_FAVORITE,
       providesTags: ['UserFavoriteWorkouts'],
@@ -40,7 +32,6 @@ export const userWorkoutsApi = createApi({
 });
 
 export const {
-  useCreateUserWorkoutMutation,
   useGetUserFavoriteWorkoutsQuery,
   useAddUserFavoriteWorkoutMutation,
   useDeleteUserFavoriteWorkoutMutation,

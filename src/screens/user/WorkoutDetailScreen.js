@@ -7,14 +7,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
-import { useDispatch } from 'react-redux';
 
 import { BackButton } from '../../components/atoms';
 import { Card, WORKOUT_TYPE_META, WorkoutTypeIcon } from '../../components/molecules';
 import {
   useGetWorkoutByIdQuery,
-  useCreateUserWorkoutMutation,
-  trackingApi,
+  useRecordWorkoutMutation,
 } from '../../store/api';
 import { colors, spacing, typography, borderRadius } from '../../theme';
 import { getCurrentDate } from '../../utils/date';
@@ -23,17 +21,16 @@ import { capitalize } from '../../utils/string';
 const WorkoutDetailScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const dispatch = useDispatch();
   const { workoutId } = route.params;
 
   const [confirmVisible, setConfirmVisible] = useState(false);
 
   const { data: workout, isLoading } = useGetWorkoutByIdQuery(workoutId, { skip: !workoutId });
-  const [createUserWorkout, { isLoading: isRecording }] = useCreateUserWorkoutMutation();
+  const [recordWorkout, { isLoading: isRecording }] = useRecordWorkoutMutation();
 
   const handleRecordWorkout = useCallback(async () => {
     try {
-      await createUserWorkout({
+      await recordWorkout({
         workoutId: workout._id,
         completedAt: new Date().toISOString(),
         durationMinutes: workout.estimatedDurationMin,
@@ -41,14 +38,13 @@ const WorkoutDetailScreen = () => {
         trackingDate: getCurrentDate(),
       }).unwrap();
 
-      dispatch(trackingApi.util.invalidateTags(['Tracking', 'DailyTracking']));
       setConfirmVisible(false);
       Toast.show({ type: 'success', text1: 'Workout Recorded', text2: 'Great job! Keep it up.' });
       navigation.goBack();
     } catch {
       Toast.show({ type: 'error', text1: 'Error', text2: 'Failed to record workout.' });
     }
-  }, [createUserWorkout, workout, dispatch, navigation]);
+  }, [recordWorkout, workout, navigation]);
 
   if (isLoading) {
     return (

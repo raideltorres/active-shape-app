@@ -3,6 +3,8 @@ import { createApi } from '@reduxjs/toolkit/query/react';
 import { baseQueryWithReauth } from './baseQuery';
 import { API_ENDPOINTS } from '../../services/api/config';
 
+const USER_WORKOUTS_URL = '/user-workouts';
+
 export const trackingApi = createApi({
   reducerPath: 'trackingApi',
   baseQuery: baseQueryWithReauth,
@@ -57,6 +59,15 @@ export const trackingApi = createApi({
       }),
       invalidatesTags: ['Tracking', 'DailyTracking'],
     }),
+
+    recordWorkout: builder.mutation({
+      query: (data) => ({
+        url: USER_WORKOUTS_URL,
+        method: 'POST',
+        body: data,
+      }),
+      invalidatesTags: ['Tracking', 'DailyTracking'],
+    }),
   }),
 });
 
@@ -67,4 +78,5 @@ export const {
   useUpdateTrackingMutation,
   useDeleteTrackingFieldMutation,
   useDeleteTrackingMutation,
+  useRecordWorkoutMutation,
 } = trackingApi;
