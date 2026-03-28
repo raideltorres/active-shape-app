@@ -5,13 +5,13 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
-  Alert,
   StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Toast from 'react-native-toast-message';
 
+import { ConfirmModal } from '../../components/atoms';
 import {
   useGetCurrentSubscriptionQuery,
   useCancelSubscriptionMutation,
@@ -26,6 +26,9 @@ const STATUS_CONFIG = {
   past_due: { label: 'Past Due', color: colors.cinnabar, icon: 'alert-circle' },
   canceled: { label: 'Canceled', color: colors.raven, icon: 'close-circle' },
   paused: { label: 'Paused', color: colors.buttercup, icon: 'pause-circle' },
+  incomplete: { label: 'Incomplete', color: colors.buttercup, icon: 'alert-circle' },
+  incomplete_expired: { label: 'Expired', color: colors.raven, icon: 'close-circle' },
+  unpaid: { label: 'Unpaid', color: colors.cinnabar, icon: 'alert-circle' },
 };
 
 const formatDate = (dateStr) => {
@@ -49,6 +52,7 @@ const SubscriptionScreen = ({ navigation }) => {
 
   const [cancelSubscription, { isLoading: isCanceling }] = useCancelSubscriptionMutation();
   const [resumeSubscription, { isLoading: isResuming }] = useResumeSubscriptionMutation();
+  const [showCancelModal, setShowCancelModal] = useState(false);
 
   const statusInfo = useMemo(() => {
     return STATUS_CONFIG[subscription?.status] || STATUS_CONFIG.active;
@@ -58,30 +62,22 @@ const SubscriptionScreen = ({ navigation }) => {
     return subscription?.planId?.title || 'Unknown Plan';
   }, [subscription]);
 
-  const handleCancel = useCallback(() => {
-    Alert.alert(
-      'Cancel Subscription',
-      'Your subscription will remain active until the end of the current billing period. Are you sure?',
-      [
-        { text: 'Keep Subscription', style: 'cancel' },
-        {
-          text: 'Cancel Subscription',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await cancelSubscription({
-                subscriptionId: subscription._id,
-                cancelAt: 'period_end',
-              }).unwrap();
-              Toast.show({ type: 'success', text1: 'Subscription canceled', text2: 'Active until end of billing period.' });
-              refetch();
-            } catch (error) {
-              Toast.show({ type: 'error', text1: 'Error', text2: error?.data?.message || 'Failed to cancel.' });
-            }
-          },
-        },
-      ],
-    );
+  const periodEndFormatted = useMemo(() => {
+    return subscription?.currentPeriodEnd ? formatDate(subscription.currentPeriodEnd) : '';
+  }, [subscription]);
+
+  const handleConfirmCancel = useCallback(async () => {
+    try {
+      await cancelSubscription({
+        subscriptionId: subscription._id,
+        cancelAt: 'period_end',
+      }).unwrap();
+      setShowCancelModal(false);
+      Toast.show({ type: 'success', text1: 'Subscription canceled', text2: 'Active until end of billing period.' });
+      refetch();
+    } catch (error) {
+      Toast.show({ type: 'error', text1: 'Error', text2: error?.data?.message || 'Failed to cancel.' });
+    }
   }, [subscription, cancelSubscription, refetch]);
 
   const handleResume = useCallback(async () => {
@@ -154,9 +150,22 @@ const SubscriptionScreen = ({ navigation }) => {
         <View style={styles.detailsCard}>
           <DetailRow label="Billing Cycle" value={subscription.billingCycle === 'yearly' ? 'Yearly' : 'Monthly'} />
           <DetailRow label="Amount" value={`${subscription.currency?.toUpperCase()} $${subscription.amount?.toFixed(2) || '0.00'}`} />
-          <DetailRow label="Current Period" value={`${formatDate(subscription.currentPeriodStart)} — ${formatDate(subscription.currentPeriodEnd)}`} />
-          {subscription.trialEnd && (
+          {subscription.cancelAtPeriodEnd ? (
+            <DetailRow label="Cancels On" value={formatDate(subscription.currentPeriodEnd)} />
+          ) : (
+            subscription.currentPeriodEnd &&
+            !['canceled', 'incomplete_expired'].includes(subscription.status) && (
+              <DetailRow label="Renews On" value={formatDate(subscription.currentPeriodEnd)} />
+            )
+          )}
+          {subscription.status === 'trialing' && subscription.trialEnd && (
             <DetailRow label="Trial Ends" value={formatDate(subscription.trialEnd)} />
+          )}
+          {subscription.canceledAt && (
+            <DetailRow label="Canceled On" value={formatDate(subscription.canceledAt)} />
+          )}
+          {subscription.platform && (
+            <DetailRow label="Platform" value={subscription.platform.charAt(0).toUpperCase() + subscription.platform.slice(1)} />
           )}
         </View>
 
@@ -214,18 +223,60 @@ const SubscriptionScreen = ({ navigation }) => {
         ) : (
           <TouchableOpacity
             style={styles.cancelBtn}
-            onPress={handleCancel}
-            disabled={isCanceling}
+            onPress={() => setShowCancelModal(true)}
             activeOpacity={0.8}
           >
-            {isCanceling ? (
-              <ActivityIndicator size="small" color={colors.cinnabar} />
-            ) : (
-              <Text style={styles.cancelBtnText}>Cancel Subscription</Text>
-            )}
+            <Text style={styles.cancelBtnText}>Cancel Subscription</Text>
           </TouchableOpacity>
         )}
       </ScrollView>
+
+      <ConfirmModal
+        visible={showCancelModal}
+        title="Cancel Subscription"
+        icon="close-circle"
+        iconColor={colors.cinnabar}
+        confirmText="Cancel Subscription"
+        cancelText="Keep Plan"
+        onConfirm={handleConfirmCancel}
+        onCancel={() => setShowCancelModal(false)}
+        isLoading={isCanceling}
+        destructive
+      >
+        <View style={styles.cancelModalBody}>
+          <View style={styles.cancelSummaryCard}>
+            <View style={styles.cancelSummaryRow}>
+              <Text style={styles.cancelSummaryLabel}>Plan</Text>
+              <Text style={styles.cancelSummaryValue}>{planTitle}</Text>
+            </View>
+            <View style={styles.cancelDivider} />
+            <View style={styles.cancelSummaryRow}>
+              <Text style={styles.cancelSummaryLabel}>Status</Text>
+              <View style={styles.cancelStatusBadge}>
+                <Ionicons name={statusInfo.icon} size={14} color={statusInfo.color} />
+                <Text style={[styles.cancelStatusText, { color: statusInfo.color }]}>{statusInfo.label}</Text>
+              </View>
+            </View>
+            {periodEndFormatted ? (
+              <>
+                <View style={styles.cancelDivider} />
+                <View style={styles.cancelSummaryRow}>
+                  <Text style={styles.cancelSummaryLabel}>Active Until</Text>
+                  <Text style={styles.cancelSummaryValue}>{periodEndFormatted}</Text>
+                </View>
+              </>
+            ) : null}
+          </View>
+
+          <View style={styles.cancelInfoCard}>
+            <Ionicons name="information-circle" size={16} color={colors.mainBlue} />
+            <Text style={styles.cancelInfoText}>
+              Your subscription will remain active until the end of your current billing period.
+              You will not be charged again.
+            </Text>
+          </View>
+        </View>
+      </ConfirmModal>
     </SafeAreaView>
   );
 };
@@ -384,6 +435,58 @@ const styles = StyleSheet.create({
   cancelBtnText: {
     ...typography.button,
     color: colors.cinnabar,
+  },
+  cancelModalBody: {
+    width: '100%',
+    gap: spacing.md,
+    marginBottom: spacing.xl,
+  },
+  cancelSummaryCard: {
+    backgroundColor: colors.athensGray,
+    borderRadius: borderRadius.lg,
+    padding: spacing.lg,
+  },
+  cancelSummaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: spacing.xs,
+  },
+  cancelSummaryLabel: {
+    ...typography.bodySmall,
+    color: colors.raven,
+  },
+  cancelSummaryValue: {
+    ...typography.bodySmall,
+    color: colors.codGray,
+    fontWeight: '600',
+  },
+  cancelDivider: {
+    height: 1,
+    backgroundColor: colors.gallery,
+  },
+  cancelStatusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  cancelStatusText: {
+    ...typography.caption,
+    fontWeight: '600',
+  },
+  cancelInfoCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.sm,
+    backgroundColor: `${colors.mainBlue}10`,
+    padding: spacing.md,
+    borderRadius: borderRadius.md,
+  },
+  cancelInfoText: {
+    ...typography.caption,
+    color: colors.mainBlue,
+    flex: 1,
+    lineHeight: 18,
   },
 });
 

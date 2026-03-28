@@ -1,9 +1,10 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 
 import { colors, spacing, typography, borderRadius } from '../../theme';
+import { getCurrentDate } from '../../utils/date';
 
 const DailyInsightsCard = ({ 
   insights = null, 
@@ -13,16 +14,11 @@ const DailyInsightsCard = ({
   onGenerateInsights,
   hasTrackingData = false,
 }) => {
+  const navigation = useNavigation();
   const hasAttemptedGeneration = useRef(false);
+  const todayStr = useMemo(() => getCurrentDate(), []);
 
-  const isInsightsFromToday = () => {
-    if (!insights?.date) return false;
-    const insightsDate = new Date(insights.date).toDateString();
-    const today = new Date().toDateString();
-    return insightsDate === today;
-  };
-
-  const needsNewInsights = !insights || !isInsightsFromToday();
+  const needsNewInsights = !insights || insights.date !== todayStr;
   const generationDone = isGenerated || isFailed;
 
   useEffect(() => {
@@ -108,7 +104,6 @@ const DailyInsightsCard = ({
     );
   }
 
-  const navigation = useNavigation();
   const moodIcon = getMoodIcon(insights.mood);
   const hasDetailedInsights = insights.overallScore != null;
 

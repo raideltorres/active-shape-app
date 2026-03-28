@@ -11,7 +11,7 @@ import { Ionicons } from '@expo/vector-icons';
 import Toast from 'react-native-toast-message';
 
 import { Card } from '../../molecules';
-import { Button, ConfirmModal } from '../../atoms';
+import { Button } from '../../atoms';
 import { useAnalyzeFoodTextMutation } from '../../../store/api';
 import FoodAnalysisResultCard from '../AiFoodScanner/FoodAnalysisResultCard';
 import { MEAL_EXAMPLE_INPUTS } from '../../../utils/measure';
@@ -22,7 +22,6 @@ const AiFoodTextAnalyzer = ({ userId, onFoodAnalyzed }) => {
   const [analyzeFoodText, { isLoading }] = useAnalyzeFoodTextMutation();
   const [analysisResponse, setAnalysisResponse] = useState(null);
   const [logging, setLogging] = useState(false);
-  const [confirmVisible, setConfirmVisible] = useState(false);
   const [error, setError] = useState(null);
 
   const canAnalyze = description.trim().length > 3;
@@ -40,9 +39,8 @@ const AiFoodTextAnalyzer = ({ userId, onFoodAnalyzed }) => {
     }
   }, [description, userId, analyzeFoodText, canAnalyze]);
 
-  const handleLogConfirm = useCallback(async () => {
+  const handleLogToTracking = useCallback(async () => {
     if (!analysis || !onFoodAnalyzed) return;
-    setConfirmVisible(false);
     setLogging(true);
     try {
       await onFoodAnalyzed(analysis);
@@ -63,27 +61,13 @@ const AiFoodTextAnalyzer = ({ userId, onFoodAnalyzed }) => {
   }, []);
 
   if (analysis && !isLoading) {
-    const { totalNutrition = {} } = analysis;
-
     return (
-      <View>
-        <FoodAnalysisResultCard
-          analysis={analysis}
-          onLogToTracking={() => setConfirmVisible(true)}
-          onAnalyzeAnother={handleReset}
-          logging={logging}
-        />
-        <ConfirmModal
-          visible={confirmVisible}
-          title="Log Meal"
-          message={`Log ${totalNutrition.calories ?? 0} kcal, ${totalNutrition.proteins ?? 0}g protein, ${totalNutrition.carbs ?? 0}g carbs, and ${totalNutrition.fats ?? 0}g fats to your daily tracking?`}
-          icon="nutrition"
-          iconColor={colors.mainOrange}
-          confirmText="Log"
-          onConfirm={handleLogConfirm}
-          onCancel={() => setConfirmVisible(false)}
-        />
-      </View>
+      <FoodAnalysisResultCard
+        analysis={analysis}
+        onLogToTracking={handleLogToTracking}
+        onAnalyzeAnother={handleReset}
+        logging={logging}
+      />
     );
   }
 

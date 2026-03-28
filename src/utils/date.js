@@ -1,8 +1,18 @@
 /**
- * Returns current date as YYYY-MM-DD (for API and selectedDate state).
+ * Returns current LOCAL date as YYYY-MM-DD.
+ * NEVER use toISOString() for this — it produces UTC which shifts the date
+ * for users in negative-offset timezones.
  */
 export function getCurrentDate() {
-  return new Date().toISOString().split('T')[0];
+  return toLocalDateString(new Date());
+}
+
+function toLocalDateString(date) {
+  const d = date instanceof Date ? date : new Date(date);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 /**
@@ -13,7 +23,7 @@ export function getCurrentDate() {
 export function addDays(dateStr, days) {
   const d = new Date(dateStr + 'T12:00:00');
   d.setDate(d.getDate() + days);
-  return d.toISOString().split('T')[0];
+  return toLocalDateString(d);
 }
 
 /**

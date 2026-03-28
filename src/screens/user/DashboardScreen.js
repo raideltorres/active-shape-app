@@ -23,7 +23,11 @@ import { spacing } from '../../theme';
 import { calculateEnergyBalance, DAILY_ACTIVITY_LABELS } from '../../utils/measure';
 
 const getTodayDate = () => {
-  return new Date().toISOString().split('T')[0];
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 };
 
 const getGreeting = () => {
@@ -40,7 +44,7 @@ const DashboardScreen = ({ navigation }) => {
 
   const { data: profile, refetch: refetchProfile } = useGetProfileQuery();
   const { data: trackingData = [], refetch: refetchTrackings } = useGetTrackingsQuery(
-    profile?._id,
+    { userId: profile?._id },
     { skip: !profile?._id },
   );
   const { fastingPlan, fastingStarted, startFasting, stopFasting } = useFasting();

@@ -58,6 +58,7 @@ export default function App() {
       <StripeProvider
         publishableKey={STRIPE_PUBLISHABLE_KEY}
         merchantIdentifier="merchant.com.activeshape.app"
+        urlScheme="activeshape"
       >
         <SafeAreaProvider>
           <StatusBar style="auto" />

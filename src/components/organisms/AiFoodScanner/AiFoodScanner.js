@@ -8,7 +8,6 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
-  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Toast from 'react-native-toast-message';
@@ -22,11 +21,13 @@ import FoodAnalysisResultCard from './FoodAnalysisResultCard';
 
 const AiFoodScanner = ({ userId, onFoodAnalyzed }) => {
   const [dishContext, setDishContext] = useState('');
-  const [imageUri, setImageUri] = useState(null);
+  const [imageAsset, setImageAsset] = useState(null);
   const [error, setError] = useState(null);
   const [analysisResponse, setAnalysisResponse] = useState(null);
   const [logging, setLogging] = useState(false);
   const [analyzeFood, { isLoading }] = useAnalyzeFoodImageMutation();
+
+  const canAnalyze = dishContext.trim().length > 0;
 
   const requestCameraPermission = useCallback(async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
@@ -59,13 +60,13 @@ const AiFoodScanner = ({ userId, onFoodAnalyzed }) => {
     if (!ok) return;
     try {
       const result = await ImagePicker.launchCameraAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ['images'],
         allowsEditing: true,
         aspect: [4, 3],
         quality: 0.8,
       });
       if (!result.canceled && result.assets?.[0]?.uri) {
-        setImageUri(result.assets[0].uri);
+        setImageAsset(result.assets[0]);
         setError(null);
         setAnalysisResponse(null);
       }
@@ -80,13 +81,13 @@ const AiFoodScanner = ({ userId, onFoodAnalyzed }) => {
     if (!ok) return;
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ['images'],
         allowsEditing: true,
         aspect: [4, 3],
         quality: 0.8,
       });
       if (!result.canceled && result.assets?.[0]?.uri) {
-        setImageUri(result.assets[0].uri);
+        setImageAsset(result.assets[0]);
         setError(null);
         setAnalysisResponse(null);
       }
@@ -97,16 +98,20 @@ const AiFoodScanner = ({ userId, onFoodAnalyzed }) => {
   }, [requestMediaLibraryPermission]);
 
   const analyzeImage = useCallback(async () => {
-    if (!imageUri || !userId) return;
+    if (!canAnalyze || !userId) return;
     setError(null);
     try {
-      const data = await analyzeFood({ userId, imageUri, context: dishContext.trim() }).unwrap();
+      const data = await analyzeFood({
+        userId,
+        imageAsset: imageAsset || null,
+        context: dishContext.trim(),
+      }).unwrap();
       setAnalysisResponse(data);
     } catch (e) {
       if (__DEV__) console.error('Analyze food error:', e);
-      setError(e?.data?.message || e?.message || 'Analysis failed. Please try again with a clearer image.');
+      setError(e?.data?.message || e?.message || 'Analysis failed. Please try again.');
     }
-  }, [imageUri, userId, dishContext, analyzeFood]);
+  }, [canAnalyze, userId, imageAsset, dishContext, analyzeFood]);
 
   const handleLogToTracking = useCallback(async () => {
     if (!analysisResponse?.analysis || !onFoodAnalyzed) return;
@@ -114,7 +119,7 @@ const AiFoodScanner = ({ userId, onFoodAnalyzed }) => {
     try {
       await onFoodAnalyzed(analysisResponse.analysis);
       setAnalysisResponse(null);
-      setImageUri(null);
+      setImageAsset(null);
       setDishContext('');
     } catch (e) {
       if (__DEV__) console.error('Log food error:', e);
@@ -126,7 +131,8 @@ const AiFoodScanner = ({ userId, onFoodAnalyzed }) => {
 
   const handleAnalyzeAnother = useCallback(() => {
     setAnalysisResponse(null);
-    setImageUri(null);
+    setImageAsset(null);
+    setDishContext('');
     setError(null);
   }, []);
 
@@ -149,11 +155,11 @@ const AiFoodScanner = ({ userId, onFoodAnalyzed }) => {
         <Text style={styles.title}>AI Food Scanner</Text>
       </View>
       <Text style={styles.description}>
-        Snap a photo of your meal and our AI will analyze the nutritional content. For complex dishes, add the dish name
-        or key ingredients below.
+        Snap a photo of your meal or describe it below and our AI will analyze the nutritional content.
+        Provide the dish name or key ingredients to help the AI understand your meal better.
       </Text>
 
-      <Text style={styles.inputLabel}>Dish name or ingredients (optional)</Text>
+      <Text style={styles.inputLabel}>Dish name or ingredients</Text>
       <TextInput
         style={styles.input}
         value={dishContext}
@@ -162,7 +168,7 @@ const AiFoodScanner = ({ userId, onFoodAnalyzed }) => {
         placeholderTextColor={colors.alto}
       />
 
-      {!imageUri ? (
+      {!imageAsset ? (
         <View style={styles.uploadArea}>
           <TouchableOpacity style={styles.uploadOption} onPress={takePhoto} disabled={isLoading}>
             <Ionicons name="camera" size={40} color={colors.mainOrange} />
@@ -175,18 +181,19 @@ const AiFoodScanner = ({ userId, onFoodAnalyzed }) => {
         </View>
       ) : (
         <View style={styles.previewWrap}>
-          <Image source={{ uri: imageUri }} style={styles.previewImage} resizeMode="cover" />
-          <View style={styles.previewActions}>
-            <Button title="Analyze" onPress={analyzeImage} disabled={isLoading} style={styles.analyzeBtn} />
-            <Button
-              title="Replace"
-              onPress={() => { setImageUri(null); setError(null); }}
-              variant="secondary"
-              style={styles.replaceBtn}
-            />
-          </View>
+          <Image source={{ uri: imageAsset.uri }} style={styles.previewImage} resizeMode="cover" />
+          <TouchableOpacity style={styles.removeImageBtn} onPress={() => { setImageAsset(null); setError(null); }}>
+            <Ionicons name="close-circle" size={28} color={colors.cinnabar} />
+          </TouchableOpacity>
         </View>
       )}
+
+      <Button
+        title={imageAsset ? 'Analyze Food' : 'Analyze from Description'}
+        onPress={analyzeImage}
+        disabled={!canAnalyze || isLoading}
+        style={styles.analyzeBtn}
+      />
 
       {isLoading && (
         <View style={styles.loading}>
@@ -257,6 +264,7 @@ const styles = StyleSheet.create({
   },
   previewWrap: {
     marginBottom: spacing.md,
+    position: 'relative',
   },
   previewImage: {
     width: '100%',
@@ -264,13 +272,17 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: colors.gallery,
   },
-  previewActions: {
-    flexDirection: 'row',
-    marginTop: spacing.sm,
-    gap: spacing.sm,
+  removeImageBtn: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    backgroundColor: colors.white,
+    borderRadius: 14,
   },
-  analyzeBtn: { flex: 1 },
-  replaceBtn: {},
+  analyzeBtn: {
+    marginTop: spacing.lg,
+    marginBottom: spacing.md,
+  },
   loading: {
     alignItems: 'center',
     paddingVertical: spacing.xl,

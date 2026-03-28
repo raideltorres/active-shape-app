@@ -50,7 +50,7 @@ const TrackingHistoryScreen = () => {
 
   const { data: profile, isLoading: profileLoading } = useGetProfileQuery();
   const { data: trackingData = [], isLoading: trackingLoading } = useGetTrackingsQuery(
-    profile?._id,
+    { userId: profile?._id },
     { skip: !profile?._id },
   );
   const [updateTracking, { isLoading: isUpdating }] = useUpdateTrackingMutation();

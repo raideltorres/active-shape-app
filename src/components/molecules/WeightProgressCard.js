@@ -79,9 +79,13 @@ const WeightProgressCard = ({
       .sort((a, b) => new Date(a.date) - new Date(b.date));
 
     if (profileWeight) {
+      const toLocal = (dt) => {
+        const dd = new Date(dt);
+        return `${dd.getFullYear()}-${String(dd.getMonth() + 1).padStart(2, '0')}-${String(dd.getDate()).padStart(2, '0')}`;
+      };
       const profileCreatedDate = profileCreatedAt
-        ? new Date(profileCreatedAt).toISOString().split('T')[0]
-        : new Date().toISOString().split('T')[0];
+        ? toLocal(profileCreatedAt)
+        : toLocal(new Date());
 
       const hasEarlierData = weightRecords.some(
         (record) => new Date(record.date) <= new Date(profileCreatedDate)

@@ -5,7 +5,6 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
-  Alert,
   StyleSheet,
   Platform,
 } from 'react-native';
@@ -13,6 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Toast from 'react-native-toast-message';
 
+import { ConfirmModal } from '../../components/atoms';
 import PlanCard from '../../components/molecules/PlanCard';
 import {
   useGetPricingPlansQuery,
@@ -22,21 +22,19 @@ import {
 } from '../../store/api';
 import { colors, spacing, typography, borderRadius } from '../../theme';
 
-const BILLING_CYCLES = [
-  { key: 'monthly', label: 'Monthly' },
-  { key: 'yearly', label: 'Yearly' },
-];
+const getRemainingTrialDays = (subscription) => {
+  if (subscription?.status !== 'trialing' || !subscription?.trialEnd) return 0;
+  const diffMs = new Date(subscription.trialEnd) - new Date();
+  const days = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+  return days > 0 ? days : 0;
+};
 
-const CHANGE_OPTIONS = [
-  { key: 'immediate', label: 'Immediately', description: 'Switch to the new plan right now (prorated)' },
-  { key: 'at_period_end', label: 'At Period End', description: 'Switch when your current billing period ends' },
-];
+const pluralizeDays = (n) => `${n} ${n === 1 ? 'day' : 'days'}`;
 
 const ChangePlanScreen = ({ navigation }) => {
   const [billingCycle, setBillingCycle] = useState('monthly');
-  const [changeOption, setChangeOption] = useState('at_period_end');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [selectedPlanId, setSelectedPlanId] = useState(null);
+  const [confirmPlan, setConfirmPlan] = useState(null);
 
   const { data: profile } = useGetProfileQuery();
   const { data: plansData, isLoading: plansLoading } = useGetPricingPlansQuery();
@@ -51,39 +49,56 @@ const ChangePlanScreen = ({ navigation }) => {
   }, [plansData]);
 
   const isTrialing = currentSubscription?.status === 'trialing';
+  const remainingTrialDays = useMemo(() => getRemainingTrialDays(currentSubscription), [currentSubscription]);
+  const hasActiveTrial = isTrialing && remainingTrialDays > 0;
 
-  const handleSelectPlan = useCallback(async (plan) => {
+  const [changeOption, setChangeOption] = useState(() => (hasActiveTrial ? 'at_period_end' : 'immediate'));
+
+  const changeTimingOptions = useMemo(() => [
+    {
+      key: 'immediate',
+      label: 'Change Immediately',
+      description: 'Switch to the new plan right now',
+      explanation: hasActiveTrial
+        ? `This will end your free trial (${pluralizeDays(remainingTrialDays)} remaining) and charge you immediately`
+        : 'You will be charged a prorated amount for the new plan today',
+    },
+    {
+      key: 'at_period_end',
+      label: 'At Period End',
+      description: hasActiveTrial
+        ? 'Change when your free trial ends'
+        : 'Change at the end of billing cycle',
+      explanation: hasActiveTrial
+        ? `Keep your free trial and switch plans in ${pluralizeDays(remainingTrialDays)}`
+        : 'Continue with your current plan until the billing period ends',
+    },
+  ], [hasActiveTrial, remainingTrialDays]);
+
+  const confirmPrice = useMemo(() => {
+    if (!confirmPlan) return '';
+    const raw = billingCycle === 'yearly' ? confirmPlan.yearlyPrice : confirmPlan.monthlyPrice;
+    return raw ? (raw / 100).toFixed(2) : '0.00';
+  }, [confirmPlan, billingCycle]);
+
+  const handleSelectPlan = useCallback((plan) => {
     if (plan._id === profile?.planId) return;
+    setConfirmPlan(plan);
+  }, [profile?.planId]);
 
-    if (isTrialing && changeOption === 'immediate') {
-      Alert.alert(
-        'End Free Trial?',
-        'Changing your plan immediately will end your free trial and you will be charged now.',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Continue',
-            onPress: () => executePlanChange(plan._id),
-          },
-        ],
-      );
-    } else {
-      await executePlanChange(plan._id);
-    }
-  }, [profile?.planId, billingCycle, changeOption, isTrialing]);
-
-  const executePlanChange = useCallback(async (planId) => {
-    setSelectedPlanId(planId);
+  const handleConfirmChange = useCallback(async () => {
+    if (!confirmPlan) return;
     setIsProcessing(true);
 
     try {
       await createSubscription({
-        planId,
+        planId: confirmPlan._id,
         billingCycle,
         option: changeOption,
         platform: Platform.OS,
       }).unwrap();
 
+      setConfirmPlan(null);
       Toast.show({
         type: 'success',
         text1: 'Plan Changed',
@@ -91,7 +106,6 @@ const ChangePlanScreen = ({ navigation }) => {
           ? 'Your plan has been updated.'
           : 'Your plan will change at the end of the billing period.',
       });
-
       navigation.goBack();
     } catch (error) {
       Toast.show({
@@ -101,9 +115,8 @@ const ChangePlanScreen = ({ navigation }) => {
       });
     } finally {
       setIsProcessing(false);
-      setSelectedPlanId(null);
     }
-  }, [billingCycle, changeOption, createSubscription, navigation]);
+  }, [confirmPlan, billingCycle, changeOption, createSubscription, navigation]);
 
   if (plansLoading) {
     return (
@@ -128,7 +141,7 @@ const ChangePlanScreen = ({ navigation }) => {
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <Text style={styles.sectionTitle}>Billing Cycle</Text>
         <View style={styles.toggleRow}>
-          {BILLING_CYCLES.map(({ key, label }) => (
+          {['monthly', 'yearly'].map((key) => (
             <TouchableOpacity
               key={key}
               style={[styles.toggleBtn, billingCycle === key && styles.toggleBtnActive]}
@@ -136,7 +149,7 @@ const ChangePlanScreen = ({ navigation }) => {
               activeOpacity={0.8}
             >
               <Text style={[styles.toggleText, billingCycle === key && styles.toggleTextActive]}>
-                {label}
+                {key === 'monthly' ? 'Monthly' : 'Yearly'}
               </Text>
             </TouchableOpacity>
           ))}
@@ -144,7 +157,7 @@ const ChangePlanScreen = ({ navigation }) => {
 
         <Text style={styles.sectionTitle}>When to Apply</Text>
         <View style={styles.optionsList}>
-          {CHANGE_OPTIONS.map(({ key, label, description }) => (
+          {changeTimingOptions.map(({ key, label, description, explanation }) => (
             <TouchableOpacity
               key={key}
               style={[styles.optionCard, changeOption === key && styles.optionCardActive]}
@@ -161,19 +174,11 @@ const ChangePlanScreen = ({ navigation }) => {
                   {label}
                 </Text>
                 <Text style={styles.optionDescription}>{description}</Text>
+                <Text style={styles.optionExplanation}>{explanation}</Text>
               </View>
             </TouchableOpacity>
           ))}
         </View>
-
-        {isTrialing && changeOption === 'immediate' && (
-          <View style={styles.warningCard}>
-            <Ionicons name="warning" size={20} color={colors.buttercup} />
-            <Text style={styles.warningText}>
-              This will end your free trial and charge you immediately.
-            </Text>
-          </View>
-        )}
 
         <Text style={[styles.sectionTitle, { marginTop: spacing.xxl }]}>Select a Plan</Text>
         <View style={styles.plansList}>
@@ -183,12 +188,82 @@ const ChangePlanScreen = ({ navigation }) => {
               plan={plan}
               billingCycle={billingCycle}
               isCurrentPlan={plan._id === profile?.planId}
-              isProcessing={isProcessing && selectedPlanId === plan._id}
               onSelect={() => handleSelectPlan(plan)}
             />
           ))}
         </View>
       </ScrollView>
+
+      <ConfirmModal
+        visible={!!confirmPlan}
+        title={hasActiveTrial && changeOption === 'immediate' ? 'End Free Trial?' : 'Confirm Plan Change'}
+        icon={hasActiveTrial && changeOption === 'immediate' ? 'warning' : 'swap-horizontal'}
+        iconColor={hasActiveTrial && changeOption === 'immediate' ? colors.buttercup : colors.mainOrange}
+        confirmText="Confirm Change"
+        cancelText="Cancel"
+        onConfirm={handleConfirmChange}
+        onCancel={() => setConfirmPlan(null)}
+        isLoading={isProcessing}
+      >
+        <View style={styles.modalBody}>
+          <View style={styles.modalSummaryCard}>
+            <View style={styles.modalSummaryRow}>
+              <Text style={styles.modalSummaryLabel}>Plan</Text>
+              <Text style={styles.modalSummaryValue}>{confirmPlan?.title}</Text>
+            </View>
+            <View style={styles.modalDivider} />
+            <View style={styles.modalSummaryRow}>
+              <Text style={styles.modalSummaryLabel}>Price</Text>
+              <Text style={styles.modalSummaryValue}>
+                ${confirmPrice}/{billingCycle === 'yearly' ? 'year' : 'month'}
+              </Text>
+            </View>
+            <View style={styles.modalDivider} />
+            <View style={styles.modalSummaryRow}>
+              <Text style={styles.modalSummaryLabel}>Billing</Text>
+              <Text style={styles.modalSummaryValue}>
+                {billingCycle === 'yearly' ? 'Yearly' : 'Monthly'}
+              </Text>
+            </View>
+            <View style={styles.modalDivider} />
+            <View style={styles.modalSummaryRow}>
+              <Text style={styles.modalSummaryLabel}>Applies</Text>
+              <Text style={styles.modalSummaryValue}>
+                {changeOption === 'immediate' ? 'Immediately' : 'At period end'}
+              </Text>
+            </View>
+          </View>
+
+          {changeOption === 'immediate' && hasActiveTrial && (
+            <View style={styles.modalWarning}>
+              <Ionicons name="warning" size={16} color={colors.buttercup} />
+              <Text style={styles.modalWarningText}>
+                You have <Text style={styles.warningBold}>{pluralizeDays(remainingTrialDays)}</Text> of
+                free trial remaining. Changing now will end your trial and charge you immediately.
+              </Text>
+            </View>
+          )}
+
+          {changeOption === 'immediate' && !hasActiveTrial && (
+            <View style={[styles.modalWarning, { backgroundColor: `${colors.mainBlue}10` }]}>
+              <Ionicons name="information-circle" size={16} color={colors.mainBlue} />
+              <Text style={[styles.modalWarningText, { color: colors.mainBlue }]}>
+                You will be charged a <Text style={styles.warningBold}>prorated amount</Text> based on
+                your remaining billing period.
+              </Text>
+            </View>
+          )}
+
+          {changeOption === 'at_period_end' && (
+            <View style={[styles.modalWarning, { backgroundColor: `${colors.lima}12` }]}>
+              <Ionicons name="checkmark-circle" size={16} color={colors.lima} />
+              <Text style={[styles.modalWarningText, { color: colors.lima }]}>
+                Your current plan will remain active until the end of the billing period.
+              </Text>
+            </View>
+          )}
+        </View>
+      </ConfirmModal>
     </SafeAreaView>
   );
 };
@@ -300,23 +375,60 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: colors.raven,
   },
-  warningCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    backgroundColor: `${colors.buttercup}15`,
-    padding: spacing.lg,
-    borderRadius: borderRadius.lg,
-    marginBottom: spacing.lg,
-  },
-  warningText: {
-    ...typography.bodySmall,
-    color: colors.buttercup,
-    flex: 1,
-    fontWeight: '500',
+  optionExplanation: {
+    ...typography.caption,
+    color: colors.raven,
+    fontStyle: 'italic',
+    marginTop: 4,
   },
   plansList: {
     gap: spacing.lg,
+  },
+  modalBody: {
+    width: '100%',
+    gap: spacing.md,
+    marginBottom: spacing.xl,
+  },
+  modalSummaryCard: {
+    backgroundColor: colors.athensGray,
+    borderRadius: borderRadius.lg,
+    padding: spacing.lg,
+  },
+  modalSummaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: spacing.xs,
+  },
+  modalSummaryLabel: {
+    ...typography.bodySmall,
+    color: colors.raven,
+  },
+  modalSummaryValue: {
+    ...typography.bodySmall,
+    color: colors.codGray,
+    fontWeight: '600',
+  },
+  modalDivider: {
+    height: 1,
+    backgroundColor: colors.gallery,
+  },
+  modalWarning: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.sm,
+    backgroundColor: `${colors.buttercup}12`,
+    padding: spacing.md,
+    borderRadius: borderRadius.md,
+  },
+  modalWarningText: {
+    ...typography.caption,
+    color: colors.buttercup,
+    flex: 1,
+    lineHeight: 18,
+  },
+  warningBold: {
+    fontWeight: '700',
   },
 });
 

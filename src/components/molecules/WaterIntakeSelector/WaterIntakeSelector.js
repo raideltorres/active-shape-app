@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, useEffect } from "react";
+import React, { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 
 import { Ionicons } from "@expo/vector-icons";
@@ -7,7 +7,7 @@ import Card from "../Card";
 import WaterTank from "../WaterTank";
 import { colors, spacing, typography, borderRadius } from "../../../theme";
 
-const DRINK_OPTIONS = [
+const BASE_DRINK_OPTIONS = [
   {
     id: "glass",
     amount: 250,
@@ -52,7 +52,21 @@ const WaterIntakeSelector = ({
   onDrink,
   loading = false,
 }) => {
-  const [selectedOption, setSelectedOption] = useState(DRINK_OPTIONS[0]);
+  const drinkOptions = useMemo(() => {
+    const goalMl = Math.round(dailyGoalLiters * 1000);
+    const alreadyExists = BASE_DRINK_OPTIONS.some((opt) => opt.amount === goalMl);
+    if (alreadyExists) return BASE_DRINK_OPTIONS;
+
+    const goalOption = {
+      id: `goal-${goalMl}`,
+      amount: goalMl,
+      label: "Daily Goal",
+      helper: "Your full daily water goal.",
+    };
+    return [...BASE_DRINK_OPTIONS, goalOption].sort((a, b) => a.amount - b.amount);
+  }, [dailyGoalLiters]);
+
+  const [selectedOption, setSelectedOption] = useState(drinkOptions[0]);
   const [bubbleAnimated, setBubbleAnimated] = useState(false);
   const timeoutRef = useRef(null);
 
@@ -133,7 +147,7 @@ const WaterIntakeSelector = ({
             />
           </View>
           <View style={styles.grid}>
-            {DRINK_OPTIONS.map((option) => {
+            {drinkOptions.map((option) => {
               const isSelected = selectedOption.id === option.id;
               const displayVal =
                 option.displayAmount ||

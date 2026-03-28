@@ -9,10 +9,11 @@ export const trackingApi = createApi({
   tagTypes: ['Tracking', 'DailyTracking'],
   endpoints: (builder) => ({
     getTrackings: builder.query({
-      query: (userId) => {
-        const query = userId ? `?userId=${encodeURIComponent(userId)}` : '';
-        return `${API_ENDPOINTS.TRACKING}${query}`;
-      },
+      query: (filters = {}) => ({
+        url: API_ENDPOINTS.TRACKING,
+        method: 'GET',
+        params: filters,
+      }),
       providesTags: ['Tracking'],
     }),
 

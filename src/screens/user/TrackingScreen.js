@@ -56,10 +56,14 @@ const TrackingScreen = () => {
   const [fats, setFats] = useState('');
 
   const { data: profile, isLoading: profileLoading } = useGetProfileQuery();
-  const { data: trackingData = [] } = useGetTrackingsQuery(
-    profile?._id,
+  const { data: trackingData = [], error: trackingError } = useGetTrackingsQuery(
+    { userId: profile?._id },
     { skip: !profile?._id },
   );
+
+  if (__DEV__ && trackingError) {
+    console.error('[TrackingScreen] Failed to fetch trackings:', trackingError);
+  }
   const [createTracking, { isLoading: saving }] = useCreateTrackingMutation();
   const { logExercise } = useExerciseLog(profile?._id, selectedDate);
   const { logFood } = useFoodLog(profile?._id, selectedDate);

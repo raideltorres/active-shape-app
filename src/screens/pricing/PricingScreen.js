@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -11,18 +11,15 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useStripe } from '@stripe/stripe-react-native';
 import Toast from 'react-native-toast-message';
 
 import PlanCard from '../../components/molecules/PlanCard';
-import { useAuth } from '../../hooks/useAuth';
+import { useAuth, useStripePaymentSheet } from '../../hooks';
 import {
   useGetPricingPlansQuery,
   useGetProfileQuery,
   useGetCurrentSubscriptionQuery,
   useLazyGetPaymentMethodsQuery,
-  useCreateSetupIntentMutation,
-  useConfirmSetupIntentMutation,
   useCreateSubscriptionMutation,
 } from '../../store/api';
 import { colors, spacing, typography, borderRadius } from '../../theme';
@@ -34,13 +31,11 @@ const BILLING_CYCLES = [
 
 const PricingScreen = ({ navigation }) => {
   const { signOut } = useAuth();
-  const { confirmSetupIntent } = useStripe();
+  const { addPaymentMethod } = useStripePaymentSheet();
 
   const [billingCycle, setBillingCycle] = useState('monthly');
   const [selectedPlanId, setSelectedPlanId] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
-
-  const pendingSubscriptionRef = useRef(null);
 
   const { data: profile } = useGetProfileQuery();
   const { data: plansData, isLoading: plansLoading } = useGetPricingPlansQuery();
@@ -49,8 +44,6 @@ const PricingScreen = ({ navigation }) => {
   });
 
   const [getPaymentMethods] = useLazyGetPaymentMethodsQuery();
-  const [createSetupIntent] = useCreateSetupIntentMutation();
-  const [confirmSetupIntentApi] = useConfirmSetupIntentMutation();
   const [createSubscription] = useCreateSubscriptionMutation();
 
   const plans = useMemo(() => {
@@ -70,7 +63,6 @@ const PricingScreen = ({ navigation }) => {
       if (paymentMethodsResult?.length > 0) {
         await createSubscriptionForPlan(plan._id);
       } else {
-        pendingSubscriptionRef.current = plan._id;
         await addPaymentMethodAndSubscribe(plan._id);
       }
     } catch (error) {
@@ -102,29 +94,11 @@ const PricingScreen = ({ navigation }) => {
   }, [billingCycle, createSubscription]);
 
   const addPaymentMethodAndSubscribe = useCallback(async (planId) => {
-    try {
-      const { clientSecret } = await createSetupIntent().unwrap();
+    const result = await addPaymentMethod();
+    if (result?.canceled) return;
 
-      if (!clientSecret) {
-        throw new Error('Failed to initialize payment setup.');
-      }
-
-      const { setupIntent, error } = await confirmSetupIntent(clientSecret, {
-        paymentMethodType: 'Card',
-      });
-
-      if (error) {
-        if (error.code === 'Canceled') return;
-        throw new Error(error.message);
-      }
-
-      await confirmSetupIntentApi(setupIntent.id).unwrap();
-      await createSubscriptionForPlan(planId);
-    } catch (error) {
-      if (error?.message?.includes('Canceled')) return;
-      throw error;
-    }
-  }, [createSetupIntent, confirmSetupIntent, confirmSetupIntentApi, createSubscriptionForPlan]);
+    await createSubscriptionForPlan(planId);
+  }, [addPaymentMethod, createSubscriptionForPlan]);
 
   const handleSignOut = useCallback(() => {
     Alert.alert('Sign Out', 'Are you sure you want to sign out?', [

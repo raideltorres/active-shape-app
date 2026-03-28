@@ -79,18 +79,21 @@ export const aiNutritionApi = createApi({
   baseQuery: formDataBaseQuery,
   endpoints: (builder) => ({
     analyzeFoodImage: builder.mutation({
-      query: ({ userId, imageUri, context = '' }) => {
+      query: ({ userId, imageAsset = null, context = '' }) => {
         const formData = new FormData();
         formData.append('userId', userId);
-        formData.append(
-          'image',
-          typeof imageUri === 'string'
-            ? { uri: imageUri, type: 'image/jpeg', name: 'image.jpg' }
-            : imageUri,
-        );
-        const contextMessage = context
+
+        if (imageAsset) {
+          formData.append('image', {
+            uri: imageAsset.uri,
+            type: imageAsset.mimeType || 'image/jpeg',
+            name: imageAsset.fileName || 'photo.jpg',
+          });
+        }
+
+        const contextMessage = imageAsset
           ? `Dish name or ingredients: ${context}. Please analyze this image considering this information and identify all components.`
-          : 'Analyze this food image and identify all visible ingredients and components.';
+          : `Dish name or ingredients: ${context}. Please estimate the nutritional content based on this description.`;
         formData.append('context', contextMessage);
 
         return { url: API_ENDPOINTS.AI_NUTRITION_ANALYZE, body: formData };

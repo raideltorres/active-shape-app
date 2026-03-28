@@ -25,7 +25,7 @@ const WeeklySummaryCard = ({ trackingData = [] }) => {
     for (let i = 0; i < 7; i++) {
       const date = new Date(startOfWeek);
       date.setDate(startOfWeek.getDate() + i);
-      const dateStr = date.toISOString().split('T')[0];
+      const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
       
       const dayRecord = trackingData?.find(t => t.date === dateStr);
       const hasData = dayRecord && (dayRecord.caloriesConsumed > 0 || dayRecord.water > 0);

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Modal, StyleSheet, TouchableOpacity, TouchableWithoutFeedback } from 'react-native';
+import { View, Text, Modal, StyleSheet, TouchableOpacity, TouchableWithoutFeedback, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 import { colors, spacing, typography, borderRadius } from '../../theme';
@@ -8,6 +8,7 @@ const ConfirmModal = ({
   visible,
   title = 'Confirm',
   message,
+  children,
   confirmText = 'Confirm',
   cancelText = 'Cancel',
   onConfirm,
@@ -15,6 +16,7 @@ const ConfirmModal = ({
   icon,
   iconColor = colors.mainOrange,
   destructive = false,
+  isLoading = false,
 }) => {
   const confirmBg = destructive ? colors.error : colors.mainOrange;
 
@@ -30,17 +32,22 @@ const ConfirmModal = ({
                 </View>
               )}
               <Text style={styles.title}>{title}</Text>
-              <Text style={styles.message}>{message}</Text>
+              {children || <Text style={styles.message}>{message}</Text>}
               <View style={styles.actions}>
-                <TouchableOpacity style={styles.cancelBtn} onPress={onCancel} activeOpacity={0.7}>
+                <TouchableOpacity style={styles.cancelBtn} onPress={onCancel} disabled={isLoading} activeOpacity={0.7}>
                   <Text style={styles.cancelText}>{cancelText}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[styles.confirmBtn, { backgroundColor: confirmBg }]}
+                  style={[styles.confirmBtn, { backgroundColor: confirmBg }, isLoading && { opacity: 0.6 }]}
                   onPress={onConfirm}
+                  disabled={isLoading}
                   activeOpacity={0.7}
                 >
-                  <Text style={styles.confirmText}>{confirmText}</Text>
+                  {isLoading ? (
+                    <ActivityIndicator size="small" color={colors.white} />
+                  ) : (
+                    <Text style={styles.confirmText}>{confirmText}</Text>
+                  )}
                 </TouchableOpacity>
               </View>
             </View>

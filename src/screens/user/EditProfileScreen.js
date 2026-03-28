@@ -230,11 +230,10 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.xxxl,
+    paddingBottom: spacing.tabBarPadding,
+    gap: spacing.xl,
   },
-  section: {
-    marginBottom: spacing.xl,
-  },
+  section: {},
   sectionTitle: {
     ...typography.caption,
     color: colors.raven,

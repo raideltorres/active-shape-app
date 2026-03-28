@@ -11,6 +11,9 @@ import PaymentMethodsScreen from '../../screens/pricing/PaymentMethodsScreen';
 import InvoicesScreen from '../../screens/pricing/InvoicesScreen';
 import ChangePlanScreen from '../../screens/pricing/ChangePlanScreen';
 import HelpScreen from '../../screens/user/HelpScreen';
+import ChangePasswordScreen from '../../screens/user/ChangePasswordScreen';
+import BlogScreen from '../../screens/blog/BlogScreen';
+import BlogPostScreen from '../../screens/blog/BlogPostScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -27,6 +30,9 @@ const ProfileStack = () => {
       <Stack.Screen name="Invoices" component={InvoicesScreen} />
       <Stack.Screen name="ChangePlan" component={ChangePlanScreen} />
       <Stack.Screen name="Help" component={HelpScreen} />
+      <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
+      <Stack.Screen name="Blog" component={BlogScreen} />
+      <Stack.Screen name="BlogPost" component={BlogPostScreen} />
     </Stack.Navigator>
   );
 };

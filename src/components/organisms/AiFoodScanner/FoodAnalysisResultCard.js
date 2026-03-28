@@ -1,30 +1,24 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 import { Card } from '../../molecules';
-import { Button } from '../../atoms';
+import { Button, ConfirmModal } from '../../atoms';
 import { colors, spacing, typography } from '../../../theme';
+import { getCurrentDate } from '../../../utils/date';
 
-/**
- * Displays AI food analysis: detected foods, total nutrition, optional suggestions.
- * Matches web FoodAnalysisResult data shape: { foods, totalNutrition, suggestions, mealType }.
- */
 const FoodAnalysisResultCard = ({ analysis, onLogToTracking, onAnalyzeAnother, logging }) => {
+  const [showLogModal, setShowLogModal] = useState(false);
+
   if (!analysis) return null;
 
-  const { foods = [], totalNutrition = {}, suggestions = [], mealType } = analysis;
+  const { foods = [], totalNutrition = {}, suggestions = [] } = analysis;
 
   return (
     <Card>
       <View style={styles.header}>
         <Ionicons name="nutrition-outline" size={24} color={colors.mainOrange} />
         <Text style={styles.title}>Food analysis results</Text>
-        {mealType ? (
-          <View style={[styles.mealTag, mealType === 'breakfast' && styles.mealTagBreakfast, mealType === 'lunch' && styles.mealTagLunch]}>
-            <Text style={styles.mealTagText}>{mealType.charAt(0).toUpperCase() + mealType.slice(1)}</Text>
-          </View>
-        ) : null}
       </View>
 
       <Text style={styles.notice}>
@@ -115,7 +109,7 @@ const FoodAnalysisResultCard = ({ analysis, onLogToTracking, onAnalyzeAnother, l
       <View style={styles.actions}>
         <Button
           title="Log to tracking"
-          onPress={onLogToTracking}
+          onPress={() => setShowLogModal(true)}
           disabled={logging}
           icon="checkmark-circle-outline"
           style={styles.logBtn}
@@ -128,6 +122,48 @@ const FoodAnalysisResultCard = ({ analysis, onLogToTracking, onAnalyzeAnother, l
           style={styles.anotherBtn}
         />
       </View>
+
+      <ConfirmModal
+        visible={showLogModal}
+        title="Log this meal?"
+        icon="flame-outline"
+        iconColor={colors.mainOrange}
+        confirmText="Confirm"
+        cancelText="Cancel"
+        onConfirm={() => {
+          setShowLogModal(false);
+          onLogToTracking();
+        }}
+        onCancel={() => setShowLogModal(false)}
+        isLoading={logging}
+      >
+        <View style={styles.modalBody}>
+          <Text style={styles.modalSubtitle}>The following will be added to your daily tracking</Text>
+
+          {foods.length > 0 && (
+            <View style={styles.modalItems}>
+              <Text style={styles.modalLabel}>Items</Text>
+              {foods.map((food, i) => (
+                <View key={i} style={styles.modalFoodRow}>
+                  <Text style={styles.modalFoodName}>{food.name}</Text>
+                  {food.portion ? <Text style={styles.modalFoodPortion}>{food.portion}</Text> : null}
+                </View>
+              ))}
+              <View style={styles.modalDivider} />
+            </View>
+          )}
+
+          <View style={styles.modalNutrition}>
+            <Text style={styles.modalLabel}>Nutrition</Text>
+            <NutritionRow label="Calories" value={`${totalNutrition.calories ?? 0} kcal`} />
+            <NutritionRow label="Protein" value={`${totalNutrition.proteins ?? 0} g`} />
+            <NutritionRow label="Carbs" value={`${totalNutrition.carbs ?? 0} g`} />
+            <NutritionRow label="Fats" value={`${totalNutrition.fats ?? 0} g`} />
+            <View style={styles.modalDivider} />
+            <NutritionRow label="Date" value={getCurrentDate()} />
+          </View>
+        </View>
+      </ConfirmModal>
     </Card>
   );
 };
@@ -144,18 +180,6 @@ const styles = StyleSheet.create({
     color: colors.mineShaft,
     marginLeft: spacing.sm,
     flex: 1,
-  },
-  mealTag: {
-    backgroundColor: colors.purple,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  mealTagBreakfast: { backgroundColor: colors.buttercup },
-  mealTagLunch: { backgroundColor: colors.mariner },
-  mealTagText: {
-    ...typography.bodySmall,
-    color: colors.white,
   },
   notice: {
     ...typography.bodySmall,
@@ -230,6 +254,7 @@ const styles = StyleSheet.create({
   nutritionCard: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: spacing.sm,
     backgroundColor: colors.athensGray,
     padding: spacing.md,
     borderRadius: 8,
@@ -245,6 +270,71 @@ const styles = StyleSheet.create({
   actions: { marginTop: spacing.md },
   logBtn: { marginBottom: spacing.sm },
   anotherBtn: {},
+  modalBody: {
+    width: '100%',
+    marginBottom: spacing.lg,
+  },
+  modalSubtitle: {
+    ...typography.bodySmall,
+    color: colors.raven,
+    textAlign: 'center',
+    marginBottom: spacing.lg,
+  },
+  modalItems: {
+    marginBottom: spacing.sm,
+  },
+  modalLabel: {
+    ...typography.bodySmall,
+    color: colors.raven,
+    fontWeight: '600',
+    marginBottom: spacing.xs,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  modalFoodRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 6,
+  },
+  modalFoodName: {
+    ...typography.body,
+    color: colors.mineShaft,
+    flex: 1,
+  },
+  modalFoodPortion: {
+    ...typography.bodySmall,
+    color: colors.raven,
+    marginLeft: spacing.sm,
+  },
+  modalDivider: {
+    height: 1,
+    backgroundColor: colors.gallery,
+    marginVertical: spacing.sm,
+  },
+  modalNutrition: {},
+  modalNutritionRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 4,
+  },
+  modalNutritionLabel: {
+    ...typography.body,
+    color: colors.raven,
+  },
+  modalNutritionValue: {
+    ...typography.body,
+    color: colors.mineShaft,
+    fontWeight: '600',
+  },
 });
+
+const NutritionRow = ({ label, value }) => (
+  <View style={styles.modalNutritionRow}>
+    <Text style={styles.modalNutritionLabel}>{label}</Text>
+    <Text style={styles.modalNutritionValue}>{value}</Text>
+  </View>
+);
 
 export default FoodAnalysisResultCard;

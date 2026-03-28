@@ -5,7 +5,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Switch,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -17,6 +16,8 @@ import { colors, spacing, typography, borderRadius } from "../../theme";
 const WEB_URLS = {
   terms: "https://www.active-shape.com/terms-of-service",
   privacy: "https://www.active-shape.com/privacy-policy",
+  referralTerms: "https://www.active-shape.com/referral-terms",
+  dataDeletion: "https://www.active-shape.com/user-data-deletion",
 };
 
 const SettingsScreen = ({ navigation }) => {
@@ -35,12 +36,7 @@ const SettingsScreen = ({ navigation }) => {
       title: "Account",
       items: [
         { icon: "person-outline", label: "Edit Profile", screen: "Profile" },
-        {
-          icon: "notifications-outline",
-          label: "Notifications",
-          hasToggle: true,
-        },
-        { icon: "lock-closed-outline", label: "Privacy & Security" },
+        { icon: "lock-closed-outline", label: "Change Password", screen: "ChangePassword" },
       ],
     },
     {
@@ -69,11 +65,9 @@ const SettingsScreen = ({ navigation }) => {
       ],
     },
     {
-      title: "Preferences",
+      title: "Content",
       items: [
-        { icon: "moon-outline", label: "Dark Mode", hasToggle: true },
-        { icon: "language-outline", label: "Language", value: "English" },
-        { icon: "fitness-outline", label: "Units", value: "Metric" },
+        { icon: "newspaper-outline", label: "Blog", screen: "Blog" },
       ],
     },
     {
@@ -84,7 +78,6 @@ const SettingsScreen = ({ navigation }) => {
           label: "Help & Support",
           screen: "Help",
         },
-        { icon: "chatbubble-outline", label: "Contact Us" },
         {
           icon: "document-text-outline",
           label: "Terms of Service",
@@ -94,6 +87,16 @@ const SettingsScreen = ({ navigation }) => {
           icon: "shield-checkmark-outline",
           label: "Privacy Policy",
           url: WEB_URLS.privacy,
+        },
+        {
+          icon: "people-outline",
+          label: "Referral Terms",
+          url: WEB_URLS.referralTerms,
+        },
+        {
+          icon: "trash-outline",
+          label: "Data Deletion",
+          url: WEB_URLS.dataDeletion,
         },
       ],
     },

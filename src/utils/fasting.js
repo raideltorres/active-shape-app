@@ -73,14 +73,16 @@ export const secondsToShortTime = (totalSeconds) => {
  */
 export const formatCalendarDate = (date) => {
   const d = new Date(date);
-  return d.toISOString().split('T')[0];
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 };
 
 /**
  * Gets the start/end of a month for calendar queries.
  */
 export const getMonthRange = (year, month) => {
-  const startDate = new Date(year, month, 1).toISOString().split('T')[0];
-  const endDate = new Date(year, month + 1, 0).toISOString().split('T')[0];
+  const start = new Date(year, month, 1);
+  const end = new Date(year, month + 1, 0);
+  const startDate = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}-${String(start.getDate()).padStart(2, '0')}`;
+  const endDate = `${end.getFullYear()}-${String(end.getMonth() + 1).padStart(2, '0')}-${String(end.getDate()).padStart(2, '0')}`;
   return { startDate, endDate };
 };

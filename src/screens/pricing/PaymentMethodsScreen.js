@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback } from 'react';
 import {
   View,
   Text,
@@ -10,15 +10,13 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useStripe } from '@stripe/stripe-react-native';
 import Toast from 'react-native-toast-message';
 
+import { useStripePaymentSheet } from '../../hooks';
 import {
   useGetPaymentMethodsQuery,
   useSetDefaultPaymentMethodMutation,
   useDeletePaymentMethodMutation,
-  useCreateSetupIntentMutation,
-  useConfirmSetupIntentMutation,
 } from '../../store/api';
 import { colors, spacing, typography, borderRadius } from '../../theme';
 
@@ -30,40 +28,24 @@ const CARD_BRAND_ICONS = {
 };
 
 const PaymentMethodsScreen = ({ navigation }) => {
-  const { confirmSetupIntent } = useStripe();
-  const [isAdding, setIsAdding] = useState(false);
+  const { addPaymentMethod, isProcessing: isAdding } = useStripePaymentSheet();
 
   const { data: paymentMethods = [], isLoading, refetch } = useGetPaymentMethodsQuery();
   const [setDefault, { isLoading: isSettingDefault }] = useSetDefaultPaymentMethodMutation();
   const [deleteMethod, { isLoading: isDeleting }] = useDeletePaymentMethodMutation();
-  const [createSetupIntent] = useCreateSetupIntentMutation();
-  const [confirmSetupIntentApi] = useConfirmSetupIntentMutation();
 
   const handleAddCard = useCallback(async () => {
-    setIsAdding(true);
     try {
-      const { clientSecret } = await createSetupIntent().unwrap();
-      if (!clientSecret) throw new Error('Failed to initialize payment setup.');
+      const result = await addPaymentMethod();
+      if (result?.canceled) return;
 
-      const { setupIntent, error } = await confirmSetupIntent(clientSecret, {
-        paymentMethodType: 'Card',
-      });
-
-      if (error) {
-        if (error.code === 'Canceled') return;
-        throw new Error(error.message);
-      }
-
-      await confirmSetupIntentApi(setupIntent.id).unwrap();
       Toast.show({ type: 'success', text1: 'Card added successfully' });
       refetch();
     } catch (error) {
       if (error?.message?.includes('Canceled')) return;
       Toast.show({ type: 'error', text1: 'Error', text2: error?.message || 'Failed to add card.' });
-    } finally {
-      setIsAdding(false);
     }
-  }, [createSetupIntent, confirmSetupIntent, confirmSetupIntentApi, refetch]);
+  }, [addPaymentMethod, refetch]);
 
   const handleSetDefault = useCallback(async (id) => {
     try {

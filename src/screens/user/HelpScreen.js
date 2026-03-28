@@ -246,22 +246,20 @@ const BugReportsTab = () => {
       ) : (
         <View style={styles.formCard}>
           <Text style={styles.fieldLabel}>Category</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipScroll}>
-            <View style={styles.chipRow}>
-              {BUG_CATEGORIES.map((cat) => (
-                <TouchableOpacity
-                  key={cat.value}
-                  style={[styles.chip, category === cat.value && styles.chipActive]}
-                  onPress={() => setCategory(category === cat.value ? null : cat.value)}
-                  activeOpacity={0.7}
-                >
-                  <Text style={[styles.chipText, category === cat.value && styles.chipTextActive]}>
-                    {cat.name}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </ScrollView>
+          <View style={styles.chipWrap}>
+            {BUG_CATEGORIES.map((cat) => (
+              <TouchableOpacity
+                key={cat.value}
+                style={[styles.chip, category === cat.value && styles.chipActive]}
+                onPress={() => setCategory(category === cat.value ? null : cat.value)}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.chipText, category === cat.value && styles.chipTextActive]}>
+                  {cat.name}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
 
           <Text style={styles.fieldLabel}>Title</Text>
           <TextInput
@@ -475,22 +473,20 @@ const SuggestionsTab = () => {
       ) : (
         <View style={styles.formCard}>
           <Text style={styles.fieldLabel}>Category</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipScroll}>
-            <View style={styles.chipRow}>
-              {SUGGESTION_CATEGORIES.map((cat) => (
-                <TouchableOpacity
-                  key={cat.value}
-                  style={[styles.chip, category === cat.value && styles.chipActive]}
-                  onPress={() => setCategory(category === cat.value ? null : cat.value)}
-                  activeOpacity={0.7}
-                >
-                  <Text style={[styles.chipText, category === cat.value && styles.chipTextActive]}>
-                    {cat.name}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </ScrollView>
+          <View style={styles.chipWrap}>
+            {SUGGESTION_CATEGORIES.map((cat) => (
+              <TouchableOpacity
+                key={cat.value}
+                style={[styles.chip, category === cat.value && styles.chipActive]}
+                onPress={() => setCategory(category === cat.value ? null : cat.value)}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.chipText, category === cat.value && styles.chipTextActive]}>
+                  {cat.name}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
 
           <Text style={styles.fieldLabel}>Title</Text>
           <TextInput
@@ -747,12 +743,9 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
-  chipScroll: {
-    marginHorizontal: -spacing.lg,
-    paddingHorizontal: spacing.lg,
-  },
-  chipRow: {
+  chipWrap: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: spacing.sm,
   },
   chip: {

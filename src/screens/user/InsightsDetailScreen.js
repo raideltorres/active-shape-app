@@ -81,12 +81,19 @@ const SectionCard = ({ sectionKey, section }) => {
       <Text style={styles.sectionAnalysis}>{section.analysis}</Text>
       {section.highlights && section.highlights.length > 0 && (
         <View style={styles.highlightsContainer}>
-          {section.highlights.map((h, i) => (
-            <View key={i} style={styles.highlightItem}>
-              <Ionicons name="flame" size={14} color={colors.mainOrange} style={styles.highlightIcon} />
-              <Text style={styles.highlightText}>{h}</Text>
-            </View>
-          ))}
+          {section.highlights.map((h, i) => {
+            const text = typeof h === 'object' && h !== null ? h.text : h;
+            const type = typeof h === 'object' && h !== null ? h.type : 'neutral';
+            const iconName = type === 'positive' ? 'checkmark-circle' : type === 'negative' ? 'alert-circle' : 'information-circle';
+            const iconColor = type === 'positive' ? colors.lima : type === 'negative' ? colors.cinnabar : colors.mainOrange;
+
+            return (
+              <View key={i} style={styles.highlightItem}>
+                <Ionicons name={iconName} size={14} color={iconColor} style={styles.highlightIcon} />
+                <Text style={styles.highlightText}>{text}</Text>
+              </View>
+            );
+          })}
         </View>
       )}
     </View>
@@ -189,9 +196,21 @@ const InsightsDetailScreen = ({ navigation }) => {
               </View>
               <Text style={styles.sectionLabel}>Coach's Analysis</Text>
             </View>
-            <View style={styles.narrativeContent}>
-              <Text style={styles.narrativeText}>{insights.narrative}</Text>
-            </View>
+            {Array.isArray(insights.narrative) ? (
+              <View style={styles.narrativeSections}>
+                {insights.narrative.map((section, idx) => (
+                  <View key={idx} style={styles.narrativeSection}>
+                    {idx > 0 && <View style={styles.narrativeDivider} />}
+                    <Text style={styles.narrativeSectionHeading}>{section.heading}</Text>
+                    <Text style={styles.narrativeText}>{section.text}</Text>
+                  </View>
+                ))}
+              </View>
+            ) : (
+              <View style={styles.narrativeContent}>
+                <Text style={styles.narrativeText}>{insights.narrative}</Text>
+              </View>
+            )}
           </View>
         )}
 
@@ -428,6 +447,22 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     borderLeftWidth: 3,
     borderLeftColor: colors.lima,
+  },
+  narrativeSections: {
+    gap: 0,
+  },
+  narrativeSection: {
+    paddingVertical: spacing.md,
+  },
+  narrativeDivider: {
+    height: 1,
+    backgroundColor: colors.gallery,
+    marginBottom: spacing.md,
+  },
+  narrativeSectionHeading: {
+    ...typography.label,
+    color: colors.mainBlue,
+    marginBottom: spacing.xs,
   },
   narrativeText: {
     ...typography.body,
