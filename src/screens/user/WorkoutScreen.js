@@ -3,9 +3,7 @@ import {
   View,
   Text,
   StyleSheet,
-  TextInput,
   TouchableOpacity,
-  ActivityIndicator,
   FlatList,
   Modal,
   ScrollView,
@@ -16,7 +14,7 @@ import { useNavigation } from "@react-navigation/native";
 
 import { TabScreenLayout } from "../../components/templates";
 import { FilterCardSelect, Button } from "../../components/atoms";
-import { WorkoutCard, WORKOUT_TYPE_META, WorkoutTypeIcon } from "../../components/molecules";
+import { WorkoutCard, WORKOUT_TYPE_META } from "../../components/molecules";
 import {
   useGetWorkoutConfigurationsQuery,
   useGetWorkoutsQuery,
@@ -26,16 +24,10 @@ import {
 } from "../../store/api";
 import { colors, spacing, typography, borderRadius } from "../../theme";
 import { capitalize } from "../../utils/string";
+import WorkoutListHeader from "./WorkoutListHeader";
+import WorkoutListEmpty from "./WorkoutListEmpty";
 
 const ROWS_PER_PAGE = 25;
-
-const ALL_TYPE_ITEM = {
-  value: null,
-  icon: "apps-outline",
-  label: "All",
-  description: "No filter",
-  color: colors.mainOrange,
-};
 
 const buildFilters = ({ criteria, type, level, objective, muscleGroup }) => {
   const filters = {};
@@ -196,168 +188,10 @@ const WorkoutScreen = () => {
 
   const keyExtractor = useCallback((item) => item._id, []);
 
-  const ListHeader = useMemo(
-    () => (
-      <>
-        {/* Type Cards */}
-        {typeItems.length > 0 && (
-          <View style={styles.typeCardsRow}>
-            {[ALL_TYPE_ITEM, ...typeItems].map((item) => {
-              const active = type === item.value;
-              return (
-                <TouchableOpacity
-                  key={item.value ?? "all"}
-                  style={[
-                    styles.typeCard,
-                    active && { borderColor: item.color },
-                  ]}
-                  onPress={() => setType(item.value)}
-                  activeOpacity={0.7}
-                >
-                  {active && (
-                    <View
-                      style={[
-                        styles.typeCheckmark,
-                        { backgroundColor: item.color },
-                      ]}
-                    >
-                      <Ionicons
-                        name="checkmark"
-                        size={12}
-                        color={colors.white}
-                      />
-                    </View>
-                  )}
-                  <View
-                    style={[
-                      styles.typeIconWrap,
-                      { backgroundColor: `${item.color}12` },
-                    ]}
-                  >
-                    <WorkoutTypeIcon meta={item} size={22} color={item.color} />
-                  </View>
-                  <Text
-                    style={[styles.typeLabel, active && { color: item.color }]}
-                  >
-                    {item.label}
-                  </Text>
-                  <Text style={styles.typeDesc}>{item.description}</Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        )}
-
-        {/* Search + Filters button */}
-        <View style={styles.searchRow}>
-          <View style={styles.searchContainer}>
-            <Ionicons name="search-outline" size={16} color={colors.raven} />
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Search workouts..."
-              placeholderTextColor={colors.alto}
-              value={criteria}
-              onChangeText={setCriteria}
-              returnKeyType="search"
-            />
-            {criteria.length > 0 && (
-              <TouchableOpacity onPress={() => setCriteria("")} hitSlop={8}>
-                <Ionicons name="close-circle" size={16} color={colors.raven} />
-              </TouchableOpacity>
-            )}
-          </View>
-        </View>
-
-        {/* Active filters bar */}
-        <View style={styles.filtersBar}>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.activeFiltersScroll}
-            style={styles.activeFiltersScrollView}
-          >
-            {activeFilterChips.map((chip) => (
-              <View key={chip.id} style={styles.filterChip}>
-                <Text style={styles.filterChipText} numberOfLines={1}>
-                  {chip.label}
-                </Text>
-              </View>
-            ))}
-          </ScrollView>
-
-          <TouchableOpacity
-            style={[styles.favToggle, favoritesOnly && styles.favToggleActive]}
-            onPress={() => setFavoritesOnly(!favoritesOnly)}
-            activeOpacity={0.7}
-          >
-            <Ionicons
-              name={favoritesOnly ? "heart" : "heart-outline"}
-              size={16}
-              color={favoritesOnly ? colors.mainOrange : colors.raven}
-            />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.filterButton}
-            onPress={openFilterModal}
-          >
-            <Ionicons
-              name="options-outline"
-              size={20}
-              color={colors.mainOrange}
-            />
-            <Text style={styles.filterButtonText}>Filters</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Results count */}
-        {!isFetching && (
-          <Text style={styles.resultCount}>
-            {displayedWorkouts.length} workout
-            {displayedWorkouts.length !== 1 ? "s" : ""} found
-          </Text>
-        )}
-      </>
-    ),
-    [
-      typeItems,
-      type,
-      criteria,
-      activeFilterChips,
-      favoritesOnly,
-      isFetching,
-      displayedWorkouts.length,
-      openFilterModal,
-    ],
+  const handleToggleFavorites = useCallback(
+    () => setFavoritesOnly((prev) => !prev),
+    [],
   );
-
-  const ListEmpty = useMemo(() => {
-    if (isFetching)
-      return (
-        <ActivityIndicator
-          size="large"
-          color={colors.mainOrange}
-          style={styles.loader}
-        />
-      );
-    return (
-      <View style={styles.emptyState}>
-        <View style={styles.emptyIconWrap}>
-          <Ionicons
-            name="barbell-outline"
-            size={40}
-            color={colors.mainOrange}
-          />
-        </View>
-        <Text style={styles.emptyTitle}>
-          {favoritesOnly ? "No Favorite Workouts" : "No Workouts Found"}
-        </Text>
-        <Text style={styles.emptySubtitle}>
-          Try adjusting your filters or search terms
-        </Text>
-      </View>
-    );
-  }, [isFetching, favoritesOnly]);
 
   return (
     <TabScreenLayout
@@ -373,8 +207,27 @@ const WorkoutScreen = () => {
         numColumns={numColumns}
         columnWrapperStyle={numColumns > 1 ? styles.gridRow : undefined}
         contentContainerStyle={styles.listContent}
-        ListHeaderComponent={ListHeader}
-        ListEmptyComponent={ListEmpty}
+        ListHeaderComponent={
+          <WorkoutListHeader
+            typeItems={typeItems}
+            type={type}
+            onTypeChange={setType}
+            criteria={criteria}
+            onCriteriaChange={setCriteria}
+            activeFilterChips={activeFilterChips}
+            favoritesOnly={favoritesOnly}
+            onFavoritesToggle={handleToggleFavorites}
+            onOpenFilterModal={openFilterModal}
+            isFetching={isFetching}
+            resultCount={displayedWorkouts.length}
+          />
+        }
+        ListEmptyComponent={
+          <WorkoutListEmpty
+            isFetching={isFetching}
+            favoritesOnly={favoritesOnly}
+          />
+        }
         showsVerticalScrollIndicator={false}
       />
 
@@ -471,160 +324,9 @@ const WorkoutScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  /* Type Cards */
-  typeCardsRow: {
-    flexDirection: "row",
-    gap: spacing.sm,
-    marginBottom: spacing.lg,
-  },
-  typeCard: {
-    flex: 1,
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.xl,
-    padding: spacing.md,
-    alignItems: "center",
-    borderWidth: 2,
-    borderColor: colors.gallery,
-    position: "relative",
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    elevation: 1,
-  },
-  typeCheckmark: {
-    position: "absolute",
-    top: 8,
-    right: 8,
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  typeIconWrap: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: spacing.xs,
-  },
-  typeLabel: {
-    ...typography.bodySmall,
-    fontWeight: "700",
-    color: colors.mineShaft,
-    marginBottom: 2,
-  },
-  typeDesc: {
-    ...typography.caption,
-    color: colors.raven,
-    textAlign: "center",
-    fontSize: 10,
-  },
-
-  /* Search */
-  searchRow: {
-    marginBottom: spacing.md,
-  },
-  searchContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    paddingHorizontal: spacing.md,
-    gap: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.gallery,
-  },
-  searchInput: {
-    flex: 1,
-    ...typography.body,
-    color: colors.mineShaft,
-    paddingVertical: spacing.sm + 2,
-    fontSize: 14,
-  },
-
-  /* Filters bar */
-  filtersBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: spacing.sm,
-    gap: spacing.sm,
-  },
-  activeFiltersScrollView: {
-    flex: 1,
-    minWidth: 0,
-  },
-  activeFiltersScroll: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.xs,
-  },
-  filterChip: {
-    backgroundColor: colors.gallery,
-    paddingVertical: spacing.xs,
-    paddingHorizontal: spacing.sm,
-    borderRadius: borderRadius.full,
-    maxWidth: 140,
-  },
-  filterChipText: {
-    ...typography.bodySmall,
-    fontSize: 12,
-    color: colors.mineShaft,
-    fontWeight: "500",
-  },
-  favToggle: {
-    padding: spacing.xs + 2,
-    borderRadius: borderRadius.full,
-  },
-  favToggleActive: {
-    backgroundColor: `${colors.mainOrange}08`,
-  },
-  filterButton: {
-    flexShrink: 0,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.xs,
-    paddingVertical: spacing.xs,
-    paddingHorizontal: spacing.sm,
-  },
-  filterButtonText: {
-    ...typography.bodySmall,
-    color: colors.mainOrange,
-    fontWeight: "600",
-  },
-
-  /* Results */
-  resultCount: {
-    ...typography.bodySmall,
-    color: colors.raven,
-    fontWeight: "500",
-    marginBottom: spacing.md,
-  },
-
   /* Grid */
   listContent: { paddingBottom: spacing.tabBarPadding },
   gridRow: { gap: spacing.md },
-
-  /* Empty / Loading */
-  loader: { marginTop: spacing.xxl },
-  emptyState: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: spacing.xxl * 2,
-    gap: spacing.md,
-  },
-  emptyIconWrap: {
-    width: 72,
-    height: 72,
-    borderRadius: 24,
-    backgroundColor: `${colors.mainOrange}10`,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  emptyTitle: { ...typography.h4, color: colors.mineShaft },
-  emptySubtitle: { ...typography.bodySmall, color: colors.raven },
 
   /* Filter Modal */
   modalOverlay: {

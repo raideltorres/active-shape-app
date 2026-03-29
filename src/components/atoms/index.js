@@ -11,3 +11,7 @@ export { default as OptionPicker } from './OptionPicker';
 export { default as AnimatedProgressBar } from './AnimatedProgressBar';
 export { default as LabeledSlider } from './LabeledSlider';
 export { default as ConfirmModal } from './ConfirmModal';
+export { default as ScoreRing } from './ScoreRing';
+export { default as TimeDigit } from './TimeDigit';
+export { default as TimeSeparator } from './TimeSeparator';
+export { default as PulsingDot } from './PulsingDot';

@@ -21,16 +21,13 @@ import {
 import Button from '../../components/atoms/Button';
 import LogMealModal from '../../components/organisms/LogMealModal';
 import { colors, spacing, typography, borderRadius } from '../../theme';
+import RecipeIngredientsList from './RecipeIngredientsList';
+import RecipeInstructions from './RecipeInstructions';
+import RecipeNutritionFacts from './RecipeNutritionFacts';
 
 const stripLinks = (html) => {
   if (!html) return '';
   return html.replace(/<a[^>]*>(.*?)<\/a>/gi, '$1');
-};
-
-const getIngredientImageUrl = (image) => {
-  if (!image) return null;
-  if (image.startsWith('http')) return image;
-  return `https://spoonacular.com/cdn/ingredients_100x100/${image}`;
 };
 
 const getEquipmentImageUrl = (image) => {
@@ -59,16 +56,6 @@ const getNetCarbs = (nutrition) => {
   }
   return null;
 };
-
-const NutritionRow = ({ icon, value, label }) => (
-  <View style={styles.nutritionRow}>
-    <View style={styles.nutritionIcon}>
-      <Ionicons name={icon} size={20} color={colors.mainOrange} />
-    </View>
-    <Text style={styles.nutritionValue}>{value}</Text>
-    <Text style={styles.nutritionLabel}>{label}</Text>
-  </View>
-);
 
 const RecipeDetailsScreen = ({ navigation, route }) => {
   const { id, isFavorite: initialFavorite } = route.params || {};
@@ -220,99 +207,19 @@ const RecipeDetailsScreen = ({ navigation, route }) => {
           </View>
         ) : null}
 
-        {recipe.extendedIngredients?.length > 0 ? (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Ingredients</Text>
-            {recipe.extendedIngredients.map((ingredient, index) => {
-              const checked = checkedIngredients.has(index);
-              return (
-                <TouchableOpacity
-                  key={index}
-                  style={[styles.ingredientRow, checked && styles.ingredientRowChecked]}
-                  onPress={() => toggleIngredient(index)}
-                  activeOpacity={0.7}
-                >
-                  <View style={[styles.checkbox, checked && styles.checkboxChecked]}>
-                    {checked && <Ionicons name="checkmark" size={14} color={colors.white} />}
-                  </View>
-                  {ingredient.image ? (
-                    <Image
-                      source={{ uri: getIngredientImageUrl(ingredient.image) }}
-                      style={styles.ingredientImage}
-                    />
-                  ) : null}
-                  <View style={styles.ingredientInfo}>
-                    <Text style={[styles.ingredientName, checked && styles.ingredientNameChecked]}>
-                      {ingredient.name}
-                    </Text>
-                    <Text style={styles.ingredientAmount}>
-                      {ingredient.amount} {ingredient.unit}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        ) : null}
+        <RecipeIngredientsList
+          ingredients={recipe.extendedIngredients}
+          checkedIngredients={checkedIngredients}
+          onToggleIngredient={toggleIngredient}
+        />
 
-        {steps.length > 0 ? (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Instructions</Text>
-            {steps.map((step) => {
-              const completed = completedSteps.has(step.number);
-              return (
-                <TouchableOpacity
-                  key={step.number}
-                  style={[styles.stepCard, completed && styles.stepCardCompleted]}
-                  onPress={() => toggleStep(step.number)}
-                  activeOpacity={0.7}
-                >
-                  <View style={styles.stepHeader}>
-                    <View style={[styles.stepCheckbox, completed && styles.stepCheckboxChecked]}>
-                      {completed && <Ionicons name="checkmark" size={14} color={colors.white} />}
-                    </View>
-                    <Text style={styles.stepNumber}>Step {step.number}</Text>
-                    {step.length ? (
-                      <Text style={styles.stepDuration}>
-                        {step.length.number} {step.length.unit}
-                      </Text>
-                    ) : null}
-                  </View>
-                  <Text style={styles.stepText}>{step.step}</Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        ) : null}
+        <RecipeInstructions
+          steps={steps}
+          completedSteps={completedSteps}
+          onToggleStep={toggleStep}
+        />
 
-        {nutrition && (nutrition.calories || nutrition.protein || nutrition.netCarbs || nutrition.fat) ? (
-          <View style={styles.section}>
-            <View style={styles.nutritionHeader}>
-              <Text style={styles.sectionTitle}>Nutrition Facts</Text>
-              <Text style={styles.nutritionPerServing}>Per serving</Text>
-            </View>
-            <View style={styles.nutritionList}>
-              {nutrition.calories && (
-                <NutritionRow icon="flame-outline" value={`${nutrition.calories.amount} kcal`} label="Calories" />
-              )}
-              {nutrition.protein && (
-                <NutritionRow icon="nutrition-outline" value={`${nutrition.protein.amount}${nutrition.protein.unit}`} label="Protein" />
-              )}
-              {nutrition.netCarbs && (
-                <NutritionRow icon="leaf-outline" value={`${nutrition.netCarbs.amount}${nutrition.netCarbs.unit}`} label="Net Carbs" />
-              )}
-              {nutrition.fat && (
-                <NutritionRow icon="water-outline" value={`${nutrition.fat.amount}${nutrition.fat.unit}`} label="Fat" />
-              )}
-              {nutrition.fiber && (
-                <NutritionRow icon="git-branch-outline" value={`${nutrition.fiber.amount}${nutrition.fiber.unit}`} label="Fiber" />
-              )}
-              {nutrition.sugar && (
-                <NutritionRow icon="flame-outline" value={`${nutrition.sugar.amount}${nutrition.sugar.unit}`} label="Sugar" />
-              )}
-            </View>
-          </View>
-        ) : null}
+        <RecipeNutritionFacts nutrition={nutrition} />
 
         {recipe.diets?.length > 0 ? (
           <View style={styles.section}>
@@ -479,136 +386,6 @@ const styles = StyleSheet.create({
     ...typography.body,
     color: colors.raven,
     lineHeight: 22,
-  },
-  ingredientRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.gallery,
-  },
-  ingredientRowChecked: {
-    opacity: 0.7,
-  },
-  checkbox: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    borderWidth: 2,
-    borderColor: colors.alto,
-    marginRight: spacing.md,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  checkboxChecked: {
-    backgroundColor: colors.mainOrange,
-    borderColor: colors.mainOrange,
-  },
-  ingredientImage: {
-    width: 48,
-    height: 48,
-    borderRadius: 8,
-    marginRight: spacing.md,
-    backgroundColor: colors.gallery,
-  },
-  ingredientInfo: {
-    flex: 1,
-  },
-  ingredientName: {
-    ...typography.body,
-  },
-  ingredientNameChecked: {
-    textDecorationLine: 'line-through',
-    color: colors.raven,
-  },
-  ingredientAmount: {
-    ...typography.bodySmall,
-    color: colors.raven,
-    marginTop: spacing.xs,
-  },
-  stepCard: {
-    padding: spacing.lg,
-    marginBottom: spacing.md,
-    borderRadius: borderRadius.md,
-    backgroundColor: colors.alabaster,
-    borderLeftWidth: 4,
-    borderLeftColor: colors.mainOrange,
-  },
-  stepCardCompleted: {
-    opacity: 0.85,
-    borderLeftColor: colors.lima,
-  },
-  stepHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing.sm,
-  },
-  stepCheckbox: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    borderWidth: 2,
-    borderColor: colors.mainOrange,
-    marginRight: spacing.md,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  stepCheckboxChecked: {
-    backgroundColor: colors.lima,
-    borderColor: colors.lima,
-  },
-  stepNumber: {
-    ...typography.body,
-    fontWeight: '600',
-    flex: 1,
-  },
-  stepDuration: {
-    ...typography.caption,
-    color: colors.raven,
-  },
-  stepText: {
-    ...typography.body,
-    lineHeight: 22,
-  },
-  nutritionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.md,
-  },
-  nutritionPerServing: {
-    ...typography.bodySmall,
-    color: colors.raven,
-  },
-  nutritionList: {
-    gap: spacing.sm,
-  },
-  nutritionRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.alabaster,
-    borderRadius: borderRadius.md,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.md,
-  },
-  nutritionIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: `${colors.mainOrange}12`,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: spacing.md,
-  },
-  nutritionValue: {
-    ...typography.body,
-    fontWeight: '700',
-    color: colors.mineShaft,
-    flex: 1,
-  },
-  nutritionLabel: {
-    ...typography.body,
-    color: colors.raven,
   },
   tagRow: {
     flexDirection: 'row',

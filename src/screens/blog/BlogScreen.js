@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
-  TextInput,
   StyleSheet,
   FlatList,
   TouchableOpacity,
@@ -14,6 +13,8 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { useGetPostsQuery, useGetPopularTagsQuery, useGetCategoriesQuery } from '../../store/api';
 import { colors, spacing, typography, borderRadius } from '../../theme';
+import BlogListHeader from './BlogListHeader';
+import BlogListEmpty from './BlogListEmpty';
 
 const POSTS_PER_PAGE = 10;
 
@@ -80,11 +81,6 @@ const BlogScreen = ({ navigation }) => {
     setSearch('');
   }, [activeCategory, resetAndFilter]);
 
-  const handleClearFilters = useCallback(() => {
-    setSearch('');
-    resetAndFilter({ search: '', tag: null, category: null });
-  }, [resetAndFilter]);
-
   const handleLoadMore = useCallback(() => {
     if (!isFetching && postsData && postsData.currentPage < postsData.totalPages) {
       setPage((p) => p + 1);
@@ -127,114 +123,19 @@ const BlogScreen = ({ navigation }) => {
     </TouchableOpacity>
   ), [navigation]);
 
-  const ListHeader = useMemo(() => (
-    <View>
-      <View style={styles.searchRow}>
-        <View style={styles.searchInputWrap}>
-          <Ionicons name="search-outline" size={18} color={colors.raven} style={styles.searchIcon} />
-          <TextInput
-            style={styles.searchInput}
-            value={search}
-            onChangeText={setSearch}
-            placeholder="Search posts..."
-            placeholderTextColor={colors.alto}
-            returnKeyType="search"
-            onSubmitEditing={handleSearch}
-          />
-          {search.length > 0 && (
-            <TouchableOpacity onPress={() => { setSearch(''); resetAndFilter({ search: '', tag: null, category: null }); }}>
-              <Ionicons name="close-circle" size={18} color={colors.raven} />
-            </TouchableOpacity>
-          )}
-        </View>
-      </View>
+  const handleClearSearch = useCallback(() => {
+    setSearch('');
+    resetAndFilter({ search: '', tag: null, category: null });
+  }, [resetAndFilter]);
 
-      {categories?.length > 0 && (
-        <View style={styles.filterSection}>
-          <Text style={styles.filterLabel}>Categories</Text>
-          <View style={styles.chipRow}>
-            {categories.map((cat) => (
-              <TouchableOpacity
-                key={cat.category}
-                style={[styles.chip, activeCategory === cat.category && styles.chipActive]}
-                onPress={() => handleCategoryPress(cat.category)}
-                activeOpacity={0.7}
-              >
-                <Text style={[styles.chipText, activeCategory === cat.category && styles.chipTextActive]}>
-                  {cat.category} ({cat.count})
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-      )}
-
-      {popularTags?.length > 0 && (
-        <View style={styles.filterSection}>
-          <Text style={styles.filterLabel}>Popular Tags</Text>
-          <View style={styles.chipRow}>
-            {popularTags.map((t) => (
-              <TouchableOpacity
-                key={t.tag}
-                style={[styles.chip, activeTag === t.tag && styles.chipActive]}
-                onPress={() => handleTagPress(t.tag)}
-                activeOpacity={0.7}
-              >
-                <Text style={[styles.chipText, activeTag === t.tag && styles.chipTextActive]}>
-                  {t.tag}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-      )}
-
-      {hasActiveFilters && (
-        <View style={styles.activeFiltersRow}>
-          {activeSearch ? (
-            <View style={styles.activeChip}>
-              <Text style={styles.activeChipText}>Search: {activeSearch}</Text>
-              <TouchableOpacity onPress={() => { setSearch(''); resetAndFilter({ search: '' }); }}>
-                <Ionicons name="close" size={14} color={colors.white} />
-              </TouchableOpacity>
-            </View>
-          ) : null}
-          {activeTag ? (
-            <View style={styles.activeChip}>
-              <Text style={styles.activeChipText}>Tag: {activeTag}</Text>
-              <TouchableOpacity onPress={() => resetAndFilter({ tag: null })}>
-                <Ionicons name="close" size={14} color={colors.white} />
-              </TouchableOpacity>
-            </View>
-          ) : null}
-          {activeCategory ? (
-            <View style={styles.activeChip}>
-              <Text style={styles.activeChipText}>{activeCategory}</Text>
-              <TouchableOpacity onPress={() => resetAndFilter({ category: null })}>
-                <Ionicons name="close" size={14} color={colors.white} />
-              </TouchableOpacity>
-            </View>
-          ) : null}
-          <TouchableOpacity onPress={handleClearFilters}>
-            <Text style={styles.clearAll}>Clear all</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-    </View>
-  ), [search, categories, popularTags, activeTag, activeCategory, activeSearch, hasActiveFilters, handleSearch, handleTagPress, handleCategoryPress, handleClearFilters, resetAndFilter]);
-
-  const ListEmpty = useMemo(() => {
-    if (isFetching) return null;
-    return (
-      <View style={styles.emptyState}>
-        <Ionicons name="document-text-outline" size={48} color={colors.mercury} />
-        <Text style={styles.emptyTitle}>No posts found</Text>
-        <Text style={styles.emptyDescription}>
-          {hasActiveFilters ? 'Try adjusting your filters or search.' : 'Check back later for new content.'}
-        </Text>
-      </View>
-    );
-  }, [isFetching, hasActiveFilters]);
+  const handleClearActiveFilter = useCallback((type) => {
+    if (type === 'search' || type === 'all') setSearch('');
+    resetAndFilter({
+      ...(type === 'search' || type === 'all' ? { search: '' } : {}),
+      ...(type === 'tag' || type === 'all' ? { tag: null } : {}),
+      ...(type === 'category' || type === 'all' ? { category: null } : {}),
+    });
+  }, [resetAndFilter]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -250,8 +151,25 @@ const BlogScreen = ({ navigation }) => {
         data={allPosts}
         keyExtractor={(item) => item._id}
         renderItem={renderPostCard}
-        ListHeaderComponent={ListHeader}
-        ListEmptyComponent={ListEmpty}
+        ListHeaderComponent={
+          <BlogListHeader
+            search={search}
+            onSearchChange={setSearch}
+            onSearchSubmit={handleSearch}
+            onClearSearch={handleClearSearch}
+            categories={categories}
+            activeCategory={activeCategory}
+            onCategoryPress={handleCategoryPress}
+            popularTags={popularTags}
+            activeTag={activeTag}
+            onTagPress={handleTagPress}
+            activeSearch={activeSearch}
+            onClearActiveFilter={handleClearActiveFilter}
+          />
+        }
+        ListEmptyComponent={
+          <BlogListEmpty isFetching={isFetching} hasActiveFilters={hasActiveFilters} />
+        }
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
         onEndReached={handleLoadMore}
@@ -296,86 +214,6 @@ const styles = StyleSheet.create({
   listContent: {
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.tabBarPadding,
-  },
-  searchRow: {
-    marginBottom: spacing.md,
-  },
-  searchInputWrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    paddingHorizontal: spacing.md,
-    height: 44,
-    borderWidth: 1,
-    borderColor: colors.gallery,
-  },
-  searchIcon: { marginRight: spacing.sm },
-  searchInput: {
-    flex: 1,
-    ...typography.body,
-    color: colors.mineShaft,
-    height: 44,
-  },
-  filterSection: {
-    marginBottom: spacing.md,
-  },
-  filterLabel: {
-    ...typography.caption,
-    color: colors.raven,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: spacing.xs,
-  },
-  chipRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.xs,
-  },
-  chip: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: colors.gallery,
-    backgroundColor: colors.white,
-  },
-  chipActive: {
-    backgroundColor: colors.mainBlue,
-    borderColor: colors.mainBlue,
-  },
-  chipText: {
-    ...typography.caption,
-    color: colors.raven,
-  },
-  chipTextActive: {
-    color: colors.white,
-  },
-  activeFiltersRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    alignItems: 'center',
-    gap: spacing.xs,
-    marginBottom: spacing.md,
-  },
-  activeChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: colors.mainBlue,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  activeChipText: {
-    ...typography.caption,
-    color: colors.white,
-  },
-  clearAll: {
-    ...typography.caption,
-    color: colors.cinnabar,
-    fontWeight: '600',
-    marginLeft: spacing.xs,
   },
   postCard: {
     backgroundColor: colors.white,
@@ -450,21 +288,6 @@ const styles = StyleSheet.create({
   loadingFooter: {
     paddingVertical: spacing.xl,
     alignItems: 'center',
-  },
-  emptyState: {
-    alignItems: 'center',
-    paddingVertical: spacing.xxl,
-  },
-  emptyTitle: {
-    ...typography.h4,
-    color: colors.mineShaft,
-    marginTop: spacing.md,
-  },
-  emptyDescription: {
-    ...typography.bodySmall,
-    color: colors.raven,
-    textAlign: 'center',
-    marginTop: spacing.xs,
   },
 });
 

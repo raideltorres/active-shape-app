@@ -1,104 +1,11 @@
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import Svg, { Circle } from 'react-native-svg';
+import { Ionicons } from '@expo/vector-icons';
 
 import { colors, spacing, typography, borderRadius } from '../../theme';
 import { useGetProfileQuery } from '../../store/api';
-
-const SECTION_CONFIG = {
-  nutrition: { label: 'Nutrition', icon: 'food-apple-outline', color: colors.mainOrange },
-  fitness: { label: 'Fitness', icon: 'dumbbell', color: colors.mariner },
-  weight: { label: 'Weight', icon: 'scale-bathroom', color: colors.cinnabar },
-  hydration: { label: 'Hydration', icon: 'water-outline', color: colors.lightBlue, isIonicon: true },
-  supplements: { label: 'Supplements', icon: 'pill', color: colors.lima },
-  fasting: { label: 'Fasting', icon: 'flash-outline', color: colors.buttercup, isIonicon: true },
-};
-
-const getScoreColor = (score) => {
-  if (score >= 90) return colors.lima;
-  if (score >= 75) return colors.mariner;
-  if (score >= 60) return colors.buttercup;
-  if (score >= 40) return colors.mainOrange;
-  return colors.cinnabar;
-};
-
-const ScoreRing = ({ score, size = 120, strokeWidth = 10 }) => {
-  const radius = (size - strokeWidth) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const offset = circumference - (score / 100) * circumference;
-  const color = getScoreColor(score);
-
-  return (
-    <View style={[styles.scoreRing, { width: size, height: size }]}>
-      <Svg width={size} height={size}>
-        <Circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill="none"
-          stroke={colors.gallery}
-          strokeWidth={strokeWidth}
-        />
-        <Circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill="none"
-          stroke={color}
-          strokeWidth={strokeWidth}
-          strokeDasharray={`${circumference}`}
-          strokeDashoffset={offset}
-          strokeLinecap="round"
-          rotation={-90}
-          origin={`${size / 2}, ${size / 2}`}
-        />
-      </Svg>
-      <View style={styles.scoreValue}>
-        <Text style={styles.scoreNumber}>{score}</Text>
-      </View>
-    </View>
-  );
-};
-
-const SectionCard = ({ sectionKey, section }) => {
-  const config = SECTION_CONFIG[sectionKey];
-  if (!section || !config) return null;
-
-  return (
-    <View style={styles.sectionCard}>
-      <View style={styles.sectionHeader}>
-        <View style={[styles.sectionIcon, { backgroundColor: `${config.color}15` }]}>
-          {config.isIonicon ? (
-            <Ionicons name={config.icon} size={20} color={config.color} />
-          ) : (
-            <MaterialCommunityIcons name={config.icon} size={20} color={config.color} />
-          )}
-        </View>
-        <Text style={styles.sectionLabel}>{config.label}</Text>
-        <ScoreRing score={section.score} size={48} strokeWidth={4} />
-      </View>
-      <Text style={styles.sectionAnalysis}>{section.analysis}</Text>
-      {section.highlights && section.highlights.length > 0 && (
-        <View style={styles.highlightsContainer}>
-          {section.highlights.map((h, i) => {
-            const text = typeof h === 'object' && h !== null ? h.text : h;
-            const type = typeof h === 'object' && h !== null ? h.type : 'neutral';
-            const iconName = type === 'positive' ? 'checkmark-circle' : type === 'negative' ? 'alert-circle' : 'information-circle';
-            const iconColor = type === 'positive' ? colors.lima : type === 'negative' ? colors.cinnabar : colors.mainOrange;
-
-            return (
-              <View key={i} style={styles.highlightItem}>
-                <Ionicons name={iconName} size={14} color={iconColor} style={styles.highlightIcon} />
-                <Text style={styles.highlightText}>{text}</Text>
-              </View>
-            );
-          })}
-        </View>
-      )}
-    </View>
-  );
-};
+import { ScoreRing } from '../../components/atoms';
+import { InsightsSectionCard } from '../../components/molecules';
 
 const InsightsDetailScreen = ({ navigation }) => {
   const { data: profile } = useGetProfileQuery();
@@ -166,7 +73,7 @@ const InsightsDetailScreen = ({ navigation }) => {
         )}
 
         {activeSections.map((key) => (
-          <SectionCard key={key} sectionKey={key} section={insights[key]} />
+          <InsightsSectionCard key={key} sectionKey={key} section={insights[key]} />
         ))}
 
         {insights.priorityActions && insights.priorityActions.length > 0 && (
@@ -296,20 +203,6 @@ const styles = StyleSheet.create({
     ...typography.bodySmall,
     color: colors.raven,
   },
-  scoreRing: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  scoreValue: {
-    position: 'absolute',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  scoreNumber: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: colors.mainBlue,
-  },
   summaryCard: {
     backgroundColor: colors.white,
     borderRadius: borderRadius.xl,
@@ -327,22 +220,6 @@ const styles = StyleSheet.create({
     color: colors.mineShaft,
     lineHeight: 24,
   },
-  sectionCard: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.xl,
-    padding: spacing.lg,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    marginBottom: spacing.md,
-  },
   sectionIcon: {
     width: 40,
     height: 40,
@@ -354,32 +231,6 @@ const styles = StyleSheet.create({
     ...typography.h4,
     color: colors.mineShaft,
     flex: 1,
-  },
-  sectionAnalysis: {
-    ...typography.body,
-    color: colors.raven,
-    lineHeight: 22,
-    marginBottom: spacing.md,
-  },
-  highlightsContainer: {
-    gap: spacing.sm,
-  },
-  highlightItem: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    backgroundColor: colors.alabaster,
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
-    gap: spacing.sm,
-  },
-  highlightIcon: {
-    marginTop: 2,
-  },
-  highlightText: {
-    ...typography.bodySmall,
-    color: colors.mineShaft,
-    flex: 1,
-    lineHeight: 20,
   },
   priorityCard: {
     backgroundColor: colors.white,

@@ -38,3 +38,6 @@ export { default as PlanCard } from "./PlanCard";
 
 // Plan sections
 export * from "./plan";
+
+// Insights
+export { default as InsightsSectionCard } from "./InsightsSectionCard";

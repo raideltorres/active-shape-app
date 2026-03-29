@@ -2,26 +2,9 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-import { Button } from '../atoms';
+import { Button, TimeDigit, TimeSeparator } from '../atoms';
 import { FASTING_STAGES, getCurrentStage, getStagesReachedLabels } from '../../constants/fasting';
 import { colors, spacing, typography, borderRadius } from '../../theme';
-
-const formatTimeDigit = (value) => value.toString().padStart(2, '0');
-
-const TimeDigit = ({ value, label }) => (
-  <View style={styles.digitContainer}>
-    <View style={styles.digitBox}>
-      <Text style={styles.digitText}>{formatTimeDigit(value)}</Text>
-    </View>
-    <Text style={styles.digitLabel}>{label}</Text>
-  </View>
-);
-
-const TimeSeparator = () => (
-  <View style={styles.separatorContainer}>
-    <Text style={styles.separator}>:</Text>
-  </View>
-);
 
 const FastingTrackerCard = ({
   fastingPlan = null,
@@ -247,39 +230,6 @@ const styles = StyleSheet.create({
   timerRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-  },
-  digitContainer: {
-    alignItems: 'center',
-  },
-  digitBox: {
-    flexDirection: 'row',
-  },
-  digitText: {
-    fontSize: 40,
-    fontWeight: '300',
-    color: colors.mainOrange,
-    backgroundColor: colors.alabaster,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.md,
-    marginHorizontal: 2,
-    minWidth: 48,
-    textAlign: 'center',
-    overflow: 'hidden',
-  },
-  digitLabel: {
-    ...typography.caption,
-    color: colors.raven,
-    marginTop: spacing.xs,
-  },
-  separatorContainer: {
-    paddingTop: spacing.sm,
-    paddingHorizontal: spacing.xs,
-  },
-  separator: {
-    fontSize: 32,
-    fontWeight: '300',
-    color: colors.mineShaft,
   },
   progressSection: {
     marginBottom: spacing.xl,
