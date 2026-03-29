@@ -47,7 +47,6 @@ const TabBarButton = ({ route, index, state, descriptors, navigation }) => {
   const isFocused = state.index === index;
   const isHome = route.name === HOME_TAB_NAME;
 
-  const scaleAnim = useRef(new Animated.Value(isFocused ? 1 : 0.9)).current;
   const opacityAnim = useRef(new Animated.Value(isFocused ? 1 : 0.6)).current;
 
   const iconName = TAB_ICONS[route.name] || 'ellipse';

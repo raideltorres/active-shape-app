@@ -139,16 +139,7 @@ const SettingsScreen = ({ navigation }) => {
                     <Text style={styles.settingLabel}>{item.label}</Text>
                   </View>
                   <View style={styles.settingRight}>
-                    {item.hasToggle ? (
-                      <Switch
-                        value={false}
-                        trackColor={{
-                          false: colors.gallery,
-                          true: colors.mainOrange,
-                        }}
-                        thumbColor={colors.white}
-                      />
-                    ) : item.value ? (
+                    {item.value ? (
                       <Text style={styles.settingValue}>{item.value}</Text>
                     ) : (
                       <Ionicons
