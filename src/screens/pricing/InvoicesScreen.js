@@ -11,7 +11,10 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 
+import { EmptyState } from '../../components/atoms';
 import { useGetInvoicesQuery } from '../../store/api';
+import ScreenHeader from '../../components/atoms/ScreenHeader';
+import { formatDisplayDate } from '../../utils/date';
 import { colors, spacing, typography, borderRadius } from '../../theme';
 
 const STATUS_STYLES = {
@@ -20,12 +23,6 @@ const STATUS_STYLES = {
   draft: { label: 'Draft', color: colors.raven },
   void: { label: 'Void', color: colors.raven },
   uncollectible: { label: 'Failed', color: colors.cinnabar },
-};
-
-const formatDate = (timestamp) => {
-  if (!timestamp) return '—';
-  const date = typeof timestamp === 'number' ? new Date(timestamp * 1000) : new Date(timestamp);
-  return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 };
 
 const InvoicesScreen = ({ navigation }) => {
@@ -38,13 +35,7 @@ const InvoicesScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.topBar}>
-        <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.7}>
-          <Ionicons name="arrow-back" size={24} color={colors.codGray} />
-        </TouchableOpacity>
-        <Text style={styles.topBarTitle}>Billing History</Text>
-        <View style={{ width: 24 }} />
-      </View>
+      <ScreenHeader title="Billing History" titleColor={colors.codGray} iconColor={colors.codGray} />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {isLoading ? (
@@ -52,11 +43,14 @@ const InvoicesScreen = ({ navigation }) => {
             <ActivityIndicator size="large" color={colors.mainOrange} />
           </View>
         ) : invoices.length === 0 ? (
-          <View style={styles.emptyContainer}>
-            <Ionicons name="receipt-outline" size={64} color={colors.alto} />
-            <Text style={styles.emptyTitle}>No Invoices Yet</Text>
-            <Text style={styles.emptyText}>Your billing history will appear here.</Text>
-          </View>
+          <EmptyState
+            icon="receipt-outline"
+            iconSize={64}
+            iconColor={colors.alto}
+            title="No Invoices Yet"
+            description="Your billing history will appear here."
+            style={styles.emptyContainer}
+          />
         ) : (
           <View style={styles.invoicesList}>
             {invoices.map((invoice) => {
@@ -82,7 +76,7 @@ const InvoicesScreen = ({ navigation }) => {
                     <Text style={styles.invoiceNumber}>
                       {invoice.number || `INV-${invoice.id?.slice(-8)}`}
                     </Text>
-                    <Text style={styles.invoiceDate}>{formatDate(invoice.created)}</Text>
+                    <Text style={styles.invoiceDate}>{formatDisplayDate(invoice.created, { month: 'short' })}</Text>
                   </View>
 
                   <View style={styles.invoiceRight}>
@@ -110,17 +104,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.white,
   },
-  topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.md,
-  },
-  topBarTitle: {
-    ...typography.h4,
-    color: colors.codGray,
-  },
   scrollContent: {
     paddingHorizontal: spacing.xl,
     paddingBottom: spacing.tabBarPadding,
@@ -134,19 +117,7 @@ const styles = StyleSheet.create({
   },
   emptyContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: spacing.md,
     minHeight: 200,
-  },
-  emptyTitle: {
-    ...typography.h3,
-    color: colors.codGray,
-  },
-  emptyText: {
-    ...typography.body,
-    color: colors.raven,
-    textAlign: 'center',
   },
   invoicesList: {
     gap: 1,

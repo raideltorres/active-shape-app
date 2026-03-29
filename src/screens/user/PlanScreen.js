@@ -22,6 +22,7 @@ import {
 } from '../../components/molecules';
 import { fire, water, scale, footSteps } from '../../assets/animations';
 import { colors, spacing, typography, borderRadius } from '../../theme';
+import { shadows } from '../../theme/shadows';
 import { isAdmin } from '../../utils/constants';
 
 const StatCard = ({ animation, label, value, unit, color = colors.mainOrange }) => (
@@ -184,11 +185,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
     width: '48%',
     alignItems: 'center',
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
+    ...shadows.card,
   },
   statCardAnimation: {
     marginBottom: spacing.sm,

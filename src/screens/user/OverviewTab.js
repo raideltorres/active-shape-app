@@ -246,7 +246,7 @@ const OverviewTab = ({
 
       <View style={styles.calcResultsGrid}>
         <View style={styles.calcResultCard}>
-          <View style={[styles.calcResultIcon, { backgroundColor: '#667eea' }]}>
+          <View style={[styles.calcResultIcon, { backgroundColor: colors.purpleGradientStart }]}>
             <Ionicons name="people-outline" size={16} color={colors.white} />
           </View>
           <View>
@@ -255,7 +255,7 @@ const OverviewTab = ({
           </View>
         </View>
         <View style={styles.calcResultCard}>
-          <View style={[styles.calcResultIcon, { backgroundColor: '#f59e0b' }]}>
+          <View style={[styles.calcResultIcon, { backgroundColor: colors.buttercup }]}>
             <Ionicons name="ribbon-outline" size={16} color={colors.white} />
           </View>
           <View>
@@ -264,7 +264,7 @@ const OverviewTab = ({
           </View>
         </View>
         <View style={styles.calcResultCard}>
-          <View style={[styles.calcResultIcon, { backgroundColor: '#10b981' }]}>
+          <View style={[styles.calcResultIcon, { backgroundColor: colors.mountainMeadow }]}>
             <Ionicons name="cash-outline" size={16} color={colors.white} />
           </View>
           <View>
@@ -273,7 +273,7 @@ const OverviewTab = ({
           </View>
         </View>
         <View style={styles.calcResultCard}>
-          <View style={[styles.calcResultIcon, { backgroundColor: '#8b5cf6' }]}>
+          <View style={[styles.calcResultIcon, { backgroundColor: colors.violet }]}>
             <Ionicons name="trending-up-outline" size={16} color={colors.white} />
           </View>
           <View>

@@ -10,22 +10,22 @@ const TRACKING_CONFIG = {
   weighIn: {
     title: 'WEIGH IN',
     icon: 'scale-outline',
-    color: '#3b82f6', // blue
+    color: colors.brightBlue,
   },
   checkIn: {
     title: 'CHECK-IN',
     icon: 'calendar-outline',
-    color: '#10b981', // green
+    color: colors.mountainMeadow,
   },
   photos: {
     title: 'PROGRESS PHOTOS',
     icon: 'camera-outline',
-    color: '#8b5cf6', // purple
+    color: colors.violet,
   },
   measurements: {
     title: 'MEASUREMENTS',
     icon: 'resize-outline',
-    color: '#f59e0b', // amber
+    color: colors.buttercup,
   },
 };
 

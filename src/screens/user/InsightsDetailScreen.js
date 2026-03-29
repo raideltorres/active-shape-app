@@ -2,9 +2,11 @@ import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
+import ScreenHeader from '../../components/atoms/ScreenHeader';
 import { colors, spacing, typography, borderRadius } from '../../theme';
+import { shadows } from '../../theme/shadows';
 import { useGetProfileQuery } from '../../store/api';
-import { ScoreRing } from '../../components/atoms';
+import { ScoreRing, EmptyState } from '../../components/atoms';
 import { InsightsSectionCard } from '../../components/molecules';
 
 const InsightsDetailScreen = ({ navigation }) => {
@@ -26,20 +28,14 @@ const InsightsDetailScreen = ({ navigation }) => {
   if (!insights || !insights.overallScore) {
     return (
       <View style={styles.screen}>
-        <View style={styles.topBar}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-            <Ionicons name="arrow-back" size={24} color={colors.mainBlue} />
-          </TouchableOpacity>
-          <Text style={styles.topTitle}>Daily Insights</Text>
-          <View style={styles.backBtn} />
-        </View>
-        <View style={styles.emptyState}>
-          <Ionicons name="analytics-outline" size={64} color={colors.mercury} />
-          <Text style={styles.emptyTitle}>No Detailed Insights</Text>
-          <Text style={styles.emptyDescription}>
-            Head back to your dashboard to generate today's insights.
-          </Text>
-        </View>
+        <ScreenHeader title="Daily Insights" iconColor={colors.mainBlue} titleColor={colors.mainBlue} style={styles.topBar} />
+        <EmptyState
+          icon="analytics-outline"
+          iconSize={64}
+          title="No Detailed Insights"
+          description="Head back to your dashboard to generate today's insights."
+          style={styles.emptyState}
+        />
       </View>
     );
   }
@@ -49,13 +45,7 @@ const InsightsDetailScreen = ({ navigation }) => {
 
   return (
     <View style={styles.screen}>
-      <View style={styles.topBar}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={24} color={colors.mainBlue} />
-        </TouchableOpacity>
-        <Text style={styles.topTitle}>Daily Insights</Text>
-        <View style={styles.backBtn} />
-      </View>
+      <ScreenHeader title="Daily Insights" iconColor={colors.mainBlue} titleColor={colors.mainBlue} style={styles.topBar} />
 
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.overallCard}>
@@ -151,25 +141,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.alabaster,
   },
   topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
     paddingTop: 56,
-    paddingBottom: spacing.md,
-    paddingHorizontal: spacing.lg,
     backgroundColor: colors.white,
     borderBottomWidth: 1,
     borderBottomColor: colors.gallery,
-  },
-  backBtn: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  topTitle: {
-    ...typography.h4,
-    color: colors.mainBlue,
   },
   scrollView: {
     flex: 1,
@@ -185,11 +160,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.xl,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
+    ...shadows.card,
   },
   overallInfo: {
     flex: 1,
@@ -209,11 +180,7 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     borderLeftWidth: 3,
     borderLeftColor: colors.purple,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
+    ...shadows.card,
   },
   summaryText: {
     ...typography.body,
@@ -236,11 +203,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderRadius: borderRadius.xl,
     padding: spacing.lg,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
+    ...shadows.card,
   },
   priorityHeader: {
     flexDirection: 'row',
@@ -280,11 +243,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderRadius: borderRadius.xl,
     padding: spacing.lg,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
+    ...shadows.card,
   },
   narrativeHeader: {
     flexDirection: 'row',
@@ -324,11 +283,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderRadius: borderRadius.xl,
     padding: spacing.lg,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
+    ...shadows.card,
   },
   tipsCardTitle: {
     ...typography.h4,
@@ -369,20 +324,6 @@ const styles = StyleSheet.create({
   },
   emptyState: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: spacing.xxl,
-    gap: spacing.md,
-  },
-  emptyTitle: {
-    ...typography.h3,
-    color: colors.mineShaft,
-  },
-  emptyDescription: {
-    ...typography.body,
-    color: colors.raven,
-    textAlign: 'center',
-    lineHeight: 24,
   },
 });
 

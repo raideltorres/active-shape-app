@@ -10,17 +10,17 @@ const CATEGORY_CONFIG = {
   recipeTypes: {
     title: 'RECIPE TYPES',
     icon: 'restaurant-outline',
-    color: '#10b981', // green
+    color: colors.mountainMeadow,
   },
   emphasizeIngredients: {
     title: 'PRIORITIZE',
     icon: 'checkmark-circle',
-    color: '#3b82f6', // blue
+    color: colors.brightBlue,
   },
   cookingMethods: {
     title: 'COOKING',
     icon: 'flame-outline',
-    color: '#8b5cf6', // purple
+    color: colors.violet,
   },
   supplementSuggestions: {
     title: 'SUPPLEMENTS',

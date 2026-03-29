@@ -12,12 +12,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Toast from 'react-native-toast-message';
 
+import { EmptyState } from '../../components/atoms';
 import { useStripePaymentSheet } from '../../hooks';
 import {
   useGetPaymentMethodsQuery,
   useSetDefaultPaymentMethodMutation,
   useDeletePaymentMethodMutation,
 } from '../../store/api';
+import ScreenHeader from '../../components/atoms/ScreenHeader';
 import { colors, spacing, typography, borderRadius } from '../../theme';
 
 const CARD_BRAND_ICONS = {
@@ -76,13 +78,7 @@ const PaymentMethodsScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.topBar}>
-        <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.7}>
-          <Ionicons name="arrow-back" size={24} color={colors.codGray} />
-        </TouchableOpacity>
-        <Text style={styles.topBarTitle}>Payment Methods</Text>
-        <View style={{ width: 24 }} />
-      </View>
+      <ScreenHeader title="Payment Methods" titleColor={colors.codGray} iconColor={colors.codGray} />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {isLoading ? (
@@ -90,11 +86,14 @@ const PaymentMethodsScreen = ({ navigation }) => {
             <ActivityIndicator size="large" color={colors.mainOrange} />
           </View>
         ) : paymentMethods.length === 0 ? (
-          <View style={styles.emptyContainer}>
-            <Ionicons name="card-outline" size={64} color={colors.alto} />
-            <Text style={styles.emptyTitle}>No Payment Methods</Text>
-            <Text style={styles.emptyText}>Add a card to manage your subscription.</Text>
-          </View>
+          <EmptyState
+            icon="card-outline"
+            iconSize={64}
+            iconColor={colors.alto}
+            title="No Payment Methods"
+            description="Add a card to manage your subscription."
+            style={styles.emptyContainer}
+          />
         ) : (
           <View style={styles.cardsList}>
             {paymentMethods.map((pm) => (
@@ -166,17 +165,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.white,
   },
-  topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.md,
-  },
-  topBarTitle: {
-    ...typography.h4,
-    color: colors.codGray,
-  },
   scrollContent: {
     paddingHorizontal: spacing.xl,
     paddingBottom: spacing.tabBarPadding,
@@ -190,19 +178,7 @@ const styles = StyleSheet.create({
   },
   emptyContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: spacing.md,
     minHeight: 200,
-  },
-  emptyTitle: {
-    ...typography.h3,
-    color: colors.codGray,
-  },
-  emptyText: {
-    ...typography.body,
-    color: colors.raven,
-    textAlign: 'center',
   },
   cardsList: {
     gap: spacing.md,

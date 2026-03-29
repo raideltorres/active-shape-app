@@ -13,6 +13,8 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { useGetPostsQuery, useGetPopularTagsQuery, useGetCategoriesQuery } from '../../store/api';
 import { colors, spacing, typography, borderRadius } from '../../theme';
+import { shadows } from '../../theme/shadows';
+import ScreenHeader from '../../components/atoms/ScreenHeader';
 import BlogListHeader from './BlogListHeader';
 import BlogListEmpty from './BlogListEmpty';
 
@@ -139,13 +141,7 @@ const BlogScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color={colors.mineShaft} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Blog</Text>
-        <View style={styles.placeholder} />
-      </View>
+      <ScreenHeader title="Blog" />
 
       <FlatList
         data={allPosts}
@@ -191,26 +187,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.alabaster,
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: colors.white,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerTitle: {
-    ...typography.h2,
-    color: colors.mineShaft,
-  },
-  placeholder: { width: 40 },
   listContent: {
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.tabBarPadding,
@@ -220,11 +196,7 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.xl,
     overflow: 'hidden',
     marginBottom: spacing.md,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
+    ...shadows.card,
   },
   postImage: {
     width: '100%',

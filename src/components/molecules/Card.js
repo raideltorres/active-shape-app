@@ -3,6 +3,7 @@ import { View, StyleSheet } from 'react-native';
 
 import { colors, spacing, borderRadius } from '../../theme';
 
+import { shadows } from '../../theme/shadows';
 /**
  * Reusable card component with shadow and rounded corners
  */
@@ -28,11 +29,7 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
   },
   default: {
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
+    ...shadows.card,
   },
   elevated: {
     shadowColor: colors.black,

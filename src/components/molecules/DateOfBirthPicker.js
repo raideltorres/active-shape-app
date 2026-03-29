@@ -8,15 +8,10 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
+import { MONTHS, MONTHS_SHORT, WEEKDAYS } from '../../utils/date';
 import { colors, spacing, typography, borderRadius } from '../../theme';
 
-const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-const MONTHS_FULL = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
-];
 const DAY_HEADERS = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];
-const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 const currentYear = new Date().getFullYear();
 const maxBirthYear = currentYear - 13;
@@ -191,7 +186,7 @@ const DateOfBirthPicker = ({ value, onChange }) => {
 
   const dayOfWeek = useMemo(() => {
     if (!year || !month || !day) return '';
-    return DAY_NAMES[new Date(year, month - 1, day).getDay()];
+    return WEEKDAYS[new Date(year, month - 1, day).getDay()];
   }, [year, month, day]);
 
   const renderProgress = () => (
@@ -223,7 +218,7 @@ const DateOfBirthPicker = ({ value, onChange }) => {
       crumbs.push(
         <View key="month" style={styles.breadcrumb}>
           <Text style={styles.breadcrumbLabel}>MONTH </Text>
-          <Text style={styles.breadcrumbValue}>{MONTHS_FULL[month - 1]}</Text>
+          <Text style={styles.breadcrumbValue}>{MONTHS[month - 1]}</Text>
         </View>,
       );
     }
@@ -295,7 +290,7 @@ const DateOfBirthPicker = ({ value, onChange }) => {
                 key={m}
                 isSelected={i + 1 === month}
                 onPress={() => handleMonthSelect(i + 1)}
-                sub={MONTHS_FULL[i]}
+                sub={MONTHS[i]}
                 width={tileWidth(4)}
               >
                 {m}
@@ -331,7 +326,7 @@ const DateOfBirthPicker = ({ value, onChange }) => {
               <Ionicons name="checkmark" size={24} color={colors.mainOrange} />
             </View>
             <Text style={styles.confirmDate}>
-              {MONTHS_FULL[(month || 1) - 1]} {day}, {year}
+              {MONTHS[(month || 1) - 1]} {day}, {year}
             </Text>
             <Text style={styles.confirmDay}>Born on a {dayOfWeek}</Text>
             {age !== null && (

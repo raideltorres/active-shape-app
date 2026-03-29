@@ -41,3 +41,4 @@ export * from "./plan";
 
 // Insights
 export { default as InsightsSectionCard } from "./InsightsSectionCard";
+export { default as CardHeader } from "./CardHeader";

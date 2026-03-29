@@ -3,8 +3,10 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 import { Button } from '../atoms';
+import CardHeader from './CardHeader';
 import { colors, spacing, typography, borderRadius } from '../../theme';
 
+import { shadows } from '../../theme/shadows';
 const ProgressRing = ({ progress, size = 56, strokeWidth = 5, color }) => {
   // Simplified progress indicator using border
   const clampedProgress = Math.min(Math.max(progress, 0), 100);
@@ -106,21 +108,19 @@ const PlanProgressCard = ({
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <View style={styles.iconContainer}>
-            <Ionicons name="trending-up" size={20} color={colors.mainOrange} />
+      <CardHeader
+        icon="trending-up"
+        iconColor={colors.mainOrange}
+        title="Today's Progress"
+        subtitle="Keep up the great work!"
+        rightElement={(
+          <View style={styles.overallProgress}>
+            <Text style={styles.overallValue}>{Math.round(progressData.overall)}%</Text>
+            <Text style={styles.overallLabel}>Complete</Text>
           </View>
-          <View style={styles.headerText}>
-            <Text style={styles.title}>Today's Progress</Text>
-            <Text style={styles.subtitle}>Keep up the great work!</Text>
-          </View>
-        </View>
-        <View style={styles.overallProgress}>
-          <Text style={styles.overallValue}>{Math.round(progressData.overall)}%</Text>
-          <Text style={styles.overallLabel}>Complete</Text>
-        </View>
-      </View>
+        )}
+        style={{ marginBottom: spacing.lg }}
+      />
 
       <View style={styles.progressItems}>
         <View style={styles.progressItem}>
@@ -213,43 +213,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderRadius: borderRadius.xl,
     padding: spacing.lg,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: spacing.lg,
-  },
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: `${colors.mainOrange}15`,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: spacing.md,
-  },
-  headerText: {
-    flex: 1,
-  },
-  title: {
-    ...typography.h4,
-    color: colors.mineShaft,
-  },
-  subtitle: {
-    ...typography.caption,
-    color: colors.raven,
-    marginTop: 2,
+    ...shadows.card,
   },
   overallProgress: {
     alignItems: 'flex-end',

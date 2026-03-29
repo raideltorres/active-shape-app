@@ -15,9 +15,9 @@ const NEEDLE_LENGTH = INNER_RADIUS - 10;
 const BMI_CATEGORIES = [
   { label: 'Underweight', value: 18.5, color: colors.havelockBlue },
   { label: 'Normal', value: 6.5, color: colors.lima },
-  { label: 'Overweight', value: 5, color: '#FFD700' },
+  { label: 'Overweight', value: 5, color: colors.gold },
   { label: 'Obesity Type 1', value: 5, color: colors.mainOrange },
-  { label: 'Obesity Type 2', value: 5, color: '#E53935' },
+  { label: 'Obesity Type 2', value: 5, color: colors.cinnabar },
   { label: 'Obesity Type 3', value: 5, color: '#B71C1C' },
 ];
 

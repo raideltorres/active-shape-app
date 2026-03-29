@@ -40,5 +40,21 @@ export const colors = {
   ripeLemon: '#F8E71C',
   buttercup: '#F5A623',
   purple: '#8A2BE2',
+  violet: '#8b5cf6',
+  gold: '#FFD700',
+
+  // Blues (extended)
+  dodgerBlue: '#1890ff',
+  brightBlue: '#3b82f6',
+  darkNavy: '#1e3a5f',
+  mediumNavy: '#2d5a87',
+
+  // Greens (extended)
+  limeGreen: '#52c41a',
+  mountainMeadow: '#10b981',
+
+  // Gradients
+  purpleGradientStart: '#667eea',
+  purpleGradientEnd: '#764ba2',
 };
 

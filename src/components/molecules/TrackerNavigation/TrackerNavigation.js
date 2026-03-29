@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 import { colors, spacing, typography, borderRadius } from "../../../theme";
+import { shadows } from '../../../theme/shadows';
 
 const TRACKER_ICONS = {
   water: "water",
@@ -78,11 +79,7 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.xl,
     padding: spacing.md,
     alignItems: "center",
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
+    ...shadows.card,
     borderWidth: 2,
     borderColor: "transparent",
   },

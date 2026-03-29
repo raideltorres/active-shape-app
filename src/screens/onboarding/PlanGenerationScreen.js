@@ -142,7 +142,7 @@ const PlanGenerationScreen = () => {
 
   return (
     <LinearGradient
-      colors={['#667eea', '#764ba2']}
+      colors={[colors.purpleGradientStart, colors.purpleGradientEnd]}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
       style={styles.gradient}
@@ -209,7 +209,7 @@ const PlanGenerationScreen = () => {
                   activeOpacity={0.8}
                 >
                   <LinearGradient
-                    colors={['#667eea', '#764ba2']}
+                    colors={[colors.purpleGradientStart, colors.purpleGradientEnd]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
                     style={styles.retryGradient}
@@ -247,7 +247,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     paddingVertical: 40,
     paddingHorizontal: 28,
-    shadowColor: '#000',
+    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.2,
     shadowRadius: 40,
@@ -288,7 +288,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   stepIconCompleted: {
-    backgroundColor: '#52c41a',
+    backgroundColor: colors.limeGreen,
   },
   stepIconActive: {
     backgroundColor: colors.mainBlue,
@@ -321,11 +321,11 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: '#52c41a',
+    backgroundColor: colors.limeGreen,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.xl,
-    shadowColor: '#52c41a',
+    shadowColor: colors.limeGreen,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.35,
     shadowRadius: 24,

@@ -3,28 +3,17 @@ import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 import SectionCard from './SectionCard';
+import { formatTimeTo12h } from '../../../utils/date';
 import { colors, spacing, typography, borderRadius } from '../../../theme';
 
-// Helper to format time from "HH:MM" to "H AM/PM"
-const formatTime = (time) => {
-  if (!time) return '';
-  const [hours] = time.split(':').map(Number);
-  const period = hours >= 12 ? 'PM' : 'AM';
-  const hour12 = hours % 12 || 12;
-  return `${hour12} ${period}`;
-};
-
-// Helper to format time window to AM/PM (e.g., "12:00 - 14:00" to "12 PM – 2 PM")
 const formatTimeWindow = (timeWindow) => {
   if (!timeWindow) return '';
-  // Check if already in AM/PM format
   if (timeWindow.toLowerCase().includes('am') || timeWindow.toLowerCase().includes('pm')) {
     return timeWindow;
   }
-  // Try to parse "HH:MM - HH:MM" format
   const parts = timeWindow.split(/\s*[-–]\s*/);
   if (parts.length === 2) {
-    return `${formatTime(parts[0])} – ${formatTime(parts[1])}`;
+    return `${formatTimeTo12h(parts[0])} – ${formatTimeTo12h(parts[1])}`;
   }
   return timeWindow;
 };
@@ -76,13 +65,13 @@ const MealTimingSection = ({ mealTimingPlan }) => {
           <View style={styles.windowItem}>
             <Text style={styles.windowLabel}>Eating Window</Text>
             <Text style={styles.windowValue}>
-              {formatTime(eatingStart)} – {formatTime(eatingEnd)}
+              {formatTimeTo12h(eatingStart)} – {formatTimeTo12h(eatingEnd)}
             </Text>
           </View>
           <View style={styles.windowItem}>
             <Text style={styles.windowLabel}>Fasting Period</Text>
             <Text style={styles.windowValue}>
-              {formatTime(eatingEnd)} – {formatTime(eatingStart)}
+              {formatTimeTo12h(eatingEnd)} – {formatTimeTo12h(eatingStart)}
             </Text>
           </View>
         </View>
@@ -137,7 +126,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   fastingBar: {
-    backgroundColor: '#1e3a5f',
+    backgroundColor: colors.darkNavy,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -200,7 +189,7 @@ const styles = StyleSheet.create({
   mealTimeBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1e3a5f',
+    backgroundColor: colors.darkNavy,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.md,

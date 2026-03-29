@@ -11,6 +11,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { Card } from '../../components/molecules';
 import { colors, spacing, typography, borderRadius } from '../../theme';
+import { shadows } from '../../theme/shadows';
 import { formatCents, STATUS_COLORS } from './referralUtils';
 
 const PayoutsTab = ({
@@ -31,21 +32,21 @@ const PayoutsTab = ({
         {/* Payout Stats */}
         <View style={styles.payoutStatsRow}>
           <View style={styles.payoutStatCard}>
-            <View style={[styles.payoutStatIcon, { backgroundColor: '#10b981' }]}>
+            <View style={[styles.payoutStatIcon, { backgroundColor: colors.mountainMeadow }]}>
               <Ionicons name="checkmark-circle-outline" size={18} color={colors.white} />
             </View>
             <Text style={styles.payoutStatLabel}>Status</Text>
             <Text style={styles.payoutStatValue}>Connected</Text>
           </View>
           <View style={styles.payoutStatCard}>
-            <View style={[styles.payoutStatIcon, { backgroundColor: '#f59e0b' }]}>
+            <View style={[styles.payoutStatIcon, { backgroundColor: colors.buttercup }]}>
               <Ionicons name="time-outline" size={18} color={colors.white} />
             </View>
             <Text style={styles.payoutStatLabel}>Pending</Text>
             <Text style={styles.payoutStatValue}>{formatCents(stats?.pendingPayout ?? 0)}</Text>
           </View>
           <View style={styles.payoutStatCard}>
-            <View style={[styles.payoutStatIcon, { backgroundColor: '#8b5cf6' }]}>
+            <View style={[styles.payoutStatIcon, { backgroundColor: colors.violet }]}>
               <Ionicons name="cash-outline" size={18} color={colors.white} />
             </View>
             <Text style={styles.payoutStatLabel}>Earned</Text>
@@ -199,11 +200,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderRadius: borderRadius.xl,
     padding: spacing.md,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
+    ...shadows.card,
   },
   payoutStatIcon: {
     width: 36,
@@ -354,11 +351,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderRadius: borderRadius.xl,
     padding: spacing.md,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 1,
+    ...shadows.subtle,
   },
   payoutRowLeft: { flex: 1 },
   payoutAmountText: {
@@ -402,11 +395,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderRadius: borderRadius.xl,
     padding: spacing.md,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 1,
+    ...shadows.subtle,
   },
   taxYear: {
     ...typography.label,

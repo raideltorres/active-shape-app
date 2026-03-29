@@ -4,6 +4,8 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { useGetProfileQuery, useGetAllConstantsQuery } from '../../../store/api';
 import { colors, spacing, typography, borderRadius } from '../../../theme';
+import { shadows } from '../../../theme/shadows';
+import { formatDisplayDate } from '../../../utils/date';
 import {
   BODY_COMP_DISPLAY_LABELS,
   DAILY_ACTIVITY_LABELS,
@@ -12,15 +14,6 @@ import {
   INJURY_LABELS,
   getDietLabel,
 } from '../../../utils/measure';
-
-const formatDate = (dateString) => {
-  if (!dateString) return null;
-  return new Date(dateString).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
-};
 
 const InfoRow = ({ label, value, badge }) => (
   <View style={styles.infoItem}>
@@ -126,7 +119,7 @@ const MyInfoTab = ({ navigation }) => {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Account</Text>
         <View style={styles.infoCard}>
-          <InfoRow label="Member Since" value={formatDate(profile?.createdAt)} />
+          <InfoRow label="Member Since" value={formatDisplayDate(profile?.createdAt, { fallback: null })} />
         </View>
       </View>
 
@@ -165,11 +158,7 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.xl,
     padding: spacing.lg,
     marginBottom: spacing.lg,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
+    ...shadows.card,
   },
   avatar: {
     width: 60,
@@ -204,11 +193,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderRadius: borderRadius.xl,
     paddingHorizontal: spacing.md,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
+    ...shadows.card,
   },
   infoItem: {
     flexDirection: 'row',
@@ -229,11 +214,7 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.xl,
     padding: spacing.lg,
     marginBottom: spacing.lg,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
+    ...shadows.card,
   },
   statItem: { flex: 1, alignItems: 'center' },
   statValue: { ...typography.h3, color: colors.mainOrange },

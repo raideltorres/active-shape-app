@@ -20,6 +20,7 @@ import {
   useGetCurrentSubscriptionQuery,
   useCreateSubscriptionMutation,
 } from '../../store/api';
+import ScreenHeader from '../../components/atoms/ScreenHeader';
 import { colors, spacing, typography, borderRadius } from '../../theme';
 
 const getRemainingTrialDays = (subscription) => {
@@ -130,13 +131,7 @@ const ChangePlanScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.topBar}>
-        <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.7}>
-          <Ionicons name="arrow-back" size={24} color={colors.codGray} />
-        </TouchableOpacity>
-        <Text style={styles.topBarTitle}>Change Plan</Text>
-        <View style={{ width: 24 }} />
-      </View>
+      <ScreenHeader title="Change Plan" titleColor={colors.codGray} iconColor={colors.codGray} />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <Text style={styles.sectionTitle}>Billing Cycle</Text>
@@ -277,17 +272,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.md,
-  },
-  topBarTitle: {
-    ...typography.h4,
-    color: colors.codGray,
   },
   scrollContent: {
     paddingHorizontal: spacing.xl,

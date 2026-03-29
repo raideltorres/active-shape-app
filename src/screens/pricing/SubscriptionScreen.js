@@ -11,13 +11,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Toast from 'react-native-toast-message';
 
-import { ConfirmModal } from '../../components/atoms';
+import { ConfirmModal, EmptyState } from '../../components/atoms';
 import {
   useGetCurrentSubscriptionQuery,
   useCancelSubscriptionMutation,
   useResumeSubscriptionMutation,
   useGetProfileQuery,
 } from '../../store/api';
+import ScreenHeader from '../../components/atoms/ScreenHeader';
+import { formatDisplayDate } from '../../utils/date';
 import { colors, spacing, typography, borderRadius } from '../../theme';
 
 const STATUS_CONFIG = {
@@ -29,15 +31,6 @@ const STATUS_CONFIG = {
   incomplete: { label: 'Incomplete', color: colors.buttercup, icon: 'alert-circle' },
   incomplete_expired: { label: 'Expired', color: colors.raven, icon: 'close-circle' },
   unpaid: { label: 'Unpaid', color: colors.cinnabar, icon: 'alert-circle' },
-};
-
-const formatDate = (dateStr) => {
-  if (!dateStr) return '—';
-  return new Date(dateStr).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
 };
 
 const SubscriptionScreen = ({ navigation }) => {
@@ -63,7 +56,7 @@ const SubscriptionScreen = ({ navigation }) => {
   }, [subscription]);
 
   const periodEndFormatted = useMemo(() => {
-    return subscription?.currentPeriodEnd ? formatDate(subscription.currentPeriodEnd) : '';
+    return subscription?.currentPeriodEnd ? formatDisplayDate(subscription.currentPeriodEnd) : '';
   }, [subscription]);
 
   const handleConfirmCancel = useCallback(async () => {
@@ -103,31 +96,22 @@ const SubscriptionScreen = ({ navigation }) => {
   if (!subscription) {
     return (
       <SafeAreaView style={styles.container}>
-        <View style={styles.topBar}>
-          <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.7}>
-            <Ionicons name="arrow-back" size={24} color={colors.codGray} />
-          </TouchableOpacity>
-          <Text style={styles.topBarTitle}>Subscription</Text>
-          <View style={{ width: 24 }} />
-        </View>
-        <View style={styles.emptyContainer}>
-          <Ionicons name="card-outline" size={64} color={colors.alto} />
-          <Text style={styles.emptyTitle}>No Active Subscription</Text>
-          <Text style={styles.emptyText}>Visit the pricing page to subscribe to a plan.</Text>
-        </View>
+        <ScreenHeader title="Subscription" titleColor={colors.codGray} iconColor={colors.codGray} />
+        <EmptyState
+          icon="card-outline"
+          iconSize={64}
+          iconColor={colors.alto}
+          title="No Active Subscription"
+          description="Visit the pricing page to subscribe to a plan."
+          style={styles.emptyContainer}
+        />
       </SafeAreaView>
     );
   }
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.topBar}>
-        <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.7}>
-          <Ionicons name="arrow-back" size={24} color={colors.codGray} />
-        </TouchableOpacity>
-        <Text style={styles.topBarTitle}>Subscription</Text>
-        <View style={{ width: 24 }} />
-      </View>
+      <ScreenHeader title="Subscription" titleColor={colors.codGray} iconColor={colors.codGray} />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.planHeader}>
@@ -142,7 +126,7 @@ const SubscriptionScreen = ({ navigation }) => {
           <View style={styles.warningCard}>
             <Ionicons name="information-circle" size={20} color={colors.buttercup} />
             <Text style={styles.warningText}>
-              Your subscription will end on {formatDate(subscription.currentPeriodEnd)}.
+              Your subscription will end on {formatDisplayDate(subscription.currentPeriodEnd)}.
             </Text>
           </View>
         )}
@@ -151,18 +135,18 @@ const SubscriptionScreen = ({ navigation }) => {
           <DetailRow label="Billing Cycle" value={subscription.billingCycle === 'yearly' ? 'Yearly' : 'Monthly'} />
           <DetailRow label="Amount" value={`${subscription.currency?.toUpperCase()} $${subscription.amount?.toFixed(2) || '0.00'}`} />
           {subscription.cancelAtPeriodEnd ? (
-            <DetailRow label="Cancels On" value={formatDate(subscription.currentPeriodEnd)} />
+            <DetailRow label="Cancels On" value={formatDisplayDate(subscription.currentPeriodEnd)} />
           ) : (
             subscription.currentPeriodEnd &&
             !['canceled', 'incomplete_expired'].includes(subscription.status) && (
-              <DetailRow label="Renews On" value={formatDate(subscription.currentPeriodEnd)} />
+              <DetailRow label="Renews On" value={formatDisplayDate(subscription.currentPeriodEnd)} />
             )
           )}
           {subscription.status === 'trialing' && subscription.trialEnd && (
-            <DetailRow label="Trial Ends" value={formatDate(subscription.trialEnd)} />
+            <DetailRow label="Trial Ends" value={formatDisplayDate(subscription.trialEnd)} />
           )}
           {subscription.canceledAt && (
-            <DetailRow label="Canceled On" value={formatDate(subscription.canceledAt)} />
+            <DetailRow label="Canceled On" value={formatDisplayDate(subscription.canceledAt)} />
           )}
           {subscription.platform && (
             <DetailRow label="Platform" value={subscription.platform.charAt(0).toUpperCase() + subscription.platform.slice(1)} />
@@ -298,35 +282,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.md,
-  },
-  topBarTitle: {
-    ...typography.h4,
-    color: colors.codGray,
-  },
   scrollContent: {
     paddingHorizontal: spacing.xl,
     paddingBottom: spacing.tabBarPadding,
   },
   emptyContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  emptyTitle: {
-    ...typography.h3,
-    color: colors.codGray,
-  },
-  emptyText: {
-    ...typography.body,
-    color: colors.raven,
-    textAlign: 'center',
   },
   planHeader: {
     flexDirection: 'row',

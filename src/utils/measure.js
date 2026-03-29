@@ -130,6 +130,32 @@ export const calculateBmi = (weight, height) => {
   return weight / Math.pow(height / 100, 2);
 };
 
+/**
+ * Returns the display color for a BMI category label (from determineBmiRange).
+ * Uses theme color names where available; hardcoded hex for colors not yet in theme.
+ */
+export const BMI_CATEGORY_COLORS = {
+  Underweight: '#4A90E2',   // havelockBlue
+  Normal: '#68af1c',        // lima
+  Overweight: '#FFD700',
+  'Obesity Type 1': '#D95725', // mainOrange
+  'Obesity Type 2': '#E53935',
+  'Obesity Type 3': '#B71C1C',
+};
+
+export const getBmiCategoryColor = (bmiOrLabel) => {
+  if (typeof bmiOrLabel === 'string') {
+    return BMI_CATEGORY_COLORS[bmiOrLabel] || '#7B7E86';
+  }
+  const bmi = bmiOrLabel;
+  if (bmi < 18.5) return BMI_CATEGORY_COLORS.Underweight;
+  if (bmi < 25) return BMI_CATEGORY_COLORS.Normal;
+  if (bmi < 30) return BMI_CATEGORY_COLORS.Overweight;
+  if (bmi < 35) return BMI_CATEGORY_COLORS['Obesity Type 1'];
+  if (bmi < 40) return BMI_CATEGORY_COLORS['Obesity Type 2'];
+  return BMI_CATEGORY_COLORS['Obesity Type 3'];
+};
+
 export const BODY_COMPOSITION_TYPES = {
   ATHLETIC_MUSCULAR: {
     value: 'athletic_muscular',

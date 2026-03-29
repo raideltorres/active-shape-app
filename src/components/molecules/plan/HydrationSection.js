@@ -3,21 +3,8 @@ import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 import SectionCard from './SectionCard';
+import { formatTimeTo12h } from '../../../utils/date';
 import { colors, spacing, typography, borderRadius } from '../../../theme';
-
-// Helper to format time to AM/PM
-const formatTime = (time) => {
-  if (!time) return '';
-  // If already in AM/PM format, return as is
-  if (time.toLowerCase().includes('am') || time.toLowerCase().includes('pm')) {
-    return time.toUpperCase();
-  }
-  // Parse HH:MM format
-  const [hours] = time.split(':').map(Number);
-  const period = hours >= 12 ? 'PM' : 'AM';
-  const hour12 = hours % 12 || 12;
-  return `${hour12} ${period}`;
-};
 
 /**
  * Hydration Schedule section for Plan screen
@@ -50,7 +37,7 @@ const HydrationSection = ({ hydrationPlan }) => {
         <View style={styles.scheduleGrid}>
           {schedule.map((item, index) => (
             <View key={index} style={styles.scheduleCard}>
-              <Text style={styles.cardTime}>{formatTime(item.time)}</Text>
+              <Text style={styles.cardTime}>{formatTimeTo12h(item.time)}</Text>
               <Text style={styles.cardAmount}>{item.amount}ml</Text>
               {item.description && (
                 <Text style={styles.cardDescription}>{item.description}</Text>

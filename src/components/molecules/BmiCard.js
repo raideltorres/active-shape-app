@@ -2,20 +2,11 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
+import { EmptyState } from '../atoms';
 import { colors, spacing, typography, borderRadius } from '../../theme';
+import { shadows } from '../../theme/shadows';
+import { getBmiCategoryColor } from '../../utils/measure';
 import BmiGauge from './BmiGauge/BmiGauge';
-
-const CATEGORY_COLORS = {
-  Underweight: colors.havelockBlue,
-  Normal: colors.lima,
-  Overweight: '#FFD700',
-  'Obesity Type 1': colors.mainOrange,
-  'Obesity Type 2': '#E53935',
-  'Obesity Type 3': '#B71C1C',
-};
-
-const getCategoryColor = (categoryLabel) =>
-  CATEGORY_COLORS[categoryLabel] || colors.raven;
 
 /**
  * BmiCard component
@@ -27,7 +18,7 @@ const getCategoryColor = (categoryLabel) =>
 const BmiCard = ({ bmiData, bodyComposition }) => {
   const displayBmi = bmiData?.adjusted;
   const category = bmiData?.category;
-  const categoryColor = category ? getCategoryColor(category) : colors.raven;
+  const categoryColor = category ? getBmiCategoryColor(category) : colors.raven;
   const message = bmiData?.message;
 
   // Show raw vs adjusted if there's a meaningful difference
@@ -38,13 +29,13 @@ const BmiCard = ({ bmiData, bodyComposition }) => {
   if (!displayBmi) {
     return (
       <View style={styles.container}>
-        <View style={styles.emptyState}>
-          <Ionicons name="body-outline" size={32} color={colors.raven} />
-          <Text style={styles.emptyTitle}>BMI Calculator</Text>
-          <Text style={styles.emptyDescription}>
-            Add your weight and height in your profile to calculate your BMI
-          </Text>
-        </View>
+        <EmptyState
+          icon="body-outline"
+          iconSize={32}
+          iconColor={colors.raven}
+          title="BMI Calculator"
+          description="Add your weight and height in your profile to calculate your BMI"
+        />
       </View>
     );
   }
@@ -121,11 +112,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderRadius: borderRadius.xl,
     padding: spacing.lg,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
+    ...shadows.card,
   },
   header: {
     flexDirection: 'row',
@@ -217,21 +204,6 @@ const styles = StyleSheet.create({
     ...typography.h4,
     color: colors.mineShaft,
     marginTop: 4,
-  },
-  emptyState: {
-    alignItems: 'center',
-    paddingVertical: spacing.lg,
-  },
-  emptyTitle: {
-    ...typography.h4,
-    color: colors.mineShaft,
-    marginTop: spacing.sm,
-    marginBottom: spacing.xs,
-  },
-  emptyDescription: {
-    ...typography.bodySmall,
-    color: colors.raven,
-    textAlign: 'center',
   },
 });
 

@@ -2,7 +2,9 @@ import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
+import CardHeader from './CardHeader';
 import { colors, spacing, typography, borderRadius } from '../../theme';
+import { shadows } from '../../theme/shadows';
 
 const DAYS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
@@ -63,15 +65,13 @@ const WeeklySummaryCard = ({ trackingData = [] }) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.iconContainer}>
-          <Ionicons name="calendar-outline" size={20} color={colors.havelockBlue} />
-        </View>
-        <View style={styles.headerText}>
-          <Text style={styles.title}>Weekly Summary</Text>
-          <Text style={styles.subtitle}>{weeklyStats.trackedDays}/7 days tracked</Text>
-        </View>
-      </View>
+      <CardHeader
+        icon="calendar-outline"
+        iconColor={colors.havelockBlue}
+        title="Weekly Summary"
+        subtitle={`${weeklyStats.trackedDays}/7 days tracked`}
+        style={{ marginBottom: spacing.lg }}
+      />
 
       <View style={styles.daysContainer}>
         {DAYS.map((day, index) => {
@@ -136,37 +136,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderRadius: borderRadius.xl,
     padding: spacing.lg,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing.lg,
-  },
-  iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: `${colors.havelockBlue}15`,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: spacing.md,
-  },
-  headerText: {
-    flex: 1,
-  },
-  title: {
-    ...typography.h4,
-    color: colors.mineShaft,
-  },
-  subtitle: {
-    ...typography.caption,
-    color: colors.raven,
-    marginTop: 2,
+    ...shadows.card,
   },
   daysContainer: {
     flexDirection: 'row',

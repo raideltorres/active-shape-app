@@ -31,7 +31,7 @@ const SleepPlanSection = ({ sleepPlan }) => {
         {/* Circular Sleep Display */}
         <View style={styles.circleContainer}>
           <LinearGradient
-            colors={['#1e3a5f', '#2d5a87']}
+            colors={[colors.darkNavy, colors.mediumNavy]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.circle}

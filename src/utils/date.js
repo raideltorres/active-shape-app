@@ -35,8 +35,40 @@ export function subDays(dateStr, days) {
   return addDays(dateStr, -days);
 }
 
-const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+export const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+export const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+export const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+export const WEEKDAYS_SHORT = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+
+/**
+ * Format a date for display using toLocaleDateString.
+ * @param {string|number|Date} value - Date string, Unix timestamp (seconds), or Date
+ * @param {Object} [options]
+ * @param {'long'|'short'} [options.month='long'] - Month format
+ * @param {string} [options.fallback='—'] - Returned when value is falsy
+ * @returns {string}
+ */
+export function formatDisplayDate(value, { month = 'long', fallback = '—' } = {}) {
+  if (!value) return fallback;
+  const date = typeof value === 'number' ? new Date(value * 1000) : new Date(value);
+  return date.toLocaleDateString('en-US', { year: 'numeric', month, day: 'numeric' });
+}
+
+/**
+ * Convert 24h "HH:MM" (or existing "H AM/PM") to 12-hour format.
+ * @param {string} time - "14:30" or "2 PM"
+ * @returns {string} e.g. "2 PM"
+ */
+export function formatTimeTo12h(time) {
+  if (!time) return '';
+  if (time.toLowerCase().includes('am') || time.toLowerCase().includes('pm')) {
+    return time.toUpperCase();
+  }
+  const [hours] = time.split(':').map(Number);
+  const period = hours >= 12 ? 'PM' : 'AM';
+  const hour12 = hours % 12 || 12;
+  return `${hour12} ${period}`;
+}
 
 /**
  * Format date for display: "Monday, January 25, 2025"

@@ -13,6 +13,7 @@ import {
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { colors, spacing, typography, borderRadius } from '../../../theme';
+import { shadows } from '../../../theme/shadows';
 import {
   useGetSupplementsQuery,
   useCreateSupplementMutation,
@@ -274,11 +275,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderRadius: borderRadius.xl,
     overflow: 'hidden',
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 1,
+    ...shadows.subtle,
   },
   cardHeader: {
     flexDirection: 'row',

@@ -9,7 +9,7 @@ import { colors, spacing, typography, borderRadius } from '../../../theme';
 // Weight stat card with gradient background
 const WeightStatCard = ({ icon, label, value, unit, iconColor }) => (
   <LinearGradient
-    colors={['#667eea', '#764ba2']}
+    colors={[colors.purpleGradientStart, colors.purpleGradientEnd]}
     start={{ x: 0, y: 0 }}
     end={{ x: 1, y: 1 }}
     style={styles.weightStatCard}

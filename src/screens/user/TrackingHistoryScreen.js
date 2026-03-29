@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useRoute } from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
 
 import {
@@ -26,7 +26,10 @@ import { DateSelector } from '../../components/molecules';
 import { ExerciseTrackerSection } from './tracking';
 import { AiFoodTextAnalyzer } from '../../components/organisms/AiFoodTextAnalyzer';
 import { useExerciseLog, useFoodLog } from '../../hooks';
+import ScreenHeader from '../../components/atoms/ScreenHeader';
+import { EmptyState } from '../../components/atoms';
 import { colors, spacing, typography, borderRadius } from '../../theme';
+import { shadows } from '../../theme/shadows';
 import { getCurrentDate } from '../../utils/date';
 
 const FIELD_CONFIG = [
@@ -42,7 +45,6 @@ const FIELD_CONFIG = [
 ];
 
 const TrackingHistoryScreen = () => {
-  const navigation = useNavigation();
   const route = useRoute();
   const [selectedDate, setSelectedDate] = useState(route.params?.date || getCurrentDate());
   const [editingField, setEditingField] = useState(null);
@@ -165,13 +167,7 @@ const TrackingHistoryScreen = () => {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.headerBar}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={24} color={colors.mineShaft} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Tracking History</Text>
-        <View style={styles.backBtn} />
-      </View>
+      <ScreenHeader title="Tracking History" />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <Text style={styles.subtitle}>View, edit, or delete your daily tracked data</Text>
@@ -249,11 +245,12 @@ const TrackingHistoryScreen = () => {
           </>
         ) : (
           <>
-            <View style={styles.noData}>
-              <Ionicons name="analytics-outline" size={48} color={colors.alto} />
-              <Text style={styles.noDataTitle}>No data tracked</Text>
-              <Text style={styles.noDataText}>Nothing logged for this day yet. Tap a metric below to start tracking.</Text>
-            </View>
+            <EmptyState
+              icon="analytics-outline"
+              iconColor={colors.alto}
+              title="No data tracked"
+              description="Nothing logged for this day yet. Tap a metric below to start tracking."
+            />
 
             <View style={styles.notTrackedSection}>
               <Text style={styles.notTrackedHint}>
@@ -347,15 +344,6 @@ const TrackingHistoryScreen = () => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.alabaster },
-  headerBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-  },
-  backBtn: { width: 40 },
-  headerTitle: { ...typography.h3, color: colors.mineShaft, textAlign: 'center' },
   scrollContent: { padding: spacing.lg, paddingBottom: spacing.tabBarPadding },
   subtitle: { ...typography.body, color: colors.raven, textAlign: 'center', marginBottom: spacing.lg },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingVertical: spacing.xxxl },
@@ -384,11 +372,7 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.lg,
     padding: spacing.md,
     marginBottom: spacing.sm,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 1,
+    ...shadows.subtle,
   },
   fieldIconWrap: {
     width: 44,
@@ -467,12 +451,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  noData: {
-    alignItems: 'center',
-    paddingVertical: spacing.xxxl,
-  },
-  noDataTitle: { ...typography.h4, color: colors.mineShaft, marginTop: spacing.md },
-  noDataText: { ...typography.body, color: colors.raven, textAlign: 'center', marginTop: spacing.xs },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.4)',

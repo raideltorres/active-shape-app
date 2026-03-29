@@ -3,9 +3,10 @@ import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 
+import { WEEKDAYS_SHORT } from "../../utils/date";
 import { colors, spacing, typography, borderRadius } from "../../theme";
 
-const WEEKDAYS = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
+const WEEKDAYS_MON = [...WEEKDAYS_SHORT.slice(1), WEEKDAYS_SHORT[0]];
 
 const FastingCalendarGrid = ({
   calendarDays,
@@ -17,7 +18,7 @@ const FastingCalendarGrid = ({
 }) => (
   <>
     <View style={styles.weekdaysRow}>
-      {WEEKDAYS.map((d) => (
+      {WEEKDAYS_MON.map((d) => (
         <View key={d} style={styles.weekdayCell}>
           <Text style={styles.weekdayText}>{d}</Text>
         </View>
@@ -68,7 +69,7 @@ const FastingCalendarGrid = ({
           >
             {hasFasting ? (
               <LinearGradient
-                colors={["#667eea", "#764ba2"]}
+                colors={[colors.purpleGradientStart, colors.purpleGradientEnd]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={[

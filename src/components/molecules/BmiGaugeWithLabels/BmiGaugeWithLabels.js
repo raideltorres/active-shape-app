@@ -8,6 +8,7 @@ import {
   adjustBmiForBodyComposition,
   determineBmiRange,
   determineBmiMotivationalMessage,
+  getBmiCategoryColor,
 } from '../../../utils/measure';
 
 /**
@@ -49,14 +50,7 @@ const BmiGaugeWithLabels = ({
 
   const { bmi, category, description } = displayData;
 
-  const categoryColor = useMemo(() => {
-    if (bmi < 18.5) return colors.havelockBlue;
-    if (bmi < 25) return colors.lima;
-    if (bmi < 30) return '#FFD700';
-    if (bmi < 35) return colors.mainOrange;
-    if (bmi < 40) return '#E53935';
-    return '#B71C1C';
-  }, [bmi]);
+  const categoryColor = useMemo(() => getBmiCategoryColor(bmi), [bmi]);
 
   return (
     <View style={styles.container}>

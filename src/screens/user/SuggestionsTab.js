@@ -3,8 +3,9 @@ import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-nativ
 import { Ionicons } from '@expo/vector-icons';
 import Toast from 'react-native-toast-message';
 
-import { Button, ConfirmModal } from '../../components/atoms';
+import { Button, ConfirmModal, EmptyState } from '../../components/atoms';
 import { colors, spacing, typography, borderRadius } from '../../theme';
+import { shadows } from '../../theme/shadows';
 import {
   SUGGESTION_CATEGORIES,
   SUGGESTION_STATUS_LABELS,
@@ -25,7 +26,7 @@ const SUGGESTION_DOT_COLORS = {
       v === 'blue' ? colors.havelockBlue
         : v === 'green' ? colors.lima
         : v === 'red' ? colors.error
-        : v === 'purple' ? '#8b5cf6'
+        : v === 'purple' ? colors.violet
         : colors.raven,
     ]),
   ),
@@ -231,10 +232,7 @@ const SuggestionsTab = () => {
       )}
 
       {mySuggestions?.length === 0 && (
-        <View style={styles.emptyState}>
-          <Ionicons name="bulb-outline" size={48} color={colors.gallery} />
-          <Text style={styles.emptyTitle}>No suggestions yet</Text>
-        </View>
+        <EmptyState icon="bulb-outline" iconColor={colors.gallery} title="No suggestions yet" />
       )}
 
       <ConfirmModal
@@ -254,15 +252,6 @@ const SuggestionsTab = () => {
 const styles = StyleSheet.create({
   tabContent: {
     gap: spacing.lg,
-  },
-  emptyState: {
-    alignItems: 'center',
-    paddingVertical: spacing.xxl,
-    gap: spacing.md,
-  },
-  emptyTitle: {
-    ...typography.body,
-    color: colors.raven,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -300,11 +289,7 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.xl,
     padding: spacing.lg,
     gap: spacing.md,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
+    ...shadows.card,
   },
   fieldLabel: {
     ...typography.caption,
@@ -377,11 +362,7 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.xl,
     padding: spacing.md,
     gap: spacing.sm,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 1,
+    ...shadows.subtle,
   },
   itemHeader: {
     gap: spacing.xs,

@@ -3,7 +3,10 @@ import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'rea
 
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 
+import CardHeader from './CardHeader';
+import { EmptyState } from '../atoms';
 import { colors, spacing, typography, borderRadius } from '../../theme';
+import { shadows } from '../../theme/shadows';
 import { getCurrentDate } from '../../utils/date';
 
 const SupplementsCard = ({
@@ -35,15 +38,14 @@ const SupplementsCard = ({
   if (!dailySummary || dailySummary.totalActive === 0) {
     return (
       <View style={styles.container}>
-        <View style={styles.emptyState}>
-          <View style={styles.emptyIconContainer}>
-            <MaterialCommunityIcons name="pill" size={32} color={colors.raven} />
-          </View>
-          <Text style={styles.emptyTitle}>Supplements</Text>
-          <Text style={styles.emptyDescription}>
-            No supplements added yet. Use the form below to add your daily supplements.
-          </Text>
-        </View>
+        <EmptyState
+          icon="pill"
+          iconFamily="material"
+          iconSize={32}
+          iconColor={colors.raven}
+          title="Supplements"
+          description="No supplements added yet. Use the form below to add your daily supplements."
+        />
       </View>
     );
   }
@@ -53,22 +55,21 @@ const SupplementsCard = ({
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <View style={styles.iconContainer}>
-            <MaterialCommunityIcons name="pill" size={20} color={colors.white} />
+      <CardHeader
+        icon="pill"
+        iconFamily="material"
+        iconColor={colors.white}
+        iconBg={colors.lima}
+        title="Supplements"
+        subtitle="Daily checklist"
+        rightElement={(
+          <View style={[styles.counterBadge, allTaken && styles.counterBadgeComplete]}>
+            <Text style={[styles.counterText, allTaken && styles.counterTextComplete]}>
+              {totalTaken}/{totalActive}
+            </Text>
           </View>
-          <View style={styles.headerText}>
-            <Text style={styles.title}>Supplements</Text>
-            <Text style={styles.subtitle}>Daily checklist</Text>
-          </View>
-        </View>
-        <View style={[styles.counterBadge, allTaken && styles.counterBadgeComplete]}>
-          <Text style={[styles.counterText, allTaken && styles.counterTextComplete]}>
-            {totalTaken}/{totalActive}
-          </Text>
-        </View>
-      </View>
+        )}
+      />
 
       <View style={styles.list}>
         {supplements.map((supplement) => (
@@ -110,43 +111,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderRadius: borderRadius.xl,
     padding: spacing.lg,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: spacing.md,
-  },
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: spacing.md,
-    backgroundColor: colors.lima,
-  },
-  headerText: {
-    flex: 1,
-  },
-  title: {
-    ...typography.h4,
-    color: colors.mineShaft,
-  },
-  subtitle: {
-    ...typography.caption,
-    color: colors.raven,
-    marginTop: 2,
+    ...shadows.card,
   },
   counterBadge: {
     paddingHorizontal: 14,
@@ -231,30 +196,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: spacing.xl,
-  },
-  emptyState: {
-    alignItems: 'center',
-    paddingVertical: spacing.lg,
-  },
-  emptyIconContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: colors.gallery,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.md,
-  },
-  emptyTitle: {
-    ...typography.h4,
-    color: colors.mineShaft,
-    marginBottom: spacing.xs,
-  },
-  emptyDescription: {
-    ...typography.bodySmall,
-    color: colors.raven,
-    textAlign: 'center',
-    paddingHorizontal: spacing.lg,
   },
   setupButton: {
     flexDirection: 'row',

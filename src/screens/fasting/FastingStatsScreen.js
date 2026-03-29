@@ -11,6 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 
 import { useGetFastingStatsQuery } from '../../store/api';
+import ScreenHeader from '../../components/atoms/ScreenHeader';
 import { colors, spacing, typography, borderRadius } from '../../theme';
 
 const StatCard = ({ icon, label, value, unit, color = colors.mainBlue }) => (
@@ -51,13 +52,7 @@ const FastingStatsScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={8}>
-          <Ionicons name="arrow-back" size={24} color={colors.mineShaft} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Fasting Stats</Text>
-        <View style={{ width: 24 }} />
-      </View>
+      <ScreenHeader title="Fasting Stats" />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* This Week */}
@@ -157,17 +152,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-  },
-  headerTitle: {
-    ...typography.h3,
-    color: colors.mineShaft,
   },
   scrollContent: {
     paddingHorizontal: spacing.lg,

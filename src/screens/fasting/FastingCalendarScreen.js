@@ -18,24 +18,11 @@ import {
   useDeleteFastingSessionMutation,
 } from "../../store/api";
 import { getMonthRange } from "../../utils/fasting";
+import { MONTHS } from "../../utils/date";
+import ScreenHeader from '../../components/atoms/ScreenHeader';
 import { colors, spacing, typography, borderRadius } from "../../theme";
 import FastingCalendarGrid from "./FastingCalendarGrid";
 import FastingSessionList from "./FastingSessionList";
-
-const MONTHS = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
 
 const FastingCalendarScreen = ({ navigation }) => {
   const today = new Date();
@@ -151,13 +138,7 @@ const FastingCalendarScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={8}>
-          <Ionicons name="arrow-back" size={24} color={colors.mineShaft} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Fasting Calendar</Text>
-        <View style={{ width: 24 }} />
-      </View>
+      <ScreenHeader title="Fasting Calendar" />
 
       <View style={styles.tabs}>
         <TouchableOpacity
@@ -231,17 +212,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.white,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-  },
-  headerTitle: {
-    ...typography.h3,
-    color: colors.mineShaft,
   },
   tabs: {
     flexDirection: "row",

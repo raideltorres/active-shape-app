@@ -3,7 +3,10 @@ import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from 'rea
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 
+import CardHeader from './CardHeader';
+import { EmptyState } from '../atoms';
 import { colors, spacing, typography, borderRadius } from '../../theme';
+import { shadows } from '../../theme/shadows';
 import { getCurrentDate } from '../../utils/date';
 
 const DailyInsightsCard = ({ 
@@ -51,15 +54,13 @@ const DailyInsightsCard = ({
   if (!hasTrackingData) {
     return (
       <View style={styles.container}>
-        <View style={styles.emptyState}>
-          <View style={styles.emptyIconContainer}>
-            <Ionicons name="analytics-outline" size={32} color={colors.raven} />
-          </View>
-          <Text style={styles.emptyTitle}>Daily Insights</Text>
-          <Text style={styles.emptyDescription}>
-            Start tracking your meals, weight, and activities to receive personalized AI insights about your progress.
-          </Text>
-        </View>
+        <EmptyState
+          icon="analytics-outline"
+          iconSize={32}
+          iconColor={colors.raven}
+          title="Daily Insights"
+          description="Start tracking your meals, weight, and activities to receive personalized AI insights about your progress."
+        />
       </View>
     );
   }
@@ -67,17 +68,12 @@ const DailyInsightsCard = ({
   if (isLoading) {
     return (
       <View style={styles.container}>
-        <View style={styles.header}>
-          <View style={styles.headerLeft}>
-            <View style={[styles.iconContainer, { backgroundColor: `${colors.purple}15` }]}>
-              <Ionicons name="sparkles" size={20} color={colors.purple} />
-            </View>
-            <View style={styles.headerText}>
-              <Text style={styles.title}>Daily Insights</Text>
-              <Text style={styles.subtitle}>AI-powered recommendations</Text>
-            </View>
-          </View>
-        </View>
+        <CardHeader
+          icon="sparkles"
+          iconColor={colors.purple}
+          title="Daily Insights"
+          subtitle="AI-powered recommendations"
+        />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="small" color={colors.purple} />
           <Text style={styles.loadingText}>Analyzing your progress...</Text>
@@ -91,15 +87,13 @@ const DailyInsightsCard = ({
 
     return (
       <View style={styles.container}>
-        <View style={styles.emptyState}>
-          <View style={styles.emptyIconContainer}>
-            <Ionicons name="sparkles-outline" size={32} color={colors.purple} />
-          </View>
-          <Text style={styles.emptyTitle}>Daily Insights</Text>
-          <Text style={styles.emptyDescription}>
-            Keep tracking throughout the day — your AI insights will be ready tomorrow based on today's data.
-          </Text>
-        </View>
+        <EmptyState
+          icon="sparkles-outline"
+          iconSize={32}
+          iconColor={colors.purple}
+          title="Daily Insights"
+          description="Keep tracking throughout the day — your AI insights will be ready tomorrow based on today's data."
+        />
       </View>
     );
   }
@@ -109,17 +103,12 @@ const DailyInsightsCard = ({
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <View style={[styles.iconContainer, { backgroundColor: `${colors.purple}15` }]}>
-            <Ionicons name="sparkles" size={20} color={colors.purple} />
-          </View>
-          <View style={styles.headerText}>
-            <Text style={styles.title}>Daily Insights</Text>
-            <Text style={styles.subtitle}>AI-powered recommendations</Text>
-          </View>
-        </View>
-        {hasDetailedInsights ? (
+      <CardHeader
+        icon="sparkles"
+        iconColor={colors.purple}
+        title="Daily Insights"
+        subtitle="AI-powered recommendations"
+        rightElement={hasDetailedInsights ? (
           <View style={styles.scoreBadge}>
             <Text style={styles.scoreBadgeText}>{insights.overallScore}</Text>
           </View>
@@ -128,7 +117,7 @@ const DailyInsightsCard = ({
             <Ionicons name={moodIcon.name} size={16} color={moodIcon.color} />
           </View>
         )}
-      </View>
+      />
 
       {insights.summary && (
         <View style={styles.summaryContainer}>
@@ -175,42 +164,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderRadius: borderRadius.xl,
     padding: spacing.lg,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: spacing.md,
-  },
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: spacing.md,
-  },
-  headerText: {
-    flex: 1,
-  },
-  title: {
-    ...typography.h4,
-    color: colors.mineShaft,
-  },
-  subtitle: {
-    ...typography.caption,
-    color: colors.raven,
-    marginTop: 2,
+    ...shadows.card,
   },
   moodBadge: {
     width: 32,
@@ -305,30 +259,6 @@ const styles = StyleSheet.create({
     ...typography.bodySmall,
     color: colors.raven,
     marginTop: spacing.sm,
-  },
-  emptyState: {
-    alignItems: 'center',
-    paddingVertical: spacing.lg,
-  },
-  emptyIconContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: colors.gallery,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.md,
-  },
-  emptyTitle: {
-    ...typography.h4,
-    color: colors.mineShaft,
-    marginBottom: spacing.xs,
-  },
-  emptyDescription: {
-    ...typography.bodySmall,
-    color: colors.raven,
-    textAlign: 'center',
-    paddingHorizontal: spacing.lg,
   },
 });
 

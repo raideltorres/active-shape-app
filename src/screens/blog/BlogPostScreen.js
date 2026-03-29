@@ -5,7 +5,6 @@ import {
   StyleSheet,
   ScrollView,
   Image,
-  TouchableOpacity,
   ActivityIndicator,
   useWindowDimensions,
 } from 'react-native';
@@ -14,9 +13,11 @@ import { Ionicons } from '@expo/vector-icons';
 import RenderHtml from 'react-native-render-html';
 
 import { useGetPostBySlugQuery } from '../../store/api';
+import ScreenHeader from '../../components/atoms/ScreenHeader';
 import { colors, spacing, typography, borderRadius } from '../../theme';
+import { shadows } from '../../theme/shadows';
 
-const BlogPostScreen = ({ route, navigation }) => {
+const BlogPostScreen = ({ route }) => {
   const { slug } = route.params;
   const { width } = useWindowDimensions();
   const contentWidth = width - spacing.lg * 2;
@@ -50,7 +51,7 @@ const BlogPostScreen = ({ route, navigation }) => {
   if (isLoading) {
     return (
       <SafeAreaView style={styles.container}>
-        <Header navigation={navigation} />
+        <ScreenHeader title="Blog" />
         <View style={styles.loadingWrap}>
           <ActivityIndicator size="large" color={colors.mainBlue} />
         </View>
@@ -61,7 +62,7 @@ const BlogPostScreen = ({ route, navigation }) => {
   if (error || !post) {
     return (
       <SafeAreaView style={styles.container}>
-        <Header navigation={navigation} />
+        <ScreenHeader title="Blog" />
         <View style={styles.errorWrap}>
           <Ionicons name="document-text-outline" size={48} color={colors.mercury} />
           <Text style={styles.errorTitle}>Post not found</Text>
@@ -73,7 +74,7 @@ const BlogPostScreen = ({ route, navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Header navigation={navigation} />
+      <ScreenHeader title="Blog" />
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -128,41 +129,11 @@ const BlogPostScreen = ({ route, navigation }) => {
   );
 };
 
-const Header = ({ navigation }) => (
-  <View style={styles.header}>
-    <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-      <Ionicons name="arrow-back" size={24} color={colors.mineShaft} />
-    </TouchableOpacity>
-    <Text style={styles.headerTitle}>Blog</Text>
-    <View style={styles.placeholder} />
-  </View>
-);
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.alabaster,
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: colors.white,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerTitle: {
-    ...typography.h2,
-    color: colors.mineShaft,
-  },
-  placeholder: { width: 40 },
   scrollContent: {
     paddingHorizontal: spacing.lg,
   },
@@ -228,11 +199,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderRadius: borderRadius.xl,
     padding: spacing.lg,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
+    ...shadows.card,
   },
   loadingWrap: {
     flex: 1,

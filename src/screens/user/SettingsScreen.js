@@ -11,7 +11,9 @@ import { Ionicons } from "@expo/vector-icons";
 import * as WebBrowser from "expo-web-browser";
 
 import { useAuth } from "../../hooks/useAuth";
+import ScreenHeader from '../../components/atoms/ScreenHeader';
 import { colors, spacing, typography, borderRadius } from "../../theme";
+import { shadows } from '../../theme/shadows';
 
 const WEB_URLS = {
   terms: "https://www.active-shape.com/terms-of-service",
@@ -108,17 +110,7 @@ const SettingsScreen = ({ navigation }) => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            style={styles.backButton}
-          >
-            <Ionicons name="arrow-back" size={24} color={colors.mineShaft} />
-          </TouchableOpacity>
-          <Text style={styles.title}>Settings</Text>
-          <View style={styles.placeholder} />
-        </View>
+        <ScreenHeader title="Settings" />
 
         {/* Settings Groups */}
         {settingsGroups.map((group, groupIndex) => (
@@ -194,27 +186,6 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     paddingBottom: spacing.tabBarPadding,
   },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: spacing.xl,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: colors.white,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  title: {
-    ...typography.h2,
-    color: colors.mineShaft,
-  },
-  placeholder: {
-    width: 40,
-  },
   group: {
     marginBottom: spacing.xl,
   },
@@ -230,11 +201,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderRadius: borderRadius.xl,
     overflow: "hidden",
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
+    ...shadows.card,
   },
   settingItem: {
     flexDirection: "row",
@@ -280,11 +247,7 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.xl,
     padding: spacing.md,
     gap: spacing.sm,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
+    ...shadows.card,
   },
   signOutText: {
     ...typography.body,

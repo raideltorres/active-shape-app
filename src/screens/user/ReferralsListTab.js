@@ -1,9 +1,10 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 
+import { EmptyState } from '../../components/atoms';
 import { Card } from '../../components/molecules';
 import { colors, spacing, typography, borderRadius } from '../../theme';
+import { shadows } from '../../theme/shadows';
 import { formatCents, STATUS_COLORS } from './referralUtils';
 
 const ReferralsListTab = ({ referralsData }) => (
@@ -32,13 +33,11 @@ const ReferralsListTab = ({ referralsData }) => (
       ))
     ) : (
       <Card>
-        <View style={styles.emptyState}>
-          <Ionicons name="people-outline" size={48} color={colors.mercury} />
-          <Text style={styles.emptyTitle}>No referrals yet</Text>
-          <Text style={styles.emptyText}>
-            Share your referral link to get started and earn commissions!
-          </Text>
-        </View>
+        <EmptyState
+          icon="people-outline"
+          title="No referrals yet"
+          description="Share your referral link to get started and earn commissions!"
+        />
       </Card>
     )}
   </View>
@@ -57,17 +56,13 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderRadius: borderRadius.xl,
     padding: spacing.md,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 1,
+    ...shadows.subtle,
   },
   refAvatar: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#667eea',
+    backgroundColor: colors.purpleGradientStart,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -104,22 +99,6 @@ const styles = StyleSheet.create({
     color: colors.mineShaft,
   },
 
-  // Empty State
-  emptyState: {
-    alignItems: 'center',
-    paddingVertical: spacing.xxxl,
-    gap: spacing.sm,
-  },
-  emptyTitle: {
-    ...typography.h4,
-    color: colors.mineShaft,
-    marginTop: spacing.sm,
-  },
-  emptyText: {
-    ...typography.bodySmall,
-    color: colors.raven,
-    textAlign: 'center',
-  },
 });
 
 export default ReferralsListTab;

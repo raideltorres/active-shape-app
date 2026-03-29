@@ -6,6 +6,7 @@ import Toast from 'react-native-toast-message';
 import { useGetProfileQuery, useUpsertUserMutation, useGetAllConstantsQuery, useAutocompleteIngredientsMutation } from '../../../store/api';
 import { OptionPicker } from '../../../components/atoms';
 import { colors, spacing, typography, borderRadius } from '../../../theme';
+import { shadows } from '../../../theme/shadows';
 import { DIET_OPTIONS } from '../../../utils/measure';
 
 const INGREDIENTS_IMG_BASE_URL = 'https://img.spoonacular.com/ingredients_250x250/';
@@ -271,11 +272,7 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.xl,
     padding: spacing.lg,
     marginBottom: spacing.lg,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
+    ...shadows.card,
   },
   cardHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: spacing.lg, gap: spacing.md },
   cardIcon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },

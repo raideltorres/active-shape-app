@@ -6,36 +6,23 @@ import Toast from 'react-native-toast-message';
 
 import { useGetProfileQuery, useUpsertUserMutation } from '../../store/api';
 import { Button } from '../../components/atoms';
+import ScreenHeader from '../../components/atoms/ScreenHeader';
+import { validatePassword } from '../../utils/validation';
 import { colors, spacing, typography, borderRadius } from '../../theme';
-
-const PASSWORD_RULES = {
-  minLength: 8,
-  hasUppercase: /[A-Z]/,
-  hasNumber: /[0-9]/,
-  hasSpecial: /[^A-Za-z0-9]/,
-};
 
 const validate = (password, confirmPassword) => {
   const errors = {};
-
+  const passwordError = validatePassword(password);
   if (!password) {
     errors.password = 'Please enter your new password';
-  } else if (password.length < PASSWORD_RULES.minLength) {
-    errors.password = 'Password must be at least 8 characters long';
-  } else if (!PASSWORD_RULES.hasUppercase.test(password)) {
-    errors.password = 'Password must contain at least one uppercase letter';
-  } else if (!PASSWORD_RULES.hasNumber.test(password)) {
-    errors.password = 'Password must contain at least one number';
-  } else if (!PASSWORD_RULES.hasSpecial.test(password)) {
-    errors.password = 'Password must contain at least one special character';
+  } else if (passwordError) {
+    errors.password = passwordError;
   }
-
   if (!confirmPassword) {
     errors.confirmPassword = 'Please confirm your new password';
   } else if (password && confirmPassword !== password) {
     errors.confirmPassword = 'The two passwords do not match';
   }
-
   return errors;
 };
 
@@ -66,13 +53,7 @@ const ChangePasswordScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color={colors.mineShaft} />
-        </TouchableOpacity>
-        <Text style={styles.title}>Change Password</Text>
-        <View style={styles.placeholder} />
-      </View>
+      <ScreenHeader title="Change Password" />
 
       <View style={styles.content}>
         <View style={styles.iconWrap}>
@@ -139,27 +120,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.alabaster,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: spacing.lg,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: colors.white,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  title: {
-    ...typography.h2,
-    color: colors.mineShaft,
-  },
-  placeholder: {
-    width: 40,
   },
   content: {
     paddingHorizontal: spacing.lg,

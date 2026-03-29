@@ -13,7 +13,7 @@ const TriggerItem = ({ trigger }) => {
     <View style={styles.triggerItem}>
       {/* Condition */}
       <View style={styles.triggerCondition}>
-        <Ionicons name="warning" size={16} color="#f59e0b" style={styles.triggerIcon} />
+        <Ionicons name="warning" size={16} color={colors.buttercup} style={styles.triggerIcon} />
         <Text style={styles.triggerText}>{trigger.condition}</Text>
       </View>
 
@@ -24,7 +24,7 @@ const TriggerItem = ({ trigger }) => {
 
       {/* Action */}
       <View style={styles.triggerAction}>
-        <Ionicons name="checkbox" size={16} color="#3b82f6" style={styles.triggerIcon} />
+        <Ionicons name="checkbox" size={16} color={colors.brightBlue} style={styles.triggerIcon} />
         <Text style={styles.triggerText}>{trigger.action}</Text>
       </View>
     </View>
@@ -90,7 +90,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 12,
-    backgroundColor: '#3b82f6',
+    backgroundColor: colors.brightBlue,
     alignItems: 'center',
     justifyContent: 'center',
   },

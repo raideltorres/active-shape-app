@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
+import { EmptyState } from '../../components/atoms';
 import { colors, spacing, typography, borderRadius } from '../../theme';
+import { shadows } from '../../theme/shadows';
 import { useGetFaqsQuery } from '../../store/api';
 
 const FaqTab = () => {
@@ -19,10 +21,7 @@ const FaqTab = () => {
 
   if (!faqs?.length) {
     return (
-      <View style={styles.emptyState}>
-        <Ionicons name="help-circle-outline" size={48} color={colors.gallery} />
-        <Text style={styles.emptyTitle}>No FAQs available yet</Text>
-      </View>
+      <EmptyState icon="help-circle-outline" iconColor={colors.gallery} title="No FAQs available yet" />
     );
   }
 
@@ -61,24 +60,11 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xxl,
     alignItems: 'center',
   },
-  emptyState: {
-    alignItems: 'center',
-    paddingVertical: spacing.xxl,
-    gap: spacing.md,
-  },
-  emptyTitle: {
-    ...typography.body,
-    color: colors.raven,
-  },
   faqCard: {
     backgroundColor: colors.white,
     borderRadius: borderRadius.xl,
     padding: spacing.md,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 1,
+    ...shadows.subtle,
   },
   faqHeader: {
     flexDirection: 'row',

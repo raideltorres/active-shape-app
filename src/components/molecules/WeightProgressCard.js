@@ -3,8 +3,10 @@ import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LineChart } from 'react-native-gifted-charts';
 
-import { PulsingDot } from '../atoms';
+import { PulsingDot, EmptyState } from '../atoms';
+import CardHeader from './CardHeader';
 import { colors, spacing, typography, borderRadius } from '../../theme';
+import { shadows } from '../../theme/shadows';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CHART_WIDTH = SCREEN_WIDTH - (spacing.lg * 4) - 40;
@@ -153,38 +155,25 @@ const WeightProgressCard = ({
   if (chartData.length === 0 && !stats.current) {
     return (
       <View style={styles.container}>
-        <View style={styles.emptyState}>
-          <View style={styles.emptyIconContainer}>
-            <Ionicons name="scale-outline" size={32} color={colors.raven} />
-          </View>
-          <Text style={styles.emptyTitle}>No Weight Data Yet</Text>
-          <Text style={styles.emptyDescription}>
-            Start tracking your weight to see your progress over time
-          </Text>
-        </View>
+        <EmptyState
+          icon="scale-outline"
+          iconSize={32}
+          iconColor={colors.raven}
+          title="No Weight Data Yet"
+          description="Start tracking your weight to see your progress over time"
+        />
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <View style={styles.iconContainer}>
-            <Ionicons name="scale-outline" size={20} color={colors.purple} />
-          </View>
-          <View style={styles.headerText}>
-            <Text style={styles.title}>Weight Progress</Text>
-            <Text style={styles.subtitle}>
-              {chartData.length > 1 
-                ? `${chartData.length} entries` 
-                : chartData.length === 1 
-                  ? 'Starting weight' 
-                  : 'Current weight'}
-            </Text>
-          </View>
-        </View>
-        {stats.change !== null && (
+      <CardHeader
+        icon="scale-outline"
+        iconColor={colors.purple}
+        title="Weight Progress"
+        subtitle={chartData.length > 1 ? `${chartData.length} entries` : chartData.length === 1 ? 'Starting weight' : 'Current weight'}
+        rightElement={stats.change !== null ? (
           <View style={[styles.changeBadge, isLoss ? styles.changeBadgeLoss : styles.changeBadgeGain]}>
             <Ionicons 
               name={isLoss ? 'trending-down' : 'trending-up'} 
@@ -195,8 +184,8 @@ const WeightProgressCard = ({
               {isLoss ? '' : '+'}{stats.change.toFixed(1)} kg ({percentChange}%)
             </Text>
           </View>
-        )}
-      </View>
+        ) : null}
+      />
 
       {lineData.length > 0 && (
         <View style={styles.chartContainer}>
@@ -270,43 +259,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderRadius: borderRadius.xl,
     padding: spacing.lg,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: spacing.md,
-  },
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: `${colors.purple}15`,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: spacing.md,
-  },
-  headerText: {
-    flex: 1,
-  },
-  title: {
-    ...typography.h4,
-    color: colors.mineShaft,
-  },
-  subtitle: {
-    ...typography.caption,
-    color: colors.raven,
-    marginTop: 2,
+    ...shadows.card,
   },
   changeBadge: {
     flexDirection: 'row',
@@ -367,30 +320,6 @@ const styles = StyleSheet.create({
   },
   statValueCurrent: {
     color: colors.purple,
-  },
-  emptyState: {
-    alignItems: 'center',
-    paddingVertical: spacing.xl,
-  },
-  emptyIconContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: colors.gallery,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.md,
-  },
-  emptyTitle: {
-    ...typography.h4,
-    color: colors.mineShaft,
-    marginBottom: spacing.xs,
-  },
-  emptyDescription: {
-    ...typography.bodySmall,
-    color: colors.raven,
-    textAlign: 'center',
-    paddingHorizontal: spacing.lg,
   },
 });
 

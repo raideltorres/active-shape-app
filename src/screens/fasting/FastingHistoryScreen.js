@@ -12,12 +12,14 @@ import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 
+import { EmptyState } from '../../components/atoms';
 import {
   useGetFastingHistoryQuery,
   useDeleteFastingSessionMutation,
 } from '../../store/api';
 import { FASTING_STAGES, getCurrentStage } from '../../constants/fasting';
 import { secondsToShortTime } from '../../utils/fasting';
+import ScreenHeader from '../../components/atoms/ScreenHeader';
 import { colors, spacing, typography, borderRadius } from '../../theme';
 
 const PAGE_SIZE = 20;
@@ -146,13 +148,7 @@ const FastingHistoryScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={8}>
-          <Ionicons name="arrow-back" size={24} color={colors.mineShaft} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Fasting History</Text>
-        <View style={{ width: 24 }} />
-      </View>
+      <ScreenHeader title="Fasting History" />
 
       <View style={styles.tabs}>
         <TouchableOpacity
@@ -188,13 +184,12 @@ const FastingHistoryScreen = ({ navigation }) => {
         refreshing={isFetching}
         onRefresh={refetch}
         ListEmptyComponent={
-          <View style={styles.empty}>
-            <Ionicons name="timer-outline" size={48} color={colors.alto} />
-            <Text style={styles.emptyTitle}>No Fasting Sessions</Text>
-            <Text style={styles.emptyText}>
-              Start your first fast from the dashboard to see your history here.
-            </Text>
-          </View>
+          <EmptyState
+            icon="timer-outline"
+            iconColor={colors.alto}
+            title="No Fasting Sessions"
+            description="Start your first fast from the dashboard to see your history here."
+          />
         }
       />
     </SafeAreaView>
@@ -210,17 +205,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-  },
-  headerTitle: {
-    ...typography.h3,
-    color: colors.mineShaft,
   },
   tabs: {
     flexDirection: 'row',
@@ -352,21 +336,6 @@ const styles = StyleSheet.create({
   stageChipText: {
     fontSize: 10,
     fontWeight: '600',
-  },
-  empty: {
-    alignItems: 'center',
-    paddingVertical: spacing.xxxl,
-    gap: spacing.sm,
-  },
-  emptyTitle: {
-    ...typography.h4,
-    color: colors.mineShaft,
-  },
-  emptyText: {
-    ...typography.bodySmall,
-    color: colors.raven,
-    textAlign: 'center',
-    paddingHorizontal: spacing.xl,
   },
 });
 

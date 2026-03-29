@@ -65,7 +65,7 @@ const EducationSection = ({ education }) => {
       <ExplanationCard
         icon="bulb-outline"
         iconColor={colors.white}
-        iconBgColor="#3b82f6"
+        iconBgColor={colors.brightBlue}
         title="Why These Goals?"
         content={whyTheseGoals}
       />
@@ -74,7 +74,7 @@ const EducationSection = ({ education }) => {
       <ExplanationCard
         icon="flask-outline"
         iconColor={colors.white}
-        iconBgColor="#f59e0b"
+        iconBgColor={colors.buttercup}
         title="The Science"
         content={scientificBasis}
       />
@@ -84,7 +84,7 @@ const EducationSection = ({ education }) => {
         title="TIPS FOR SUCCESS"
         items={successTips}
         icon="checkmark-circle"
-        iconColor="#10b981"
+        iconColor={colors.mountainMeadow}
         isWarning={false}
       />
 
@@ -93,7 +93,7 @@ const EducationSection = ({ education }) => {
         title="AVOID THESE MISTAKES"
         items={commonMistakes}
         icon="warning"
-        iconColor="#f59e0b"
+        iconColor={colors.buttercup}
         isWarning={true}
       />
     </SectionCard>

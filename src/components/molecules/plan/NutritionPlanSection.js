@@ -7,9 +7,9 @@ import { colors, spacing, typography, borderRadius } from '../../../theme';
 
 // Chart colors matching web
 const CHART_COLORS = {
-  protein: '#52c41a',
-  carbs: '#1890ff',
-  fats: '#faad14',
+  protein: colors.limeGreen,
+  carbs: colors.dodgerBlue,
+  fats: colors.buttercup,
 };
 
 /**

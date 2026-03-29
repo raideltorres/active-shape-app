@@ -15,27 +15,12 @@ import { useAuth, useSocialAuth } from '../../hooks';
 import { useSignUpMutation } from '../../store/api';
 import { SOCIAL_PROVIDERS } from '../../constants/oauth';
 import { getStoredReferralCode, clearStoredReferralCode } from '../../utils/referral';
+import { validatePassword } from '../../utils/validation';
 import { authStyles as styles } from '../../theme/authStyles';
 
 const WEB_URLS = {
   terms: 'https://www.active-shape.com/terms-of-service',
   privacy: 'https://www.active-shape.com/privacy-policy',
-};
-
-const validatePassword = (password) => {
-  if (password.length < 8) {
-    return 'Password must be at least 8 characters long.';
-  }
-  if (!/[A-Z]/.test(password)) {
-    return 'Password must contain at least one uppercase letter.';
-  }
-  if (!/[0-9]/.test(password)) {
-    return 'Password must contain at least one number.';
-  }
-  if (!/[^A-Za-z0-9]/.test(password)) {
-    return 'Password must contain at least one special character.';
-  }
-  return null;
 };
 
 const RegisterScreen = ({ navigation }) => {

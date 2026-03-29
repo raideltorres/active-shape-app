@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Button, TimeDigit, TimeSeparator } from '../atoms';
 import { FASTING_STAGES, getCurrentStage, getStagesReachedLabels } from '../../constants/fasting';
 import { colors, spacing, typography, borderRadius } from '../../theme';
+import { shadows } from '../../theme/shadows';
 
 const FastingTrackerCard = ({
   fastingPlan = null,
@@ -199,11 +200,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderRadius: borderRadius.xl,
     padding: spacing.lg,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
+    ...shadows.card,
   },
   header: {
     flexDirection: 'row',
